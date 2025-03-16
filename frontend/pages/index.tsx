@@ -6,7 +6,6 @@ import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
-import { config } from '../../backend/src/config'
 
 export default function Home() {
   const router = useRouter()
@@ -108,14 +107,14 @@ export default function Home() {
           <>
             <div
               style={{
-                border: '2px dashed #ff69b4',
-                padding: '10px',
-                backgroundColor: 'white',
-                borderRadius: '10px',
+              border: '2px dashed #ff69b4',
+              padding: '10px',
+              backgroundColor: 'white',
+              borderRadius: '10px',
               }}
             >
               <QRCodeSVG
-                value={`${config.publicHost}/join?session=${sessionId}`}
+                value={`${window.location.origin}/join?session=${sessionId}`}
                 size={150}
               />
             </div>

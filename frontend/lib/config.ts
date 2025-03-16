@@ -1,1 +1,1 @@
-export const apiUrl = process.env.NODE_ENV === 'development' ? 'http://192.168.2.88:3001' : ''
+export const apiUrl = process.env.NODE_ENV !== 'production' ? 'http://localhost:3001' : ''

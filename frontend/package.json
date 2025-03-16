@@ -5,12 +5,9 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.0.14",
-    "lightningcss-win32-x64-msvc": "^1.29.2",
     "next": "^15.2.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",

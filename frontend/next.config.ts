@@ -1,5 +1,12 @@
-module.exports = {
-  async rewrites() {
+import type { NextConfig } from 'next'
+import { config } from '../backend/src/config'
+
+const nextConfig: NextConfig = {
+  output: 'export'
+}
+
+const devConfig: NextConfig = {
+  rewrites: async () => {
     return [
       {
         source: '/api/:path*',
@@ -8,3 +15,7 @@ module.exports = {
     ]
   }
 }
+
+const exportConfig = config.dev ? devConfig : nextConfig
+
+export default exportConfig

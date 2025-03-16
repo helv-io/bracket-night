@@ -11,7 +11,7 @@ const server = http.createServer(app)
 const io = new Server(server,
   {
     cors: {
-      origin: process.env.NODE_ENV === 'development' ? '*' : config.publicHost,
+      origin: config.dev ? '*' : config.publicURL,
       methods: ['GET', 'POST'],
       credentials: true
     }
@@ -21,8 +21,11 @@ const io = new Server(server,
 // Initialize game logic
 new Game(io)
 
-// Serve frontend static files in production
-app.use(express.static(path.join(__dirname, '../../frontend/out')))
+// TODO: Make the file path consistent between dev and prod
+const fePath = config.dev ? '../../frontend/out' : '../frontend/out'
+
+// Serve frontend static html files.
+app.use(express.static(path.join(__dirname, fePath), { extensions: ['html'] }))
 
 // API endpoint to create a new bracket
 app.use(express.json())
@@ -37,6 +40,8 @@ app.post('/api/create-bracket', (req, res) => {
   res.json({ code })
 })
 
-server.listen(3001, () => {
-  console.log('Server running on port 3001')
+const port = config.dev ? 3001 : 3000
+
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`)
 })

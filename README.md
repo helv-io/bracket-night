@@ -38,7 +38,7 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 3. **Setup Environment Variables**
   Create a `.env` file in the root directory and add the following variables:
   ```env
-  PUBLIC_HOST=https://bracket.my.domain
+  PUBLIC_URL=https://bracket.my.domain
   ```
 
 4. **Configure TypeScript**
