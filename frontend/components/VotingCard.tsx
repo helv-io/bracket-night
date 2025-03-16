@@ -11,19 +11,18 @@ interface VotingCardProps {
 
 export default function VotingCard({ matchup, sessionId, playerName, hasVoted }: VotingCardProps) {
   const [voted, setVoted] = useState(hasVoted)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [voteChoice, setVoteChoice] = useState<number | null>(null)
 
-  // Store sessionId and playerName in localStorage
   useEffect(() => {
     localStorage.setItem('sessionId', sessionId)
     localStorage.setItem('playerName', playerName)
   }, [sessionId, playerName])
 
-  // Reset voted state when matchup or hasVoted changes
   useEffect(() => {
     setVoted(hasVoted)
   }, [matchup, hasVoted])
 
-  // Reconnect socket and rejoin session on component mount
   useEffect(() => {
     const storedSessionId = localStorage.getItem('sessionId')
     const storedPlayerName = localStorage.getItem('playerName')
@@ -33,8 +32,16 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
   }, [])
 
   const handleVote = (choice: number) => {
-    socket.emit('vote', { sessionId, choice })
-    setVoted(true)
+    setVoteChoice(choice)
+    setShowConfirmation(true)
+  }
+
+  const confirmVote = () => {
+    if (voteChoice !== null) {
+      socket.emit('vote', { sessionId, choice: voteChoice })
+      setVoted(true)
+      setShowConfirmation(false)
+    }
   }
 
   return (
@@ -49,6 +56,13 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
         </button>
       </div>
       {voted && <p>Waiting for others to vote...</p>}
+      {showConfirmation && (
+        <div style={{ padding: '10px', background: 'white', border: '1px solid black', borderRadius: '5px' }}>
+          <p>Are you sure you want to cast your vote? This will stop others from joining the game session.</p>
+          <button onClick={confirmVote}>Yes</button>
+          <button onClick={() => setShowConfirmation(false)}>No</button>
+        </div>
+      )}
     </div>
   )
 }

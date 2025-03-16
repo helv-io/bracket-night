@@ -131,7 +131,7 @@ export default function Join() {
             </div>
           )}
           {matchups.length === 0 && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
-          {matchups.length > 0 && currentMatchupIndex < matchups.length && (
+          {matchups.length > 0 && currentMatchupIndex < matchups.length && players.length >= 3 && (
             <VotingCard
               playerName={name}
               matchup={matchups[currentMatchupIndex]}
