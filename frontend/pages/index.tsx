@@ -123,19 +123,18 @@ export default function Home() {
           </>
         )}
         {hasVotingStarted && (
-          <div>
-            <h3>Players:</h3>
-            <ul>
+            <div>
+            <ul style={{ listStyleType: 'none', paddingLeft: 0, display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
               {players.map(player => {
-                const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
-                return (
-                  <li key={player.id}>
-                    {hasVoted ? '✔️' : '❌'} {player.name}
-                  </li>
-                )
+              const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
+              return (
+                <li key={player.id} style={{ textAlign: 'left' }}>
+                  {hasVoted ? '✅' : '❎'} {player.name}
+                </li>
+              )
               })}
             </ul>
-          </div>
+            </div>
         )}
       </div>
 

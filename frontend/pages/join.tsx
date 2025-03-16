@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
 import VotingCard from '../components/VotingCard'
 import { Matchup, Player } from '../../backend/src/types'
+import Head from 'next/head'
 
 export default function Join() {
   const router = useRouter()
@@ -63,6 +64,9 @@ export default function Join() {
 
   return (
     <div style={{ padding: '20px' }}>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+      </Head>
       {!hasJoined ? (
         <>
           <h1>Join Game: {session}</h1>
@@ -72,7 +76,13 @@ export default function Join() {
             onChange={e => setName(e.target.value)}
             placeholder="Your Name"
             style={{ padding: '5px', marginBottom: '10px' }}
+            onKeyUp={e => {
+              if (e.key === 'Enter') {
+                handleJoin()
+              }
+            }}
           />
+          <br />
           <button onClick={handleJoin}>Join</button>
         </>
       ) : (
@@ -87,7 +97,13 @@ export default function Join() {
                 onChange={e => setBracketCode(e.target.value)}
                 placeholder="Enter Bracket Code"
                 style={{ padding: '5px', marginBottom: '10px' }}
+                onKeyUp={e => {
+            if (e.key === 'Enter') {
+              handleSetBracket()
+            }
+          }}
               />
+              <br />
               <button onClick={handleSetBracket}>Set Bracket</button>
             </div>
           )}

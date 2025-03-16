@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { Matchup } from '../../backend/src/types'
 
 interface BracketProps {
@@ -9,21 +10,58 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
   return (
     <div
       style={{
-        background: isCurrent ? 'var(--accent)' : 'var(--card-bg)',
-        padding: '10px',
-        borderRadius: '5px',
-        textAlign: 'center',
-        width: '150px',
+      background: isCurrent ? 'var(--accent)' : 'var(--card-bg)',
+      padding: '10px',
+      borderRadius: '5px',
+      textAlign: 'center',
+      width: '170px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      position: 'relative',
+      height: '100px',
+      justifyContent: 'space-between',
       }}
     >
-      <div>{matchup.left?.name || 'TBD'}</div>
-      <div>vs</div>
-      <div>{matchup.right?.name || 'TBD'}</div>
-      {matchup.winner && (
-        <div style={{ color: 'var(--winner-highlight)' }}>
-          Winner: {matchup.winner.name}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+      {matchup.left?.image_url ? (
+        <img
+        src={matchup.left.image_url}
+        alt={matchup.left.name}
+        style={{
+          width: '30px',
+          height: '30px',
+          marginRight: '10px',
+          opacity: matchup.winner?.id === matchup.left?.id ? 1 : 0.5,
+        }}
+        />
+      ) : (
+        <div style={{ width: '30px', height: '30px', marginRight: '10px' }}>TBD</div>
       )}
+      <div style={{ flex: 1, textAlign: 'left', color: matchup.winner?.id === matchup.left?.id ? 'lightgreen' : 'gray', fontWeight: matchup.winner?.id === matchup.left?.id ? 'bold' : 'normal' }}>
+        {matchup.left?.name || ''}
+      </div>
+      </div>
+      <div style={{ textAlign: 'center' }}>vs</div>
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+      <div style={{ flex: 1, textAlign: 'right', color: matchup.winner?.id === matchup.right?.id ? 'lightgreen' : 'gray', fontWeight: matchup.winner?.id === matchup.right?.id ? 'bold' : 'normal' }}>
+        {matchup.right?.name || ''}
+      </div>
+      {matchup.right?.image_url ? (
+        <img
+        src={matchup.right.image_url}
+        alt={matchup.right.name}
+        style={{
+          width: '30px',
+          height: '30px',
+          marginLeft: '10px',
+          opacity: matchup.winner?.id === matchup.right?.id ? 1 : 0.5,
+        }}
+        />
+      ) : (
+        <div style={{ width: '30px', height: '30px', marginLeft: '10px' }}>TBD</div>
+      )}
+      </div>
     </div>
   )
 }
@@ -39,7 +77,7 @@ export default function Bracket({ matchups, currentMatchupIndex }: BracketProps)
   const final = [matchups[14]]
 
   return (
-    <div style={{ position: 'relative', height: '880px', width: '100%' }}>
+    <div style={{ position: 'relative', height: '1080px', width: '95%' }}>
       {/* Round 1 Left */}
       <div style={{ position: 'absolute', left: '0%', width: '10%', height: '100%' }}>
         {round1Left.map((matchup, index) => (
