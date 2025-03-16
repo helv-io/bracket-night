@@ -118,7 +118,7 @@ export default function Home() {
             >
               <QRCodeSVG
                 value={`${window.location.origin}/join?session=${sessionId}`}
-                imageSettings={{ src: '/bn-logo-gold.svg', height: 32, width: 32, excavate: true }}
+                imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
                 size={150}
               />
             </div>
