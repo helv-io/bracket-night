@@ -57,8 +57,5 @@ export function getBracketByCode(code: string):
   const contestants = db.prepare<number, { id: number, name: string, image_url: string }>
     ('SELECT id, name, image_url FROM contestants WHERE bracket_id = ?').all(bracket.id)
   
-  // Randomize the order of contestants
-  contestants.sort(() => Math.random() - 0.5)
-  
   return { ...bracket, contestants }
 }
