@@ -37,6 +37,8 @@ export default function Join() {
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('enter_bracket_code', () => setIsFirstPlayer(true))
     socket.on('bracket_set', ({ matchups, currentMatchupIndex }) => {
+      // Randomize matchups
+      matchups = matchups.sort(() => Math.random() - 0.5)
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
     })
