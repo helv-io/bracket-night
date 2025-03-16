@@ -1,0 +1,20 @@
+{
+  "name": "bracket-night",
+  "version": "0.0.1",
+  "scripts": {
+    "lint": "npx eslint **/*.ts",
+    "lint:fix": "npx eslint **/*.ts --fix",
+    "clean": "rimraf dist",
+    "build:frontend": "npm run build -w frontend",
+    "build:backend": "npm run build -w backend",
+    "build": "npm i && npm run build:frontend && npm run build:backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "dev": "npx npm-run-all --parallel dev:backend dev:frontend"
+  },
+  "private": false,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "../",
+    "baseUrl": "./src",
+    "outDir": "./dist",
+    "module": "CommonJS",
+    "target": "ESNext",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "typeRoots": [
+      "../types",
+      "../node_modules/@types"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

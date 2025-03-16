@@ -1,0 +1,34 @@
+:root {
+  --background: #1a1a2e;
+  --text: #e0e0e0;
+  --accent: #ff6f61;
+  --card-bg: #16213e;
+  --winner-highlight: #4caf50;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+button {
+  background: var(--accent);
+  color: var(--text);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.9
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed
+}
