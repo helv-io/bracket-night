@@ -57,6 +57,9 @@ export default function Home() {
 
   return (
     <div>
+      {/* Background Music */}
+      <audio src="/background.wav" autoPlay loop />
+
       {/* Title and Subtitle Section */}
       <div
         style={{
@@ -118,8 +121,19 @@ export default function Home() {
                 size={150}
               />
             </div>
-            <p>Scan to join: {sessionId}</p>
-            <p>Players: {players.length}/10</p>
+            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{sessionId}</span>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {players.length === 0 && (
+                <div style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '5px', color: 'gray' }}>
+                  It is empty around here
+                </div>
+                )}
+              {players.map(player => (
+                <div key={player.id} style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '5px' }}>
+                  {player.name}
+                </div>
+              ))}
+            </div>
           </>
         )}
         {hasVotingStarted && (
