@@ -29,12 +29,21 @@ export class Game {
 
     socket.on('join', ({ sessionId, playerName }) => {
       const session = this.sessions.get(sessionId)
-      if (!session || session.players.length >= 10 || session.hasVotingStarted) {
+      if (!session || session.players.length >= 10) {
         socket.emit('error', 'Cannot join session')
         return
       }
-      const player: Player = { id: socket.id, name: playerName }
-      session.players.push(player)
+      let player = session.players.find(p => p.name === playerName)
+      if (player) {
+        player.id = socket.id // Update player ID to the new socket ID
+      } else {
+        if (session.hasVotingStarted) {
+          socket.emit('error', 'Cannot join session')
+          return
+        }
+        player = { id: socket.id, name: playerName }
+        session.players.push(player)
+      }
       socket.join(sessionId) // Explicitly join the room (good practice)
       this.io.to(sessionId).emit('player_joined', { players: session.players })
       if (session.players.length === 1) {

@@ -5,16 +5,32 @@ import { socket } from '../lib/socket'
 interface VotingCardProps {
   matchup: Matchup
   sessionId: string
+  playerName: string
   hasVoted: boolean
 }
 
-export default function VotingCard({ matchup, sessionId, hasVoted }: VotingCardProps) {
+export default function VotingCard({ matchup, sessionId, playerName, hasVoted }: VotingCardProps) {
   const [voted, setVoted] = useState(hasVoted)
+
+  // Store sessionId and playerName in localStorage
+  useEffect(() => {
+    localStorage.setItem('sessionId', sessionId)
+    localStorage.setItem('playerName', playerName)
+  }, [sessionId, playerName])
 
   // Reset voted state when matchup or hasVoted changes
   useEffect(() => {
     setVoted(hasVoted)
   }, [matchup, hasVoted])
+
+  // Reconnect socket and rejoin session on component mount
+  useEffect(() => {
+    const storedSessionId = localStorage.getItem('sessionId')
+    const storedPlayerName = localStorage.getItem('playerName')
+    if (storedSessionId && storedPlayerName) {
+      socket.emit('join', { sessionId: storedSessionId, playerName: storedPlayerName })
+    }
+  }, [])
 
   const handleVote = (choice: number) => {
     socket.emit('vote', { sessionId, choice })

@@ -16,6 +16,20 @@ export default function Join() {
   const [players, setPlayers] = useState<Player[]>([])
   const [currentVotes, setCurrentVotes] = useState<{ playerId: string, vote: string }[]>([])
   const [hasJoined, setHasJoined] = useState(false)
+  const [sessionId, setSessionId] = useState('')
+
+  useEffect(() => {
+    const storedName = localStorage.getItem('playerName')
+    if (storedName) {
+      setName(storedName)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (session) {
+      setSessionId(session as string)
+    }
+  }, [session])
 
   useEffect(() => {
     if (!session) return
@@ -48,15 +62,16 @@ export default function Join() {
   }, [session])
 
   const handleJoin = () => {
-    if (session && name) {
-      socket.emit('join', { sessionId: session, playerName: name })
+    if (sessionId && name) {
+      socket.emit('join', { sessionId: sessionId, playerName: name })
+      localStorage.setItem('playerName', name)
       setHasJoined(true)
     }
   }
 
   const handleSetBracket = () => {
-    if (session && bracketCode) {
-      socket.emit('set_bracket', { sessionId: session, code: bracketCode })
+    if (sessionId && bracketCode) {
+      socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode })
     }
   }
 
@@ -69,7 +84,15 @@ export default function Join() {
       </Head>
       {!hasJoined ? (
         <>
-          <h1>Join Game: {session}</h1>
+          <h1>Join Game</h1>
+          <input
+            type="text"
+            value={sessionId}
+            onChange={e => setSessionId(e.target.value)}
+            placeholder="Session ID"
+            style={{ padding: '5px', marginBottom: '10px' }}
+          />
+          <br />
           <input
             type="text"
             value={name}
@@ -98,10 +121,10 @@ export default function Join() {
                 placeholder="Enter Bracket Code"
                 style={{ padding: '5px', marginBottom: '10px' }}
                 onKeyUp={e => {
-            if (e.key === 'Enter') {
-              handleSetBracket()
-            }
-          }}
+                  if (e.key === 'Enter') {
+                    handleSetBracket()
+                  }
+                }}
               />
               <br />
               <button onClick={handleSetBracket}>Set Bracket</button>
@@ -110,8 +133,9 @@ export default function Join() {
           {matchups.length === 0 && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
           {matchups.length > 0 && currentMatchupIndex < matchups.length && (
             <VotingCard
+              playerName={name}
               matchup={matchups[currentMatchupIndex]}
-              sessionId={session as string}
+              sessionId={sessionId as string}
               hasVoted={hasVoted}
             />
           )}
