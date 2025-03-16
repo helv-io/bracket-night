@@ -36,7 +36,7 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
         }}
         />
       ) : (
-        <div style={{ width: '30px', height: '30px', marginRight: '10px' }}>TBD</div>
+        <div style={{ width: '30px', height: '30px', marginRight: '10px' }}>❓</div>
       )}
       <div style={{ flex: 1, textAlign: 'left', color: matchup.winner?.id === matchup.left?.id ? 'lightgreen' : 'gray', fontWeight: matchup.winner?.id === matchup.left?.id ? 'bold' : 'normal' }}>
         {matchup.left?.name || ''}
@@ -59,7 +59,7 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
         }}
         />
       ) : (
-        <div style={{ width: '30px', height: '30px', marginLeft: '10px' }}>TBD</div>
+        <div style={{ width: '30px', height: '30px', marginLeft: '10px' }}>❔</div>
       )}
       </div>
     </div>
@@ -77,7 +77,7 @@ export default function Bracket({ matchups, currentMatchupIndex }: BracketProps)
   const final = [matchups[14]]
 
   return (
-    <div style={{ position: 'relative', height: '1080px', width: '95%' }}>
+    <div style={{ position: 'relative', height: '1050px', width: '95%' }}>
       {/* Round 1 Left */}
       <div style={{ position: 'absolute', left: '0%', width: '10%', height: '100%' }}>
         {round1Left.map((matchup, index) => (
