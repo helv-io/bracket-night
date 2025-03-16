@@ -61,7 +61,7 @@ export class Game {
     socket.on('set_bracket', ({ sessionId, code }) => {
       const session = this.sessions.get(sessionId)
       if (!session || session.bracket) return
-      const bracket = getBracketByCode(code)
+        const bracket = getBracketByCode(code)
       if (!bracket) {
         socket.emit('error', 'Invalid bracket code')
         return

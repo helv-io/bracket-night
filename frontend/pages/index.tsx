@@ -116,7 +116,11 @@ export default function Home() {
               borderRadius: '10px',
               }}
             >
-              <QRCodeSVG value={`${window.location.origin}/join?session=${sessionId}`} size={150}/>
+              <QRCodeSVG
+                value={`${window.location.origin}/join?session=${sessionId}`}
+                imageSettings={{ src: '/bn-logo-gold.svg', height: 32, width: 32, excavate: true }}
+                size={150}
+              />
             </div>
             <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{sessionId}</span>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
