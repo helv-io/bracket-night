@@ -90,7 +90,7 @@ export default function Home() {
         }}
       >
         {matchups.length > 0 && (
-          <Bracket matchups={matchups.sort(() => Math.random() - 0.5)} currentMatchupIndex={currentMatchupIndex} />
+          <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
       </div>
 
