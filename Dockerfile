@@ -1,5 +1,5 @@
 # Build frontend
-FROM node:22 AS frontend-build
+FROM node:lts-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -8,7 +8,7 @@ COPY backend/ ../backend
 RUN npm run build
 
 # Build backend
-FROM node:22 AS backend-build
+FROM node:lts-alpine AS backend-build
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
@@ -16,7 +16,7 @@ COPY backend ./
 RUN npm run build
 
 # Final image
-FROM node:22 AS backend
+FROM node:lts-alpine AS backend
 WORKDIR /app/backend
 COPY --from=backend-build /app/backend/dist /app/backend
 COPY --from=frontend-build /app/frontend/out /app/frontend/out
