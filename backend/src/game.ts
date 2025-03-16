@@ -91,14 +91,25 @@ export class Game {
     })
   }
 
+  private shuffleArray(array: any[]): any[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j: number = Math.floor(Math.random() * (i + 1))
+      const temp = array[i]
+      array[i] = array[j]
+      array[j] = temp
+    }
+    return array
+  }
+
   private createMatchups(contestants: Contestant[]): Matchup[] {
+    const shuffledContestants = this.shuffleArray(contestants);
     const matchups: Matchup[] = []
     // First round: 8 matchups with 16 contestants
     for (let i = 0; i < 8; i++) {
       matchups.push({
         id: i,
-        left: contestants[i * 2],
-        right: contestants[i * 2 + 1],
+        left: shuffledContestants[i * 2],
+        right: shuffledContestants[i * 2 + 1],
         winner: null
       })
     }
@@ -110,10 +121,10 @@ export class Game {
           left: null,
           right: null,
           winner: null
-        })
+        });
       }
     }
-    return matchups
+    return matchups;
   }
 
   private advanceMatchup(sessionId: string) {
