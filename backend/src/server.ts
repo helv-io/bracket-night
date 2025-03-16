@@ -21,11 +21,8 @@ const io = new Server(server,
 // Initialize game logic
 new Game(io)
 
-// TODO: Make the file path consistent between dev and prod
-const fePath = config.dev ? '../../frontend/out' : '../frontend/out'
-
 // Serve frontend static html files.
-app.use(express.static(path.join(__dirname, fePath), { extensions: ['html'] }))
+app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['html'] }))
 
 // API endpoint to create a new bracket
 app.use(express.json())
