@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io'
 import { getBracketByCode } from './db'
 import { Bracket, Contestant, Matchup, Player, Vote } from './types'
-import { config } from 'config'
+import { config } from './config'
 
 export class Game {
   private io: Server
@@ -137,6 +137,8 @@ export class Game {
     const currentMatchup = session.matchups[session.currentMatchupIndex]
     const leftVotes = session.currentVotes.filter(v => v.choice === 0).length
     const rightVotes = session.currentVotes.filter(v => v.choice === 1).length
+    
+    // Randomly select a winner if there's a tie
     const winner = leftVotes > rightVotes
       ? currentMatchup.left
       : rightVotes > leftVotes

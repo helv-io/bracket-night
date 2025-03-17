@@ -52,6 +52,9 @@ export default function Join() {
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
       setPlayers(players)
+      if (currentVotes.length === players.length) {
+        socket.emit('advance_matchup', { sessionId })
+      }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
       setMatchups(matchups)

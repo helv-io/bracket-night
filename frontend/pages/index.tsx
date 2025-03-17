@@ -39,6 +39,9 @@ export default function Home() {
       if (currentVotes.length > 0) {
         setIsGameStarted(true)
       }
+      if (currentVotes.length === players.length) {
+        socket.emit('advance_matchup', { sessionId })
+      }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
       setMatchups(matchups)
@@ -86,7 +89,7 @@ export default function Home() {
 
       {/* QR Code and Session Info Section */}
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', bottom: '20px' }}>
-        {/* Check if voting has not started and sessionId exists */}
+        {/* Check if game is pending start and sessionId exists */}
         {!isGameStarted && sessionId && (
           <>
             <div
@@ -119,7 +122,7 @@ export default function Home() {
             </div>
           </>
         )}
-        {/* Check if voting has started */}
+        {/* Check if game has started */}
         {isGameStarted && (
           <div>
             <ul style={{ listStyleType: 'none', paddingLeft: 0, display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
