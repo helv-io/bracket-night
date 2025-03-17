@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { isMobile } from 'react-device-detect'
 import { QRCodeSVG } from 'qrcode.react'
@@ -18,6 +18,11 @@ export default function Home() {
   const [isGameOver, setIsGameOver] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
+  const gameIdRef = useRef(gameId)
+  
+  useEffect(() => {
+    gameIdRef.current = gameId
+  }, [gameId])
 
   useEffect(() => {
     if (isMobile) {
@@ -40,7 +45,7 @@ export default function Home() {
         setIsGameStarted(true)
       }
       if (currentVotes.length === players.length) {
-        socket.emit('advance_matchup', { gameId })
+        socket.emit('advance_matchup', { gameId: gameIdRef.current })
       }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
@@ -57,7 +62,7 @@ export default function Home() {
       socket.off('vote_cast')
       socket.off('matchup_advanced')
     }
-  }, []) // Empty dependency array
+  }, [router]) // Empty dependency array
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
