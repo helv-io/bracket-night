@@ -21,8 +21,8 @@ WORKDIR /app/backend
 COPY --from=backend-build /app/backend/dist /app/backend
 COPY --from=frontend-build /app/frontend/out /app/frontend/out
 COPY backend/package*.json /app/backend/
-RUN cd /app/backend && npm install --only=production
+RUN cd /app/backend && npm install --omit=dev
 ENV NODE_ENV=production
-ENV PUBLIC_URL=https://bracket.my.domain
+ENV PUBLIC_URL=https://bracket.helv.io
 EXPOSE 3000
 CMD ["node", "server.js"]
