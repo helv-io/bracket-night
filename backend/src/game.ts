@@ -91,6 +91,15 @@ export class Game {
         this.advanceMatchup(sessionId)
       }
     })
+
+    socket.on('start_game', () => {
+      const sessionId = Array.from(socket.rooms)[1] // Get the sessionId from the socket's rooms
+      const session = this.sessions.get(sessionId)
+      if (session) {
+        session.hasVotingStarted = true
+        this.io.to(sessionId).emit('game_started')
+      }
+    })
   }
 
   private shuffleArray(array: any[]): any[] {
@@ -104,7 +113,7 @@ export class Game {
   }
 
   private createMatchups(contestants: Contestant[]): Matchup[] {
-    const shuffledContestants = this.shuffleArray(contestants);
+    const shuffledContestants = this.shuffleArray(contestants)
     const matchups: Matchup[] = []
     // First round: 8 matchups with 16 contestants
     for (let i = 0; i < 8; i++) {
@@ -123,10 +132,10 @@ export class Game {
           left: null,
           right: null,
           winner: null
-        });
+        })
       }
     }
-    return matchups;
+    return matchups
   }
 
   private advanceMatchup(sessionId: string) {
