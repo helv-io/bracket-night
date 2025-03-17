@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { isMobile } from 'react-device-detect'
 import { QRCodeSVG } from 'qrcode.react'
@@ -18,7 +18,6 @@ export default function Home() {
   const [isGameOver, setIsGameOver] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
-  const socketInitialized = useRef(false)
 
   useEffect(() => {
     if (isMobile) {
@@ -26,44 +25,39 @@ export default function Home() {
       return
     }
 
-    if (!socketInitialized.current) {
-      socket.emit('create_session')
-      socket.on('session_created', ({ sessionId }) => setSessionId(sessionId))
-      socket.on('player_joined', ({ players }) => setPlayers(players))
-      socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
-        setBracket(bracket)
-        setMatchups(matchups)
-        setCurrentMatchupIndex(currentMatchupIndex)
-      })
-      socket.on('vote_cast', ({ currentVotes, players }) => {
-        setCurrentVotes(currentVotes)
-        setPlayers(players)
-        if (currentVotes.length > 0) {
-          setIsGameStarted(true)
-        }
-        if (currentVotes.length === players.length) {
-          socket.emit('advance_matchup', { sessionId })
-        }
-      })
-      socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
-        setMatchups(matchups)
-        setCurrentMatchupIndex(currentMatchupIndex)
-        setCurrentVotes([])
-        if (currentMatchupIndex === 15) setIsGameOver(true)
-      })
-      
-      socket.connect()
-      socketInitialized.current = true
-
-      return () => {
-        socket.off('session_created')
-        socket.off('player_joined')
-        socket.off('bracket_set')
-        socket.off('vote_cast')
-        socket.off('matchup_advanced')
+    socket.emit('create_session')
+    socket.on('session_created', ({ sessionId }) => setSessionId(sessionId))
+    socket.on('player_joined', ({ players }) => setPlayers(players))
+    socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
+      setBracket(bracket)
+      setMatchups(matchups)
+      setCurrentMatchupIndex(currentMatchupIndex)
+    })
+    socket.on('vote_cast', ({ currentVotes, players }) => {
+      setCurrentVotes(currentVotes)
+      setPlayers(players)
+      if (currentVotes.length > 0) {
+        setIsGameStarted(true)
       }
+      if (currentVotes.length === players.length) {
+        socket.emit('advance_matchup', { sessionId })
+      }
+    })
+    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
+      setMatchups(matchups)
+      setCurrentMatchupIndex(currentMatchupIndex)
+      setCurrentVotes([])
+      if (currentMatchupIndex === 15) setIsGameOver(true)
+    })
+
+    return () => {
+      socket.off('session_created')
+      socket.off('player_joined')
+      socket.off('bracket_set')
+      socket.off('vote_cast')
+      socket.off('matchup_advanced')
     }
-  }, [router, sessionId])
+  })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
