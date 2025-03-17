@@ -52,6 +52,7 @@ export default function Home() {
         if (currentMatchupIndex === 15) setIsGameOver(true)
       })
       
+      socket.connect()
       socketInitialized.current = true
 
       return () => {
