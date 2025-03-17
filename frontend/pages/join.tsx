@@ -178,7 +178,7 @@ export default function Join() {
                   <button onClick={handleSetBracket}>Set Bracket</button>
                 </div>
               )}
-              {isFirstPlayer && bracket && (
+              {isFirstPlayer && bracket && !gameStarted && (
                 <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
               )}
             </>
