@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
-import { Matchup, Player } from '../../backend/src/types'
+import { Bracket, Matchup, Player } from '../../backend/src/types'
 import Head from 'next/head'
 
 export default function Join() {
@@ -10,7 +10,7 @@ export default function Join() {
   const { session } = router.query
   const [name, setName] = useState('')
   const [bracketCode, setBracketCode] = useState('')
-  const [bracketName, setBracketName] = useState('')
+  const [bracket, setBracket] = useState<Bracket | null>(null)
   const [isFirstPlayer, setIsFirstPlayer] = useState(false)
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
@@ -43,16 +43,10 @@ export default function Join() {
 
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('enter_bracket_code', () => setIsFirstPlayer(true))
-    socket.on('bracket_set', ({ matchups, currentMatchupIndex, bracketName }) => {
-      
-      // Debug
-      console.log(matchups)
-      console.log(currentMatchupIndex)
-      console.log(bracketName)
-      
-      setMatchups(matchups)
-      setCurrentMatchupIndex(currentMatchupIndex)
-      setBracketName(bracketName)
+    socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
+      setBracket(bracket as Bracket)
+      setMatchups(matchups as Matchup[])
+      setCurrentMatchupIndex(currentMatchupIndex as number)
     })
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
@@ -128,7 +122,7 @@ export default function Join() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
       </Head>
-      {bracketName && <h1>{bracketName}</h1>}
+      {bracket && <h1>{bracket.title}</h1>}
       {!hasJoined ? (
         <>
           <h1>Join Game</h1>
@@ -159,14 +153,14 @@ export default function Join() {
         <>
           {!gameStarted ? (
             <> 
-              {!bracketName && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
+              {!bracket && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
               <h2 style={{ fontSize: '1em' }}>Waiting for players...</h2>
               <ul>
                 {players.map((player, index) => (
                   <li key={index}>{player.name}</li>
                 ))}
               </ul>
-              {isFirstPlayer && !bracketName && (
+              {isFirstPlayer && !bracket && (
                 <div>
                   <input
                     type="text"
@@ -184,16 +178,16 @@ export default function Join() {
                   <button onClick={handleSetBracket}>Set Bracket</button>
                 </div>
               )}
-              {isFirstPlayer && bracketName && (
+              {isFirstPlayer && bracket && (
                 <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
               )}
             </>
           ) : (
             <>
               <h1>Bracket Night</h1>
-              {bracketName && <h2>{bracketName}</h2>}
+              {bracket && <h2>{bracket.title}</h2>}
               <p>Players: {players.length}/10</p>
-              {isFirstPlayer && !bracketName && (
+              {isFirstPlayer && !bracket && (
               <div>
                 <input
                 type="text"
@@ -211,7 +205,7 @@ export default function Join() {
                 <button onClick={handleSetBracket}>Set Bracket</button>
               </div>
               )}
-              {bracketName && currentMatchupIndex < matchups.length && (
+              {bracket && currentMatchupIndex < matchups.length && (
               <div>
                 <h2>Vote for your favorite</h2>
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>
@@ -226,7 +220,7 @@ export default function Join() {
                 </div>
               </div>
               )}
-              {bracketName && currentMatchupIndex === matchups.length && (
+              {bracket && currentMatchupIndex === matchups.length && (
               <>
                 <h2>Game Over!</h2>
                 <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>

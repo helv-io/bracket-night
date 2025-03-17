@@ -62,7 +62,7 @@ export default function Home() {
       <audio src="/background.ogg" autoPlay loop />
       
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '0px' }}>
-        <img src="/bracket-night-gold.svg" alt="Bracket Night Gold" style={{ width: '600px', height: 'auto' }} />
+        <img src="/bracket-night-gold.svg" alt="Bracket Night Gold" style={{ width: '580px', height: 'auto' }} />
       </div>
 
       {/* Title and Subtitle Section */}
