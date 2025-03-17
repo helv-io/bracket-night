@@ -165,11 +165,28 @@ export default function Join() {
                   <li key={index}>{player.name}</li>
                 ))}
               </ul>
-              <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
+              {isFirstPlayer && matchups.length === 0 && (
+                <div>
+                  <input
+                    type="text"
+                    value={bracketCode}
+                    onChange={e => setBracketCode(e.target.value)}
+                    placeholder="Enter Bracket Code"
+                    style={{ padding: '5px', marginBottom: '10px' }}
+                    onKeyUp={e => {
+                      if (e.key === 'Enter') {
+                        handleSetBracket()
+                      }
+                    }}
+                  />
+                  <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
+                </div>
+              )}
             </>
           ) : (
             <>
-              <h1>Bracket Night</h1>
+                <h1>Bracket Night</h1>
+                {bracketName && <h2>{bracketName}</h2>}
               <p>Players: {players.length}/10</p>
               {isFirstPlayer && matchups.length === 0 && (
               <div>

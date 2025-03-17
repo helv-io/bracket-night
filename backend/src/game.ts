@@ -92,13 +92,11 @@ export class Game {
       }
     })
 
-    socket.on('start_game', () => {
-      const sessionId = Array.from(socket.rooms)[1] // Get the sessionId from the socket's rooms
+    socket.on('start_game', ({ sessionId }) => {
       const session = this.sessions.get(sessionId)
-      if (session) {
-        session.hasVotingStarted = true
-        this.io.to(sessionId).emit('game_started')
-      }
+      if (!session || session.gameStarted) return
+      session.gameStarted = true
+      this.io.to(sessionId).emit('game_started')
     })
   }
 
@@ -181,4 +179,5 @@ interface GameState {
   matchups: Matchup[]
   currentVotes: Vote[]
   hasVotingStarted: boolean
+  gameStarted?: boolean
 }
