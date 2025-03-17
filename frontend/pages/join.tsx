@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
 import { Bracket, Matchup, Player } from '../../backend/src/types'
 import Head from 'next/head'
+import VotingCard from '../components/VotingCard'
 
 export default function Join() {
   const router = useRouter()
@@ -209,16 +210,12 @@ export default function Join() {
               {bracket && currentMatchupIndex < matchups.length && (
               <div>
                 <h2>Vote for your favorite</h2>
-                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                  <div onClick={() => !hasVoted && socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].left?.id })}>
-                    <img src={matchups[currentMatchupIndex].left?.image_url} alt={matchups[currentMatchupIndex].left?.name} style={{ width: '150px', height: '150px' }} />
-                    <p>{matchups[currentMatchupIndex].left?.name}</p>
-                  </div>
-                  <div onClick={() => !hasVoted && socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].right?.id })}>
-                    <img src={matchups[currentMatchupIndex].right?.image_url} alt={matchups[currentMatchupIndex].right?.name} style={{ width: '150px', height: '150px' }} />
-                    <p>{matchups[currentMatchupIndex].right?.name}</p>
-                  </div>
-                </div>
+                <VotingCard 
+                  matchup={matchups[currentMatchupIndex]} 
+                  sessionId={sessionId} 
+                  playerName={name} 
+                  hasVoted={hasVoted} 
+                />
               </div>
               )}
               {bracket && currentMatchupIndex === matchups.length && (

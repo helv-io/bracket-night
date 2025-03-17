@@ -11,7 +11,6 @@ interface VotingCardProps {
 
 export default function VotingCard({ matchup, sessionId, playerName, hasVoted }: VotingCardProps) {
   const [voted, setVoted] = useState(hasVoted)
-  const [voteChoice, setVoteChoice] = useState<number | null>(null)
 
   useEffect(() => {
     localStorage.setItem('sessionId', sessionId)
@@ -39,9 +38,10 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
   }, [])
 
   const handleVote = (choice: number) => {
-    setVoteChoice(choice)
-    socket.emit('vote', { sessionId, choice })
-    setVoted(true)
+    if (!voted) {
+      socket.emit('vote', { sessionId, choice })
+      setVoted(true)
+    }
   }
 
   return (
@@ -58,7 +58,6 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
       {voted && (
         <div>
           <p>Waiting for others to vote...</p>
-          <p>You voted for: {voteChoice === 0 ? matchup.left?.name : matchup.right?.name}</p>
         </div>
       )}
     </div>
