@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { isMobile } from 'react-device-detect'
@@ -59,9 +60,13 @@ export default function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       {/* Background Music */}
       <audio src="/background.wav" autoPlay loop />
+      
+      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '0px' }}>
+        <img src="/bracket-night-gold.svg" alt="Bracket Night Gold" style={{ width: '600px', height: 'auto' }} />
+      </div>
 
       {/* Title and Subtitle Section */}
-      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '20px' }}>
+      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '200px' }}>
         {bracket && (
           <>
             <h1>{bracket.title}</h1>
