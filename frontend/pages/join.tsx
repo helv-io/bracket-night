@@ -17,6 +17,7 @@ export default function Join() {
   const [currentVotes, setCurrentVotes] = useState<{ playerId: string, vote: string }[]>([])
   const [hasJoined, setHasJoined] = useState(false)
   const [sessionId, setSessionId] = useState('')
+  const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
 
   useEffect(() => {
     const storedName = localStorage.getItem('playerName')
@@ -60,6 +61,25 @@ export default function Join() {
       socket.off('error')
     }
   }, [session])
+
+  useEffect(() => {
+    const requestWakeLock = async () => {
+      try {
+        const wakeLock = await navigator.wakeLock.request('screen')
+        setWakeLock(wakeLock)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    requestWakeLock()
+
+    return () => {
+      if (wakeLock) {
+        wakeLock.release().then(() => setWakeLock(null))
+      }
+    }
+  }, [wakeLock])
 
   const handleJoin = () => {
     if (sessionId && name) {
