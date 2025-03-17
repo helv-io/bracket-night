@@ -24,6 +24,10 @@ export default function Join() {
     if (storedName) {
       setName(storedName)
     }
+    const storedBracketCode = localStorage.getItem('bracketCode')
+    if (storedBracketCode) {
+      setBracketCode(storedBracketCode)
+    }
   }, [])
 
   useEffect(() => {
@@ -91,7 +95,8 @@ export default function Join() {
 
   const handleSetBracket = () => {
     if (sessionId && bracketCode) {
-      socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode })
+      socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
+      localStorage.setItem('bracketCode', bracketCode.toLowerCase())
     }
   }
 
