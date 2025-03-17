@@ -180,7 +180,8 @@ export default function Join() {
                         handleSetBracket()
                       }
                     }}
-                  />
+                    />
+                    <br />
                   <button onClick={handleSetBracket}>Set Bracket</button>
                   {isBracketSet && (
                     <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
