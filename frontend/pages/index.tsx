@@ -61,7 +61,7 @@ export default function Home() {
       <audio src="/background.wav" autoPlay loop />
 
       {/* Title and Subtitle Section */}
-      <div style={{ textAlign: 'center', margin: '20px 0' }}>
+      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '20px' }}>
         {bracket && (
           <>
             <h1>{bracket.title}</h1>
@@ -78,7 +78,7 @@ export default function Home() {
       </div>
 
       {/* QR Code and Session Info Section */}
-      <div style={{ textAlign: 'center', margin: '20px 0' }}>
+      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', bottom: '20px' }}>
         {!hasVotingStarted && sessionId && (
           <>
             <div
