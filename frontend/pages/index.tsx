@@ -16,7 +16,7 @@ export default function Home() {
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
   const [players, setPlayers] = useState<Player[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
-  const [hasVotingStarted, setHasVotingStarted] = useState(false)
+  const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Home() {
       setCurrentVotes(currentVotes)
       setPlayers(players)
       if (currentVotes.length > 0) {
-        setHasVotingStarted(true)
+        setIsGameStarted(true)
       }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
@@ -67,6 +67,7 @@ export default function Home() {
 
       {/* Title and Subtitle Section */}
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '200px' }}>
+        {/* Check if bracket exists */}
         {bracket && (
           <>
             <h1>{bracket.title}</h1>
@@ -77,6 +78,7 @@ export default function Home() {
 
       {/* Bracket Section */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+        {/* Check if matchups exist */}
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
@@ -84,7 +86,8 @@ export default function Home() {
 
       {/* QR Code and Session Info Section */}
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', bottom: '20px' }}>
-        {!hasVotingStarted && sessionId && (
+        {/* Check if voting has not started and sessionId exists */}
+        {!isGameStarted && sessionId && (
           <>
             <div
               style={{
@@ -102,6 +105,7 @@ export default function Home() {
             </div>
             <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{sessionId}</span>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {/* Check if players length is zero */}
                 {players.length === 0 && (
                 <div style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '5px', color: 'gray' }}>
                   It is empty around here
@@ -115,21 +119,24 @@ export default function Home() {
             </div>
           </>
         )}
-        {hasVotingStarted && (
-            <div>
+        {/* Check if voting has started */}
+        {isGameStarted && (
+          <div>
             <ul style={{ listStyleType: 'none', paddingLeft: 0, display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+              {/* Map through players and check if they have voted */}
               {players.map(player => {
-              const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
-              return (
-                <li key={player.id} style={{ textAlign: 'left' }}>
-                  {hasVoted ? '✅' : '❎'} {player.name}
-                </li>
-              )
+                const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
+                return (
+                  <li key={player.id} style={{ textAlign: 'left' }}>
+                    {hasVoted ? '✅' : '❎'} {player.name}
+                  </li>
+                )
               })}
             </ul>
-            </div>
+          </div>
         )}
       </div>
+      {/* Check if showConfetti is true */}
       {showConfetti && <Confetti />}
     </div>
   )

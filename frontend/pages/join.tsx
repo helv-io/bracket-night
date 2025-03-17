@@ -124,8 +124,8 @@ export default function Join() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
       </Head>
-      {bracket && <h1>{bracket.title}</h1>}
-      {!hasJoined ? (
+      {/* Check if user needs to join */}
+      {!hasJoined && (
         <>
           <h1>Join Game</h1>
           <input
@@ -151,80 +151,79 @@ export default function Join() {
           <br />
           <button onClick={handleJoin}>Join</button>
         </>
-      ) : (
+      )}
+      {/* Check if user has joined and game is pending */}
+      {hasJoined && !gameStarted && (
         <>
-          {!gameStarted ? (
-            <> 
-              {!bracket && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
-              <h2 style={{ fontSize: '1em' }}>Waiting for players...</h2>
-              <ul>
-                {players.map((player, index) => (
-                  <li key={index}>{player.name}</li>
-                ))}
-              </ul>
-              {isFirstPlayer && !bracket && (
-                <div>
-                  <input
-                    type="text"
-                    value={bracketCode}
-                    onChange={e => setBracketCode(e.target.value)}
-                    placeholder="Enter Bracket Code"
-                    style={{ padding: '5px', marginBottom: '10px' }}
-                    onKeyUp={e => {
-                      if (e.key === 'Enter') {
-                        handleSetBracket()
-                      }
-                    }}
-                    />
-                    <br />
-                  <button onClick={handleSetBracket}>Set Bracket</button>
-                </div>
-              )}
-              {isFirstPlayer && bracket && !gameStarted && (
-                <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
-              )}
-            </>
-          ) : (
-            <>
-              <h1>Bracket Night</h1>
-              {bracket && <h2>{bracket.title}</h2>}
-              <p>Players: {players.length}/10</p>
-              {isFirstPlayer && !bracket && (
-              <div>
-                <input
+          {/* Display message if waiting for bracket to be set */}
+          {!bracket && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
+          <h2 style={{ fontSize: '1em' }}>Waiting for players...</h2>
+          <ul>
+            {players.map((player, index) => (
+              <li key={index}>{player.name}</li>
+            ))}
+          </ul>
+          {/* Check if user is the first player and needs to set the bracket */}
+          {isFirstPlayer && !bracket && (
+            <div>
+              <input
                 type="text"
                 value={bracketCode}
                 onChange={e => setBracketCode(e.target.value)}
                 placeholder="Enter Bracket Code"
                 style={{ padding: '5px', marginBottom: '10px' }}
-                onKeyUp={e => {
-                  if (e.key === 'Enter') {
-                    handleSetBracket()
-                  }
-                }}
-                />
-                <br />
-                <button onClick={handleSetBracket}>Set Bracket</button>
-              </div>
-              )}
-              {bracket && currentMatchupIndex < matchups.length && (
-              <div>
-                <h2>Vote for your favorite</h2>
-                <VotingCard 
-                  matchup={matchups[currentMatchupIndex]} 
-                  sessionId={sessionId} 
-                  playerName={name} 
-                  hasVoted={hasVoted} 
-                />
-              </div>
-              )}
-              {bracket && currentMatchupIndex === matchups.length && (
-              <>
-                <h2>Game Over!</h2>
-                <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
-                <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" style={{ width: '200px', height: '200px' }} />
-              </>
-              )}
+                onKeyUp={e => { if (e.key === 'Enter') handleSetBracket() }}
+              />
+              <br />
+              <button onClick={handleSetBracket}>Set Bracket</button>
+            </div>
+          )}
+          {/* Check if user is the first player, bracket exists, and game is pending */}
+          {isFirstPlayer && bracket && !gameStarted && (
+            <button onClick={startGame}>Everyone is in, start!</button>
+          )}
+        </>
+      )}
+      {/* Check if user has joined and game has started */}
+      {hasJoined && gameStarted && (
+        <>
+          <h1>Bracket Night</h1>
+          {/* Check if bracket exists */}
+          {bracket && <h2>{bracket.title}</h2>}
+          <p>Players: {players.length}/10</p>
+          {/* Check if user is the first player and bracket does not exist */}
+          {isFirstPlayer && !bracket && (
+            <div>
+              <input
+                type="text"
+                value={bracketCode}
+                onChange={e => setBracketCode(e.target.value)}
+                placeholder="Enter Bracket Code"
+                style={{ padding: '5px', marginBottom: '10px' }}
+                onKeyUp={e => { if (e.key === 'Enter') handleSetBracket() }}
+              />
+              <br />
+              <button onClick={handleSetBracket}>Set Bracket</button>
+            </div>
+          )}
+          {/* Check if bracket exists and currentMatchupIndex is less than matchups length */}
+          {bracket && currentMatchupIndex < matchups.length && (
+            <div>
+              <h2>Vote for your favorite</h2>
+              <VotingCard 
+                matchup={matchups[currentMatchupIndex]} 
+                sessionId={sessionId} 
+                playerName={name} 
+                hasVoted={hasVoted} 
+              />
+            </div>
+          )}
+          {/* Check if bracket exists and currentMatchupIndex is equal to matchups length */}
+          {bracket && currentMatchupIndex === matchups.length && (
+            <>
+              <h2>Game Over!</h2>
+              <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
+              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" style={{ width: '200px', height: '200px' }} />
             </>
           )}
         </>
