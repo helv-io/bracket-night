@@ -15,7 +15,7 @@ export default function Home() {
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
   const [players, setPlayers] = useState<Player[]>([])
-  const [showConfetti, setShowConfetti] = useState(false)
+  const [isGameOver, setIsGameOver] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
 
@@ -44,7 +44,7 @@ export default function Home() {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
-      if (currentMatchupIndex === 15) setShowConfetti(true)
+      if (currentMatchupIndex === 15) setIsGameOver(true)
     })
 
     return () => {
@@ -136,8 +136,8 @@ export default function Home() {
           </div>
         )}
       </div>
-      {/* Check if showConfetti is true */}
-      {showConfetti && <Confetti />}
+      {/* Show confetti when game is over and a winner is chosen */}
+      {isGameOver && <Confetti />}
     </div>
   )
 }
