@@ -111,6 +111,7 @@ export default function Join() {
       socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
       localStorage.setItem('bracketCode', bracketCode.toLowerCase())
       setBracketName('Bracket Name') // Replace with actual bracket name logic
+      setIsBracketSet(true)
     }
   }
 
@@ -151,7 +152,7 @@ export default function Join() {
           />
           <br />
           <button onClick={handleJoin}>Join</button>
-          {bracketCode && (
+          {isBracketSet && (
             <p style={{ fontSize: '0.8em', marginTop: '10px' }}>
               Bracket: {bracketName}
             </p>
