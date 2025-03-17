@@ -116,8 +116,7 @@ export default function Join() {
   }
 
   const startGame = () => {
-    socket.emit('start_game')
-    setGameStarted(true)
+    socket.emit('start_game', { sessionId: sessionId })
   }
 
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
