@@ -20,7 +20,6 @@ export default function Join() {
   const [sessionId, setSessionId] = useState('')
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
-  const [isBracketSet, setIsBracketSet] = useState(false)
 
   useEffect(() => {
     const storedName = localStorage.getItem('playerName')
@@ -48,7 +47,6 @@ export default function Join() {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setBracketName(bracketName)
-      setIsBracketSet(true)
     })
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
@@ -111,7 +109,6 @@ export default function Join() {
       socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
       localStorage.setItem('bracketCode', bracketCode.toLowerCase())
       setBracketName('Bracket Name') // Replace with actual bracket name logic
-      setIsBracketSet(true)
     }
   }
 
@@ -152,7 +149,7 @@ export default function Join() {
           />
           <br />
           <button onClick={handleJoin}>Join</button>
-          {isBracketSet && (
+          {bracketName && (
             <p style={{ fontSize: '0.8em', marginTop: '10px' }}>
               Bracket: {bracketName}
             </p>
@@ -184,7 +181,7 @@ export default function Join() {
                     />
                     <br />
                   <button onClick={handleSetBracket}>Set Bracket</button>
-                  {isBracketSet && (
+                  {bracketName && (
                     <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
                   )}
                 </div>
