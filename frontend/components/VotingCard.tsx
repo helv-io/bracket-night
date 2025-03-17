@@ -11,7 +11,6 @@ interface VotingCardProps {
 
 export default function VotingCard({ matchup, sessionId, playerName, hasVoted }: VotingCardProps) {
   const [voted, setVoted] = useState(hasVoted)
-  const [showConfirmation, setShowConfirmation] = useState(false)
   const [voteChoice, setVoteChoice] = useState<number | null>(null)
 
   useEffect(() => {
@@ -33,15 +32,8 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
 
   const handleVote = (choice: number) => {
     setVoteChoice(choice)
-    setShowConfirmation(true)
-  }
-
-  const confirmVote = () => {
-    if (voteChoice !== null) {
-      socket.emit('vote', { sessionId, choice: voteChoice })
-      setVoted(true)
-      setShowConfirmation(false)
-    }
+    socket.emit('vote', { sessionId, choice })
+    setVoted(true)
   }
 
   return (
@@ -49,18 +41,16 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
       <h3>{matchup.left?.name} vs {matchup.right?.name}</h3>
       <div style={{ display: 'flex', gap: '20px' }}>
         <button onClick={() => handleVote(0)} disabled={voted || !matchup.left}>
-          Vote {matchup.left?.name}
+          Vote <strong>{matchup.left?.name}</strong>
         </button>
         <button onClick={() => handleVote(1)} disabled={voted || !matchup.right}>
-          Vote {matchup.right?.name}
+          Vote <strong>{matchup.right?.name}</strong>
         </button>
       </div>
-      {voted && <p>Waiting for others to vote...</p>}
-      {showConfirmation && (
-        <div style={{ padding: '10px', background: 'white', border: '1px solid black', borderRadius: '5px' }}>
-          <p>Are you sure you want to cast your vote? This will stop others from joining the game session.</p>
-          <button onClick={confirmVote}>Yes</button>
-          <button onClick={() => setShowConfirmation(false)}>No</button>
+      {voted && (
+        <div>
+          <p>Waiting for others to vote...</p>
+          <p>You voted for: {voteChoice === 0 ? matchup.left?.name : matchup.right?.name}</p>
         </div>
       )}
     </div>
