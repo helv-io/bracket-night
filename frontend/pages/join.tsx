@@ -108,7 +108,6 @@ export default function Join() {
     if (sessionId && bracketCode) {
       socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
       localStorage.setItem('bracketCode', bracketCode.toLowerCase())
-      setBracketName('Bracket Name') // Replace with actual bracket name logic
     }
   }
 
@@ -149,23 +148,19 @@ export default function Join() {
           />
           <br />
           <button onClick={handleJoin}>Join</button>
-          {bracketName && (
-            <p style={{ fontSize: '0.8em', marginTop: '10px' }}>
-              Bracket: {bracketName}
-            </p>
-          )}
         </>
       ) : (
         <>
           {!gameStarted ? (
-            <>
+            <> 
+              {!bracketName && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
               <h2 style={{ fontSize: '1em' }}>Waiting for players...</h2>
               <ul>
                 {players.map((player, index) => (
                   <li key={index}>{player.name}</li>
                 ))}
               </ul>
-              {isFirstPlayer && matchups.length === 0 && (
+              {isFirstPlayer && !bracketName && (
                 <div>
                   <input
                     type="text"
@@ -181,18 +176,18 @@ export default function Join() {
                     />
                     <br />
                   <button onClick={handleSetBracket}>Set Bracket</button>
-                  {bracketName && (
-                    <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
-                  )}
                 </div>
+              )}
+              {isFirstPlayer && bracketName && (
+                <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
               )}
             </>
           ) : (
             <>
-                <h1>Bracket Night</h1>
-                {bracketName && <h2>{bracketName}</h2>}
+              <h1>Bracket Night</h1>
+              {bracketName && <h2>{bracketName}</h2>}
               <p>Players: {players.length}/10</p>
-              {isFirstPlayer && matchups.length === 0 && (
+              {isFirstPlayer && !bracketName && (
               <div>
                 <input
                 type="text"
@@ -202,7 +197,7 @@ export default function Join() {
                 style={{ padding: '5px', marginBottom: '10px' }}
                 onKeyUp={e => {
                   if (e.key === 'Enter') {
-                  handleSetBracket()
+                    handleSetBracket()
                   }
                 }}
                 />
@@ -210,8 +205,7 @@ export default function Join() {
                 <button onClick={handleSetBracket}>Set Bracket</button>
               </div>
               )}
-              {matchups.length === 0 && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
-              {matchups.length > 0 && currentMatchupIndex < matchups.length && (
+              {bracketName && currentMatchupIndex < matchups.length && (
               <div>
                 <h2>Vote for your favorite</h2>
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>
@@ -226,7 +220,7 @@ export default function Join() {
                 </div>
               </div>
               )}
-              {matchups.length > 0 && currentMatchupIndex === matchups.length && (
+              {bracketName && currentMatchupIndex === matchups.length && (
               <>
                 <h2>Game Over!</h2>
                 <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
