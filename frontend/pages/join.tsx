@@ -122,7 +122,6 @@ export default function Join() {
   }
 
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
-  console.log(hasVoted)
 
   return (
     <div style={{ padding: '20px' }}>
@@ -216,11 +215,11 @@ export default function Join() {
               <div>
                 <h2>Vote for your favorite</h2>
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                  <div onClick={() => socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].left?.id })}>
+                  <div onClick={() => !hasVoted && socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].left?.id })}>
                     <img src={matchups[currentMatchupIndex].left?.image_url} alt={matchups[currentMatchupIndex].left?.name} style={{ width: '150px', height: '150px' }} />
                     <p>{matchups[currentMatchupIndex].left?.name}</p>
                   </div>
-                  <div onClick={() => socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].right?.id })}>
+                  <div onClick={() => !hasVoted && socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].right?.id })}>
                     <img src={matchups[currentMatchupIndex].right?.image_url} alt={matchups[currentMatchupIndex].right?.name} style={{ width: '150px', height: '150px' }} />
                     <p>{matchups[currentMatchupIndex].right?.name}</p>
                   </div>
