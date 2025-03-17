@@ -1,7 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
-import VotingCard from '../components/VotingCard'
 import { Matchup, Player } from '../../backend/src/types'
 import Head from 'next/head'
 
@@ -10,6 +10,7 @@ export default function Join() {
   const { session } = router.query
   const [name, setName] = useState('')
   const [bracketCode, setBracketCode] = useState('')
+  const [bracketName, setBracketName] = useState('')
   const [isFirstPlayer, setIsFirstPlayer] = useState(false)
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
@@ -18,6 +19,7 @@ export default function Join() {
   const [hasJoined, setHasJoined] = useState(false)
   const [sessionId, setSessionId] = useState('')
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
+  const [gameStarted, setGameStarted] = useState(false)
 
   useEffect(() => {
     const storedName = localStorage.getItem('playerName')
@@ -41,9 +43,10 @@ export default function Join() {
 
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('enter_bracket_code', () => setIsFirstPlayer(true))
-    socket.on('bracket_set', ({ matchups, currentMatchupIndex }) => {
+    socket.on('bracket_set', ({ matchups, currentMatchupIndex, bracketName }) => {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
+      setBracketName(bracketName)
     })
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
@@ -55,6 +58,12 @@ export default function Join() {
       setCurrentVotes([])
     })
     socket.on('error', (msg) => alert(msg))
+    socket.on('players_update', (updatedPlayers) => {
+      setPlayers(updatedPlayers)
+    })
+    socket.on('game_started', () => {
+      setGameStarted(true)
+    })
 
     return () => {
       socket.off('player_joined')
@@ -63,6 +72,8 @@ export default function Join() {
       socket.off('vote_cast')
       socket.off('matchup_advanced')
       socket.off('error')
+      socket.off('players_update')
+      socket.off('game_started')
     }
   }, [session])
 
@@ -97,10 +108,16 @@ export default function Join() {
     if (sessionId && bracketCode) {
       socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
       localStorage.setItem('bracketCode', bracketCode.toLowerCase())
+      setBracketName('Bracket Name') // Replace with actual bracket name logic
     }
   }
 
+  const startGame = () => {
+    socket.emit('start_game')
+  }
+
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
+  console.log(hasVoted)
 
   return (
     <div style={{ padding: '20px' }}>
@@ -132,14 +149,31 @@ export default function Join() {
           />
           <br />
           <button onClick={handleJoin}>Join</button>
+          {bracketCode && (
+            <p style={{ fontSize: '0.8em', marginTop: '10px' }}>
+              Bracket: {bracketName}
+            </p>
+          )}
         </>
       ) : (
         <>
-          <h1>Bracket Night</h1>
-          <p>Players: {players.length}/10</p>
-          {isFirstPlayer && matchups.length === 0 && (
-            <div>
-              <input
+          {!gameStarted ? (
+            <>
+              <h2 style={{ fontSize: '1em' }}>Waiting for players...</h2>
+              <ul>
+                {players.map((player, index) => (
+                  <li key={index}>{player.name}</li>
+                ))}
+              </ul>
+              <button onClick={startGame}>Everybody&apos;s in, let&apos;s go!</button>
+            </>
+          ) : (
+            <>
+              <h1>Bracket Night</h1>
+              <p>Players: {players.length}/10</p>
+              {isFirstPlayer && matchups.length === 0 && (
+              <div>
+                <input
                 type="text"
                 value={bracketCode}
                 onChange={e => setBracketCode(e.target.value)}
@@ -147,24 +181,39 @@ export default function Join() {
                 style={{ padding: '5px', marginBottom: '10px' }}
                 onKeyUp={e => {
                   if (e.key === 'Enter') {
-                    handleSetBracket()
+                  handleSetBracket()
                   }
                 }}
-              />
-              <br />
-              <button onClick={handleSetBracket}>Set Bracket</button>
-            </div>
+                />
+                <br />
+                <button onClick={handleSetBracket}>Set Bracket</button>
+              </div>
+              )}
+              {matchups.length === 0 && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
+              {matchups.length > 0 && currentMatchupIndex < matchups.length && (
+              <div>
+                <h2>Vote for your favorite</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                  <div onClick={() => socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].left?.id })}>
+                    <img src={matchups[currentMatchupIndex].left?.image_url} alt={matchups[currentMatchupIndex].left?.name} style={{ width: '150px', height: '150px' }} />
+                    <p>{matchups[currentMatchupIndex].left?.name}</p>
+                  </div>
+                  <div onClick={() => socket.emit('vote', { sessionId, playerId: matchups[currentMatchupIndex].right?.id })}>
+                    <img src={matchups[currentMatchupIndex].right?.image_url} alt={matchups[currentMatchupIndex].right?.name} style={{ width: '150px', height: '150px' }} />
+                    <p>{matchups[currentMatchupIndex].right?.name}</p>
+                  </div>
+                </div>
+              </div>
+              )}
+              {matchups.length > 0 && currentMatchupIndex === matchups.length && (
+              <>
+                <h2>Game Over!</h2>
+                <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
+                <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" style={{ width: '200px', height: '200px' }} />
+              </>
+              )}
+            </>
           )}
-          {matchups.length === 0 && !isFirstPlayer && <p>Waiting for the bracket to be set...</p>}
-          {matchups.length > 0 && currentMatchupIndex < matchups.length && players.length >= 3 && (
-            <VotingCard
-              playerName={name}
-              matchup={matchups[currentMatchupIndex]}
-              sessionId={sessionId as string}
-              hasVoted={hasVoted}
-            />
-          )}
-          {matchups.length > 0 && currentMatchupIndex === matchups.length && <h2>Game Over!</h2>}
         </>
       )}
     </div>
