@@ -22,7 +22,7 @@ export class Game {
         currentMatchupIndex: 0,
         matchups: [],
         currentVotes: [],
-        isGameStarted: false
+        gameStarted: false
       })
       socket.emit('session_created', { sessionId })
       socket.join(sessionId)
@@ -38,7 +38,7 @@ export class Game {
       if (player) {
         player.id = socket.id // Update player ID to the new socket ID
       } else {
-        if (session.isGameStarted) {
+        if (session.gameStarted) {
           socket.emit('error', 'Game has already started')
           return
         }
@@ -82,16 +82,30 @@ export class Game {
       })
     })
 
+    // Handle vote event
     socket.on('vote', ({ sessionId, choice }) => {
+      // Retrieve the game session
       const session = this.sessions.get(sessionId)
+      
+      // Check if session exists, bracket is set, and current matchup is valid
       if (!session || !session.bracket || session.currentMatchupIndex >= session.matchups.length) return
+      
+      // Prevent duplicate votes from the same player
       if (session.currentVotes.find(v => v.playerId === socket.id)) return
+      
+      // Record the vote
       session.currentVotes.push({ playerId: socket.id, choice })
-      session.isGameStarted = true
+      
+      // Log session state
+      console.log(session)
+      
+      // Notify all clients in the session about the vote
       this.io.to(sessionId).emit('vote_cast', {
         currentVotes: session.currentVotes,
         players: session.players
       })
+      
+      // If all players have voted, advance to the next matchup
       if (session.currentVotes.length === session.players.length) {
         this.advanceMatchup(sessionId)
       }
@@ -175,6 +189,5 @@ interface GameState {
   currentMatchupIndex: number
   matchups: Matchup[]
   currentVotes: Vote[]
-  isGameStarted: boolean
   gameStarted?: boolean
 }
