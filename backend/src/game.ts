@@ -63,12 +63,16 @@ export class Game {
 
     socket.on('set_bracket', ({ sessionId, code }) => {
       const session = this.sessions.get(sessionId)
+      // Prevent setting bracket if the game has already started or if the bracket has already been set
       if (!session || session.bracket) return
-        const bracket = getBracketByCode(code)
+      
+      // Find the bracket by code and set it
+      const bracket = getBracketByCode(code)
       if (!bracket) {
         socket.emit('error', 'Invalid bracket code')
         return
       }
+      console.log(bracket)
       session.bracket = bracket
       session.matchups = this.createMatchups(bracket.contestants)
       this.io.to(sessionId).emit('bracket_set', {
@@ -101,18 +105,8 @@ export class Game {
     })
   }
 
-  private shuffleArray(array: any[]): any[] {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j: number = Math.floor(Math.random() * (i + 1))
-      const temp = array[i]
-      array[i] = array[j]
-      array[j] = temp
-    }
-    return array
-  }
-
   private createMatchups(contestants: Contestant[]): Matchup[] {
-    const shuffledContestants = this.shuffleArray(contestants)
+    const shuffledContestants = contestants.sort(() => Math.random() - 0.5)
     const matchups: Matchup[] = []
     // First round: 8 matchups with 16 contestants
     for (let i = 0; i < 8; i++) {
