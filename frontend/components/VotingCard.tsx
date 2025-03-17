@@ -28,6 +28,14 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
     if (storedSessionId && storedPlayerName) {
       socket.emit('join', { sessionId: storedSessionId, playerName: storedPlayerName })
     }
+
+    socket.on('vote_status', ({ hasVoted }) => {
+      setVoted(hasVoted)
+    })
+
+    return () => {
+      socket.off('vote_status')
+    }
   }, [])
 
   const handleVote = (choice: number) => {
