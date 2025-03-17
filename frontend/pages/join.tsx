@@ -123,6 +123,7 @@ export default function Join() {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
       </Head>
+      {bracketName && <h1>{bracketName}</h1>}
       {!hasJoined ? (
         <>
           <h1>Join Game</h1>
