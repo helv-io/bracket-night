@@ -5,7 +5,7 @@ import { config } from './config'
 
 export class Game {
   private io: Server
-  private sessions: Map<string, GameState> = new Map()
+  private games: Map<string, GameState> = new Map()
 
   constructor(io: Server) {
     this.io = io
@@ -13,10 +13,10 @@ export class Game {
   }
 
   private handleConnection(socket: Socket) {
-    socket.on('create_session', () => {
-      const sessionId = Math.random().toString(36).substring(2, 6).toUpperCase()
-      this.sessions.set(sessionId, {
-        sessionId,
+    socket.on('create_game', () => {
+      const gameId = Math.random().toString(36).substring(2, 6).toUpperCase()
+      this.games.set(gameId, {
+        gameId: gameId,
         bracket: null,
         players: [],
         currentMatchupIndex: 0,
@@ -24,47 +24,47 @@ export class Game {
         currentVotes: [],
         gameStarted: false
       })
-      socket.emit('session_created', { sessionId })
-      socket.join(sessionId)
+      socket.emit('game_created', { gameId })
+      socket.join(gameId)
     })
 
-    socket.on('join', ({ sessionId, playerName }) => {
-      const session = this.sessions.get(sessionId)
-      if (!session || session.players.length >= config.maxPlayers) {
+    socket.on('join', ({ gameId, playerName }) => {
+      const game = this.games.get(gameId)
+      if (!game || game.players.length >= config.maxPlayers) {
         socket.emit('error', 'Game is full')
         return
       }
-      let player = session.players.find(p => p.name === playerName)
+      let player = game.players.find(p => p.name === playerName)
       if (player) {
         player.id = socket.id // Update player ID to the new socket ID
       } else {
-        if (session.gameStarted) {
+        if (game.gameStarted) {
           socket.emit('error', 'Game has already started')
           return
         }
         player = { id: socket.id, name: playerName }
-        session.players.push(player)
+        game.players.push(player)
       }
-      socket.join(sessionId) // Explicitly join the room (good practice)
-      const hasVoted = session.currentVotes.some(v => v.playerId === socket.id)
+      socket.join(gameId) // Explicitly join the room (good practice)
+      const hasVoted = game.currentVotes.some(v => v.playerId === socket.id)
       socket.emit('vote_status', { hasVoted })
-      this.io.to(sessionId).emit('player_joined', { players: session.players })
-      if (session.players.length === 1) {
+      this.io.to(gameId).emit('player_joined', { players: game.players })
+      if (game.players.length === 1) {
         socket.emit('enter_bracket_code')
-      } else if (session.bracket) {
+      } else if (game.bracket) {
         // Send the current game state to the newly joined player
         socket.emit('bracket_set', {
-          bracket: session.bracket,
-          matchups: session.matchups,
-          currentMatchupIndex: session.currentMatchupIndex
+          bracket: game.bracket,
+          matchups: game.matchups,
+          currentMatchupIndex: game.currentMatchupIndex
         })
       }
     })
 
-    socket.on('set_bracket', ({ sessionId, code }) => {
-      const session = this.sessions.get(sessionId)
+    socket.on('set_bracket', ({ gameId, code }) => {
+      const game = this.games.get(gameId)
       // Prevent setting bracket if the game has already started or if the bracket has already been set
-      if (!session || session.bracket) return
+      if (!game || game.bracket) return
       
       // Find the bracket by code and set it
       const bracket = getBracketByCode(code)
@@ -72,46 +72,46 @@ export class Game {
         socket.emit('error', 'Invalid bracket code')
         return
       }
-      session.bracket = bracket
-      session.matchups = this.createMatchups(bracket.contestants)
-      this.io.to(sessionId).emit('bracket_set', {
-        bracket: session.bracket,
-        matchups: session.matchups,
-        currentMatchupIndex: session.currentMatchupIndex
+      game.bracket = bracket
+      game.matchups = this.createMatchups(bracket.contestants)
+      this.io.to(gameId).emit('bracket_set', {
+        bracket: game.bracket,
+        matchups: game.matchups,
+        currentMatchupIndex: game.currentMatchupIndex
       })
     })
 
     // Handle vote event
-    socket.on('vote', ({ sessionId, choice }) => {
-      // Retrieve the game session
-      const session = this.sessions.get(sessionId)
+    socket.on('vote', ({ gameId, choice }) => {
+      // Retrieve the game game
+      const game = this.games.get(gameId)
       
-      // Check if session exists, bracket is set, and current matchup is valid
-      if (!session || !session.bracket || session.currentMatchupIndex >= session.matchups.length) return
+      // Check if game exists, bracket is set, and current matchup is valid
+      if (!game || !game.bracket || game.currentMatchupIndex >= game.matchups.length) return
       
       // Prevent duplicate votes from the same player
-      if (session.currentVotes.find(v => v.playerId === socket.id)) return
+      if (game.currentVotes.find(v => v.playerId === socket.id)) return
       
       // Record the vote
-      session.currentVotes.push({ playerId: socket.id, choice })
+      game.currentVotes.push({ playerId: socket.id, choice })
       
-      // Notify all clients in the session about the vote
-      this.io.to(sessionId).emit('vote_cast', {
-        currentVotes: session.currentVotes,
-        players: session.players
+      // Notify all clients in the game about the vote
+      this.io.to(gameId).emit('vote_cast', {
+        currentVotes: game.currentVotes,
+        players: game.players
       })
       
       // If all players have voted, advance to the next matchup
-      if (session.currentVotes.length === session.players.length) {
-        this.advanceMatchup(sessionId)
+      if (game.currentVotes.length === game.players.length) {
+        this.advanceMatchup(gameId)
       }
     })
 
-    socket.on('start_game', ({ sessionId }) => {
-      const session = this.sessions.get(sessionId)
-      if (!session || session.gameStarted) return
-      session.gameStarted = true
-      this.io.to(sessionId).emit('game_started')
+    socket.on('start_game', ({ gameId }) => {
+      const game = this.games.get(gameId)
+      if (!game || game.gameStarted) return
+      game.gameStarted = true
+      this.io.to(gameId).emit('game_started')
     })
   }
 
@@ -141,12 +141,12 @@ export class Game {
     return matchups
   }
 
-  private advanceMatchup(sessionId: string) {
-    const session = this.sessions.get(sessionId)
-    if (!session) return
-    const currentMatchup = session.matchups[session.currentMatchupIndex]
-    const leftVotes = session.currentVotes.filter(v => v.choice === 0).length
-    const rightVotes = session.currentVotes.filter(v => v.choice === 1).length
+  private advanceMatchup(gameId: string) {
+    const game = this.games.get(gameId)
+    if (!game) return
+    const currentMatchup = game.matchups[game.currentMatchupIndex]
+    const leftVotes = game.currentVotes.filter(v => v.choice === 0).length
+    const rightVotes = game.currentVotes.filter(v => v.choice === 1).length
     
     // Randomly select a winner if there's a tie
     const winner = leftVotes > rightVotes
@@ -159,27 +159,27 @@ export class Game {
     currentMatchup.winner = winner
 
     // Update next matchup if not final round
-    if (session.currentMatchupIndex < 14) {
-      const nextMatchupIndex = 8 + Math.floor(session.currentMatchupIndex / 2)
-      const nextMatchup = session.matchups[nextMatchupIndex]
-      if (session.currentMatchupIndex % 2 === 0) {
+    if (game.currentMatchupIndex < 14) {
+      const nextMatchupIndex = 8 + Math.floor(game.currentMatchupIndex / 2)
+      const nextMatchup = game.matchups[nextMatchupIndex]
+      if (game.currentMatchupIndex % 2 === 0) {
         nextMatchup.left = winner
       } else {
         nextMatchup.right = winner
       }
     }
 
-    session.currentVotes = []
-    session.currentMatchupIndex++
-    this.io.to(sessionId).emit('matchup_advanced', {
-      matchups: session.matchups,
-      currentMatchupIndex: session.currentMatchupIndex
+    game.currentVotes = []
+    game.currentMatchupIndex++
+    this.io.to(gameId).emit('matchup_advanced', {
+      matchups: game.matchups,
+      currentMatchupIndex: game.currentMatchupIndex
     })
   }
 }
 
 interface GameState {
-  sessionId: string
+  gameId: string
   bracket: Bracket | null
   players: Player[]
   currentMatchupIndex: number

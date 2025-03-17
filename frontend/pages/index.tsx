@@ -10,7 +10,7 @@ import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src
 
 export default function Home() {
   const router = useRouter()
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [gameId, setGameId] = useState<string | null>(null)
   const [bracket, setBracket] = useState<BracketType | null>(null)
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
@@ -24,9 +24,9 @@ export default function Home() {
       router.push('/new')
       return
     }
-
-    socket.emit('create_session')
-    socket.on('session_created', ({ sessionId }) => setSessionId(sessionId))
+  
+    socket.emit('create_game')
+    socket.on('game_created', ({ gameId }) => setGameId(gameId))
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
       setBracket(bracket)
@@ -40,7 +40,7 @@ export default function Home() {
         setIsGameStarted(true)
       }
       if (currentVotes.length === players.length) {
-        socket.emit('advance_matchup', { sessionId })
+        socket.emit('advance_matchup', { gameId })
       }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
@@ -49,15 +49,15 @@ export default function Home() {
       setCurrentVotes([])
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
-
+  
     return () => {
-      socket.off('session_created')
+      socket.off('game_created')
       socket.off('player_joined')
       socket.off('bracket_set')
       socket.off('vote_cast')
       socket.off('matchup_advanced')
     }
-  }, [router])
+  }, []) // Empty dependency array
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -87,10 +87,10 @@ export default function Home() {
         )}
       </div>
 
-      {/* QR Code and Session Info Section */}
+      {/* QR Code and Game Info Section */}
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', bottom: '20px' }}>
-        {/* Check if game is pending start and sessionId exists */}
-        {!isGameStarted && sessionId && (
+        {/* Check if game is pending start and gameId exists */}
+        {!isGameStarted && gameId && (
           <>
             <div
               style={{
@@ -101,12 +101,12 @@ export default function Home() {
               }}
             >
               <QRCodeSVG
-                value={`${window.location.origin}/join?session=${sessionId}`}
+                value={`${window.location.origin}/join?game=${gameId}`}
                 imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
                 size={150}
               />
             </div>
-            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{sessionId}</span>
+            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{gameId}</span>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {/* Check if players length is zero */}
                 {players.length === 0 && (

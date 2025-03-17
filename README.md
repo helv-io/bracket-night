@@ -10,7 +10,7 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 - **Player Management**: Up to 10 players can join the game via QR code.
 - **Bracket Code**: The first player to join can enter a Bracket Code to pre-fill contestants and images.
 - **Mobile Friendly**: A mobile-friendly page allows players to enter bracket details and save them to a database.
-- **Session Management**: Each device can vote only once per session.
+- **Game Management**: Each device can vote only once per game.
 - **Docker Support**: The project includes a Dockerfile for easy distribution.
 - **Environment Variables**: Use environment variables to configure the QR code generation.
 
@@ -85,13 +85,13 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 
 ## Usage
 
-- **Main Page**: Opens the bracket screen with a random QR code for session attachment.
+- **Main Page**: Opens the bracket screen with a random QR code for game attachment.
 - **Mobile Page**: Redirects to the contestants form at `/new` if accessed via a mobile device.
 
 ## Development Notes
 
 - **TypeScript**: Use 2-space indentation and avoid semicolons.
-- **Database**: Use SQLite for storing bracket details and session management.
+- **Database**: Use SQLite for storing bracket details and game management.
 - **Effects**: Add pleasant night-time colors and effects to enhance the game experience.
 
 ## Contributing
