@@ -1,1 +1,84 @@
-/node_modules
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# dotenv environment variables file
+.env
+.env.*
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# VSCode
+.vscode/
+
+# Next.js
+.next/
+out/
+
+# Production
+/build
+
+# Coverage
+coverage/
+
+# Miscellaneous
+*.pem
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+docker-compose.yml
+Dockerfile
+
+# Frontend specific
+frontend/.next/
+frontend/out/
+frontend/.vercel
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+frontend/.eslintcache
+frontend/.env*
+
+# Backend specific
+backend/dist/
+backend/config/
+backend/.env*
