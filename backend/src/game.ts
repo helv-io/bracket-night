@@ -45,6 +45,8 @@ export class Game {
         session.players.push(player)
       }
       socket.join(sessionId) // Explicitly join the room (good practice)
+      const hasVoted = session.currentVotes.some(v => v.playerId === socket.id)
+      socket.emit('vote_status', { hasVoted })
       this.io.to(sessionId).emit('player_joined', { players: session.players })
       if (session.players.length === 1) {
         socket.emit('enter_bracket_code')
