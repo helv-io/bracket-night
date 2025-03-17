@@ -13,7 +13,7 @@ export class Game {
 
   private handleConnection(socket: Socket) {
     socket.on('create_session', () => {
-      const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase()
+      const sessionId = Math.random().toString(36).substring(2, 6).toUpperCase()
       this.sessions.set(sessionId, {
         sessionId,
         bracket: null,
