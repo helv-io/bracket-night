@@ -71,7 +71,7 @@ export default function Home() {
       </div>
 
       {/* Bracket Section */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}

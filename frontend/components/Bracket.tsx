@@ -77,7 +77,7 @@ export default function Bracket({ matchups, currentMatchupIndex }: BracketProps)
   const final = [matchups[14]]
 
   return (
-    <div style={{ position: 'relative', height: '1050px', width: '95%' }}>
+    <div style={{ position: 'relative', height: '100vh', width: '95%' }}>
       {/* Round 1 Left */}
       <div style={{ position: 'absolute', left: '0%', width: '10%', height: '100%' }}>
         {round1Left.map((matchup, index) => (
