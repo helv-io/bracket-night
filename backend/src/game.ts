@@ -72,7 +72,6 @@ export class Game {
         socket.emit('error', 'Invalid bracket code')
         return
       }
-      console.log(bracket)
       session.bracket = bracket
       session.matchups = this.createMatchups(bracket.contestants)
       this.io.to(sessionId).emit('bracket_set', {
@@ -84,6 +83,9 @@ export class Game {
 
     // Handle vote event
     socket.on('vote', ({ sessionId, choice }) => {
+      // logging
+      console.log('vote', sessionId, choice)
+      
       // Retrieve the game session
       const session = this.sessions.get(sessionId)
       
@@ -93,10 +95,13 @@ export class Game {
       // Prevent duplicate votes from the same player
       if (session.currentVotes.find(v => v.playerId === socket.id)) return
       
+      // Log session state before voting
+      console.log(session)
+      
       // Record the vote
       session.currentVotes.push({ playerId: socket.id, choice })
       
-      // Log session state
+      // Log session state after voting
       console.log(session)
       
       // Notify all clients in the session about the vote
