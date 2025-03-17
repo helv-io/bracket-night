@@ -79,7 +79,7 @@ export default function Join() {
       socket.off('players_update')
       socket.off('game_started')
     }
-  }, [session])
+  }, [session, sessionId])
 
   useEffect(() => {
     const requestWakeLock = async () => {
