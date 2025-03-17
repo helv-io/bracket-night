@@ -8,7 +8,7 @@ import VotingCard from '../components/VotingCard'
 
 export default function Join() {
   const router = useRouter()
-  const { session } = router.query
+  const { game } = router.query
   const [name, setName] = useState('')
   const [bracketCode, setBracketCode] = useState('')
   const [bracket, setBracket] = useState<Bracket | null>(null)
@@ -18,7 +18,7 @@ export default function Join() {
   const [players, setPlayers] = useState<Player[]>([])
   const [currentVotes, setCurrentVotes] = useState<{ playerId: string, vote: string }[]>([])
   const [hasJoined, setHasJoined] = useState(false)
-  const [sessionId, setSessionId] = useState('')
+  const [gameId, setGameId] = useState('')
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
 
@@ -34,13 +34,13 @@ export default function Join() {
   }, [])
 
   useEffect(() => {
-    if (session) {
-      setSessionId(session as string)
+    if (game) {
+      setGameId(game as string)
     }
-  }, [session])
+  }, [game])
 
   useEffect(() => {
-    if (!session) return
+    if (!game) return
 
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('enter_bracket_code', () => setIsFirstPlayer(true))
@@ -53,7 +53,7 @@ export default function Join() {
       setCurrentVotes(currentVotes)
       setPlayers(players)
       if (currentVotes.length === players.length) {
-        socket.emit('advance_matchup', { sessionId })
+        socket.emit('advance_matchup', { gameId })
       }
     })
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
@@ -79,7 +79,7 @@ export default function Join() {
       socket.off('players_update')
       socket.off('game_started')
     }
-  }, [session, sessionId])
+  }, [game, gameId])
 
   useEffect(() => {
     const requestWakeLock = async () => {
@@ -101,22 +101,22 @@ export default function Join() {
   }, [wakeLock])
 
   const handleJoin = () => {
-    if (sessionId && name) {
-      socket.emit('join', { sessionId: sessionId, playerName: name })
+    if (gameId && name) {
+      socket.emit('join', { gameId, playerName: name })
       localStorage.setItem('playerName', name)
       setHasJoined(true)
     }
   }
 
   const handleSetBracket = () => {
-    if (sessionId && bracketCode) {
-      socket.emit('set_bracket', { sessionId: sessionId, code: bracketCode.toLowerCase() })
+    if (gameId && bracketCode) {
+      socket.emit('set_bracket', { gameId, code: bracketCode.toLowerCase() })
       localStorage.setItem('bracketCode', bracketCode.toLowerCase())
     }
   }
 
   const startGame = () => {
-    socket.emit('start_game', { sessionId: sessionId })
+    socket.emit('start_game', { gameId })
   }
 
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
@@ -132,9 +132,9 @@ export default function Join() {
           <h1>Join Game</h1>
           <input
             type="text"
-            value={sessionId}
-            onChange={e => setSessionId(e.target.value)}
-            placeholder="Session ID"
+            value={gameId}
+            onChange={e => setGameId(e.target.value)}
+            placeholder="Game ID"
             style={{ padding: '5px', marginBottom: '10px' }}
           />
           <br />
@@ -214,7 +214,7 @@ export default function Join() {
               <h2>Vote for your favorite</h2>
               <VotingCard 
                 matchup={matchups[currentMatchupIndex]} 
-                sessionId={sessionId} 
+                gameId={gameId} 
                 playerName={name} 
                 hasVoted={hasVoted} 
               />

@@ -4,28 +4,28 @@ import { socket } from '../lib/socket'
 
 interface VotingCardProps {
   matchup: Matchup
-  sessionId: string
+  gameId: string
   playerName: string
   hasVoted: boolean
 }
 
-export default function VotingCard({ matchup, sessionId, playerName, hasVoted }: VotingCardProps) {
+export default function VotingCard({ matchup, gameId, playerName, hasVoted }: VotingCardProps) {
   const [voted, setVoted] = useState(hasVoted)
 
   useEffect(() => {
-    localStorage.setItem('sessionId', sessionId)
+    localStorage.setItem('gameId', gameId)
     localStorage.setItem('playerName', playerName)
-  }, [sessionId, playerName])
+  }, [gameId, playerName])
 
   useEffect(() => {
     setVoted(hasVoted)
   }, [matchup, hasVoted])
 
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('sessionId')
+    const storedGameId = localStorage.getItem('gameId')
     const storedPlayerName = localStorage.getItem('playerName')
-    if (storedSessionId && storedPlayerName) {
-      socket.emit('join', { sessionId: storedSessionId, playerName: storedPlayerName })
+    if (storedGameId && storedPlayerName) {
+      socket.emit('join', { gameId: storedGameId, playerName: storedPlayerName })
     }
 
     socket.on('vote_status', ({ hasVoted }) => {
@@ -39,7 +39,7 @@ export default function VotingCard({ matchup, sessionId, playerName, hasVoted }:
 
   const handleVote = (choice: number) => {
     if (!voted) {
-      socket.emit('vote', { sessionId, choice })
+      socket.emit('vote', { gameId, choice })
       setVoted(true)
     }
   }
