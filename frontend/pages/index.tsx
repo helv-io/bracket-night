@@ -59,7 +59,7 @@ export default function Home() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       {/* Background Music */}
-      <audio src="/background.wav" autoPlay loop />
+      <audio src="/background.ogg" autoPlay loop />
       
       <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '0px' }}>
         <img src="/bracket-night-gold.svg" alt="Bracket Night Gold" style={{ width: '600px', height: 'auto' }} />
