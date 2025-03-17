@@ -56,22 +56,12 @@ export default function Home() {
   }, [router])
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       {/* Background Music */}
       <audio src="/background.wav" autoPlay loop />
 
       {/* Title and Subtitle Section */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+      <div style={{ textAlign: 'center', margin: '20px 0' }}>
         {bracket && (
           <>
             <h1>{bracket.title}</h1>
@@ -81,31 +71,14 @@ export default function Home() {
       </div>
 
       {/* Bracket Section */}
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
       </div>
 
       {/* QR Code and Session Info Section */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+      <div style={{ textAlign: 'center', margin: '20px 0' }}>
         {!hasVotingStarted && sessionId && (
           <>
             <div
@@ -152,8 +125,6 @@ export default function Home() {
             </div>
         )}
       </div>
-
-      {/* Confetti */}
       {showConfetti && <Confetti />}
     </div>
   )
