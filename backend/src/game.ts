@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io'
 import { getBracketByCode } from './db'
 import { Bracket, Contestant, Matchup, Player, Vote } from './types'
+import { config } from 'config'
 
 export class Game {
   private io: Server
@@ -21,7 +22,7 @@ export class Game {
         currentMatchupIndex: 0,
         matchups: [],
         currentVotes: [],
-        hasVotingStarted: false
+        isGameStarted: false
       })
       socket.emit('session_created', { sessionId })
       socket.join(sessionId)
@@ -29,16 +30,16 @@ export class Game {
 
     socket.on('join', ({ sessionId, playerName }) => {
       const session = this.sessions.get(sessionId)
-      if (!session || session.players.length >= 10) {
-        socket.emit('error', 'Cannot join session')
+      if (!session || session.players.length >= config.maxPlayers) {
+        socket.emit('error', 'Game is full')
         return
       }
       let player = session.players.find(p => p.name === playerName)
       if (player) {
         player.id = socket.id // Update player ID to the new socket ID
       } else {
-        if (session.hasVotingStarted) {
-          socket.emit('error', 'Cannot join session')
+        if (session.isGameStarted) {
+          socket.emit('error', 'Game has already started')
           return
         }
         player = { id: socket.id, name: playerName }
@@ -82,7 +83,7 @@ export class Game {
       if (!session || !session.bracket || session.currentMatchupIndex >= session.matchups.length) return
       if (session.currentVotes.find(v => v.playerId === socket.id)) return
       session.currentVotes.push({ playerId: socket.id, choice })
-      session.hasVotingStarted = true
+      session.isGameStarted = true
       this.io.to(sessionId).emit('vote_cast', {
         currentVotes: session.currentVotes,
         players: session.players
@@ -178,6 +179,6 @@ interface GameState {
   currentMatchupIndex: number
   matchups: Matchup[]
   currentVotes: Vote[]
-  hasVotingStarted: boolean
+  isGameStarted: boolean
   gameStarted?: boolean
 }
