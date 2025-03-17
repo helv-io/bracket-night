@@ -57,7 +57,7 @@ export default function Home() {
       socket.off('vote_cast')
       socket.off('matchup_advanced')
     }
-  }, [router])
+  }, [router, sessionId])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
