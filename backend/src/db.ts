@@ -49,7 +49,7 @@ export function getBracketByCode(code: string):
   { id: number, title: string, subtitle: string, contestants: { id: number, name: string, image_url: string }[] }
   | null {
   const bracket = db.prepare<string, { id: number, title: string, subtitle: string }>
-    ('SELECT id, title, subtitle FROM brackets WHERE code = ?').get(code)
+    ('SELECT id, title, subtitle FROM brackets WHERE LOWER(code) = LOWER(?)').get(code)
   
   // Return null if bracket not found
   if (!bracket) return null

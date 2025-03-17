@@ -19,6 +19,7 @@ export default function NewBracket() {
     if (response.ok) {
       const { code } = await response.json()
       alert(`Bracket created with code: ${code}`)
+      localStorage.setItem('bracketCode', code)
       router.push('/')
     } else {
       alert('Error creating bracket')
