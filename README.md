@@ -95,3 +95,7 @@ Feel free to submit issues and pull requests to improve the project.
 ## License
 
 This project is licensed under the MIT License.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=helv-io/bracket-night&type=Date&theme=dark)](https://www.star-history.com/#helv-io/bracket-night&Date)
