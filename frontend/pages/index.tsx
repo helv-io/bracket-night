@@ -18,7 +18,7 @@ export default function Home() {
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
   const [players, setPlayers] = useState<Player[]>([])
   const [isGameOver, setIsGameOver] = useState(false)
-  const [isGameStarted, setGameStarted] = useState(false)
+  const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
   const gameIdRef = useRef(gameId)
   
@@ -46,14 +46,15 @@ export default function Home() {
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
     
-    socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, gameStarted }) => {
+    socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, isGameStarted, isGameOver }) => {
       setGameId(gameId)
       setBracket(bracket)
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setPlayers(players)
       setCurrentVotes(currentVotes)
-      setGameStarted(gameStarted)
+      setIsGameStarted(isGameStarted)
+      setIsGameOver(isGameOver)
     })
   
     return () => {
@@ -97,18 +98,23 @@ export default function Home() {
             <div
               style={{
               border: '2px dashed #ff69b4',
-              padding: '10px',
+              padding: '8px',
               backgroundColor: 'white',
               borderRadius: '10px',
+              display: 'inline-block',
+              textAlign: 'center'
               }}
             >
               <QRCodeSVG
-                value={`${window.location.origin}/join?game=${gameId}`}
-                imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
-                size={150}
+              value={`${window.location.origin}/join?game=${gameId}`}
+              imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
+              size={150}
               />
+              <div style={{ marginTop: '10px' }}>
+              <a href={`${window.location.origin}/join?game=${gameId}`} target='_blank' style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4', textDecoration: 'none' }}>{gameId}</a>
+              </div>
             </div>
-            <a href={`${window.location.origin}/join?game=${gameId}`} target='_blank' style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4', textDecoration: 'none'}}>{gameId}</a>
+            <br/><br/>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {/* Check if players length is zero */}
                 {players.length === 0 && (
