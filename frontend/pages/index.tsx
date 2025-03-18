@@ -150,7 +150,7 @@ export default function Home() {
             </div>
           </>
         )}
-        {isGameStarted && (
+        {isGameStarted && !isGameOver && (
           <div className="mt-4">
             <ul className="list-none flex flex-wrap gap-4 justify-center">
               {players.map(player => {
