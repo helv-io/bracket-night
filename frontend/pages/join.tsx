@@ -218,7 +218,7 @@ export default function Join() {
       {hasJoined && isGameStarted && (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl">
           <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Bracket Night</h1>
-          {bracket && <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{bracket.title}</h2>}
+          {bracket && <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100" style={{ textShadow: '2px 2px 4px var(--accent)' }}>{bracket.title}</h2>}
           <p className="mb-4 text-gray-900 dark:text-gray-100">Players: {players.length}/10</p>
           {isGameStarted && !isGameOver && (
             <div>
