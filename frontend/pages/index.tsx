@@ -63,91 +63,130 @@ export default function Home() {
   }, [router])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+    <div className="relative min-h-screen bg-[var(--background)] text-[var(--text)] p-4">
       {/* Background Music */}
       <audio src="/background.ogg" autoPlay loop />
-      
-      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '0px' }}>
-        <img src="/bracket-night-gold.svg" alt="Bracket Night Gold" style={{ width: '580px', height: 'auto' }} />
+  
+      {/* Logo */}
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
+        <img
+          src="/bracket-night-gold.svg"
+          alt="Bracket Night"
+          className="w-[580px] h-auto drop-shadow-[0_0_10px_var(--accent)]"
+        />
       </div>
-
-      {/* Title and Subtitle Section */}
-      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', top: '200px' }}>
-        {/* Check if bracket exists */}
+  
+      {/* Title and Subtitle */}
+      <div className="absolute top-[25vh] left-1/2 transform -translate-x-1/2 z-10 text-center">
         {bracket && (
           <>
-            <h1>{bracket.title}</h1>
-            <h2>{bracket.subtitle}</h2>
+            <h1
+              className="text-4xl md:text-5xl font-bold"
+              style={{ textShadow: '2px 2px 4px var(--accent)' }}
+            >
+              {bracket.title}
+            </h1>
+            <h2
+              className="text-2xl md:text-3xl mt-2"
+              style={{ textShadow: '1px 1px 2px var(--accent)' }}
+            >
+              {bracket.subtitle}
+            </h2>
           </>
         )}
       </div>
-
-      {/* Bracket Section */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
-        {/* Check if matchups exist */}
-        {matchups.length > 0 && (
+  
+      {/* Bracket or Loading Message */}
+      <div className="absolute inset-0 flex justify-center items-center z-0">
+        {matchups.length > 0 ? (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
+        ) : (
+          <div className="text-center px-4">
+            <h1 className="text-3xl md:text-6xl font-bold mb-4" style={{ textShadow: '2px 2px 4px var(--accent)' }}>
+              🏆 Welcome to Bracket Night! 🏆
+            </h1>
+            <p className="text-2xl md:text-3xl max-w-2xl mx-auto">
+              Get ready for an epic tournament where champions clash and only one emerges victorious. Hang tight as the brackets load... ⚔️
+            </p>
+          </div>
         )}
       </div>
-
-      {/* QR Code and Game Info Section */}
-      <div style={{ textAlign: 'center', margin: '20px 0', position: 'absolute', bottom: '20px' }}>
-        {/* Check if game is pending start and gameId exists */}
+  
+      {/* QR Code and Game Info */}
+      <div className="absolute bottom-[5vh] left-1/2 transform -translate-x-1/2 z-10 text-center">
         {!isGameStarted && gameId && (
           <>
-            <div
-              style={{
-              border: '2px dashed #ff69b4',
-              padding: '8px',
-              backgroundColor: 'white',
-              borderRadius: '10px',
-              display: 'inline-block',
-              textAlign: 'center'
-              }}
-            >
+            <div className="border-2 border-dashed border-[var(--accent)] p-4 bg-white rounded-lg shadow-lg inline-block transition-transform hover:scale-105">
               <QRCodeSVG
-              value={`${window.location.origin}/join?game=${gameId}`}
-              imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
-              size={150}
+                value={`${window.location.origin}/join?game=${gameId}`}
+                imageSettings={{ src: '/bn-logo-gold.svg', height: 24, width: 24, excavate: true }}
+                size={150}
               />
-              <div style={{ marginTop: '10px' }}>
-              <a href={`${window.location.origin}/join?game=${gameId}`} target='_blank' style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4', textDecoration: 'none' }}>{gameId}</a>
+              <div className="mt-2">
+                <a
+                  href={`${window.location.origin}/join?game=${gameId}`}
+                  target="_blank"
+                  className="text-2xl font-bold text-[var(--accent)] hover:text-[var(--winner-highlight)] transition-colors duration-200"
+                >
+                  {gameId}
+                </a>
               </div>
             </div>
-            <br/><br/>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {/* Check if players length is zero */}
-                {players.length === 0 && (
-                <div style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '5px', color: 'gray' }}>
-                  It is empty around here
+            <div className="flex flex-wrap gap-2 justify-center mt-4">
+              {players.length === 0 ? (
+                <div className="px-3 py-1 border border-gray-300 rounded text-gray-500 bg-[var(--card-bg)]">
+                  It’s empty around here... 👻
                 </div>
-                )}
-              {players.map(player => (
-                <div key={player.id} style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '5px' }}>
-                  {player.name}
-                </div>
-              ))}
+              ) : (
+                players.map(player => (
+                  <div
+                    key={player.id}
+                    className="px-3 py-1 border border-[var(--accent)] rounded text-[var(--text)] bg-[var(--card-bg)] shadow-sm"
+                  >
+                    {player.name}
+                  </div>
+                ))
+              )}
             </div>
           </>
         )}
-        {/* Check if game has started */}
         {isGameStarted && (
-          <div>
-            <ul style={{ listStyleType: 'none', paddingLeft: 0, display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-              {/* Map through players and check if they have voted */}
+          <div className="mt-4">
+            <ul className="list-none flex flex-wrap gap-4 justify-center">
               {players.map(player => {
-                const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
+                const hasVoted = currentVotes.some(vote => vote.playerId === player.id);
                 return (
-                  <li key={player.id} style={{ textAlign: 'left' }}>
-                    {hasVoted ? '✅' : '❎'} {player.name}
+                  <li
+                    key={player.id}
+                    className={`flex items-center gap-2 px-3 py-1 rounded ${
+                      hasVoted ? 'bg-[var(--accent)]/20' : 'bg-[var(--card-bg)]'
+                    } transition duration-200`}
+                  >
+                    <span
+                      className={`${
+                        hasVoted ? 'text-[var(--winner-highlight)] font-bold' : 'text-gray-400'
+                      }`}
+                    >
+                      {player.name}
+                    </span>
+                    <span
+                      className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                        hasVoted
+                          ? 'bg-[var(--winner-highlight)] text-white'
+                          : 'bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      {hasVoted ? 'Voted' : 'Pending'}
+                    </span>
                   </li>
-                )
+                );
               })}
             </ul>
           </div>
         )}
       </div>
-      {/* Show confetti when game is over and a winner is chosen */}
+  
+      {/* Confetti */}
       {isGameOver && <Confetti />}
     </div>
   )
