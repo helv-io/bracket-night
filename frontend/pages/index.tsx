@@ -9,14 +9,16 @@ import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
 
 export default function Home() {
+  // Declare router for mobile navigation
   const router = useRouter()
+  
   const [gameId, setGameId] = useState<string | null>(null)
   const [bracket, setBracket] = useState<BracketType | null>(null)
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
   const [players, setPlayers] = useState<Player[]>([])
   const [isGameOver, setIsGameOver] = useState(false)
-  const [isGameStarted, setIsGameStarted] = useState(false)
+  const [isGameStarted, setGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
   const gameIdRef = useRef(gameId)
   
@@ -25,44 +27,39 @@ export default function Home() {
   }, [gameId])
 
   useEffect(() => {
+    // Navigate to new game page if on mobile
     if (isMobile) {
       router.push('/new')
       return
     }
   
+    // Create a new game on page load
     socket.emit('create_game')
-    socket.on('game_created', ({ gameId }) => setGameId(gameId))
-    socket.on('player_joined', ({ players }) => setPlayers(players))
-    socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
-      setBracket(bracket)
-      setMatchups(matchups)
-      setCurrentMatchupIndex(currentMatchupIndex)
-    })
-    socket.on('vote_cast', ({ currentVotes, players }) => {
-      setCurrentVotes(currentVotes)
-      setPlayers(players)
-      if (currentVotes.length > 0) {
-        setIsGameStarted(true)
-      }
-      if (currentVotes.length === players.length) {
-        socket.emit('advance_matchup', { gameId: gameIdRef.current })
-      }
-    })
+    
+    // When a matchup is advanced, update matchups and current matchup index
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
+      
+      // Check if game is over, aka last matchup is complete
       if (currentMatchupIndex === 15) setIsGameOver(true)
+    })
+    
+    socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, gameStarted }) => {
+      setGameId(gameId)
+      setBracket(bracket)
+      setMatchups(matchups)
+      setCurrentMatchupIndex(currentMatchupIndex)
+      setPlayers(players)
+      setCurrentVotes(currentVotes)
+      setGameStarted(gameStarted)
     })
   
     return () => {
-      socket.off('game_created')
-      socket.off('player_joined')
-      socket.off('bracket_set')
-      socket.off('vote_cast')
       socket.off('matchup_advanced')
     }
-  }, [router]) // Empty dependency array
+  }, [router])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
@@ -111,7 +108,7 @@ export default function Home() {
                 size={150}
               />
             </div>
-            <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4' }}>{gameId}</span>
+            <a href={`${window.location.origin}/join?game=${gameId}`} target='_blank' style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff69b4', textDecoration: 'none'}}>{gameId}</a>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {/* Check if players length is zero */}
                 {players.length === 0 && (
