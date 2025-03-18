@@ -55,7 +55,6 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   │   ├── styles/
   │   └── next.config.js
   ├── Dockerfile
-  ├── .env
   ├── package.json
   └── README.md
   ```
@@ -74,7 +73,7 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 
 2. **Run Docker Container**
   ```bash
-  docker run -p 3000:3000 --env-file .env bracket-night
+  docker run -p 3000:3000 bracket-night
   ```
 
 ## Usage
@@ -94,7 +93,7 @@ Feel free to submit issues and pull requests to improve the project.
 
 ## License
 
-This project is licensed under the MIT License.
+This project does not currently have a License. It will be licensed once development is more stable.
 
 ## Star History
 
