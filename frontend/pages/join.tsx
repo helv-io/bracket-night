@@ -153,95 +153,75 @@ export default function Join() {
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
       </Head>
       
-      {/* Check if user needs to join */}
       {!hasJoined && (
-        <>
-          <h1>Join Game</h1>
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Join Game</h1>
           <input
             type="text"
             value={gameId}
             onChange={e => setGameId(e.target.value)}
             placeholder="Game ID"
-            style={{ padding: '5px', marginBottom: '10px' }}
+            className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />
-          <br />
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Your Name"
-            style={{ padding: '5px', marginBottom: '10px' }}
+            className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             onKeyUp={e => { if (e.key === 'Enter') handleJoin() }}
           />
-          <br />
-          <button onClick={handleJoin}>Join</button>
-        </>
+          <button onClick={handleJoin} className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Join</button>
+        </div>
       )}
       
-      {/* Check if user has joined and game is pending */}
       {hasJoined && !isGameStarted && (
-        <>          
-          {/* Check if user is the first player and needs to set the bracket */}
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
           {isGameMaster && !bracket && (
             <div>
-              Bracket Code:
-              <br />
+              <label className="block mb-2 text-gray-900 dark:text-gray-100">Bracket Code:</label>
               <input
                 type="text"
                 value={bracketCode}
                 onChange={e => setBracketCode(e.target.value)}
                 placeholder="Enter Bracket Code"
-                style={{ padding: '5px', marginBottom: '10px' }}
+                className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 onKeyUp={e => { if (e.key === 'Enter') handleSetBracket() }}
               />
-              <br />
-              <button onClick={handleSetBracket}>Set Bracket</button>
+              <button onClick={handleSetBracket} className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Set Bracket</button>
             </div>
           )}
           
-          {/* Check if user is the first player, bracket exists, and game is pending start */}
           {isGameMaster && bracket && !isGameStarted && (
-            <button onClick={handleStart}>Everyone ready, start!</button>
+            <button onClick={handleStart} className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 mt-4">Everyone ready, start!</button>
           )}
           
-          {/* Display message if waiting for bracket to be set */}
-          {!bracket && !isGameMaster && <p>Waiting for the bracket to be set...</p>}
-          <h2 style={{ fontSize: '1em' }}>Players in game:</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+          {!bracket && !isGameMaster && <p className="text-center text-gray-500 dark:text-gray-400">Waiting for the bracket to be set...</p>}
+          {bracket && !isGameMaster && <p className="text-center text-gray-500 dark:text-gray-400">Waiting for the Game Master to begin...</p>}
+          <h2 className="text-lg font-semibold mt-4 text-gray-900 dark:text-gray-100">Players in game:</h2>
+          <div className="flex flex-wrap gap-4 mt-2">
             {players.map((player, index) => (
-              <div key={index}
-                style={{
-                  color: 'darkblue',
-                  padding: '10px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '5px', 
-                  backgroundColor: '#f9f9f9', 
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)' 
-                }}
-              >
-              {player.name}
+              <div key={index} className="text-blue-700 dark:text-blue-300 p-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 shadow">
+                {player.name}
               </div>
             ))}
-            </div>
-        </>
+          </div>
+        </div>
       )}
       
-      {/* Check if user has joined and game has started */}
       {hasJoined && isGameStarted && (
-        <>
-          <h1>Bracket Night</h1>
-          {/* Check if bracket exists */}
-          {bracket && <h2>{bracket.title}</h2>}
-          <p>Players: {players.length}/10</p>
-          {/* Check if bracket exists and currentMatchupIndex is less than matchups length */}
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl">
+          <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Bracket Night</h1>
+          {bracket && <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{bracket.title}</h2>}
+          <p className="mb-4 text-gray-900 dark:text-gray-100">Players: {players.length}/10</p>
           {isGameStarted && !isGameOver && (
             <div>
-              <h2>Vote for your favorite</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Vote for your favorite</h2>
               <VotingCard 
                 matchup={matchups[currentMatchupIndex]} 
                 gameId={gameId} 
@@ -250,15 +230,14 @@ export default function Join() {
               />
             </div>
           )}
-          {/* Check if bracket exists and currentMatchupIndex is equal to matchups length */}
           {isGameOver && (
-            <>
-              <h2>Game Over!</h2>
-              <h3>Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
-              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" style={{ width: '200px', height: '200px' }} />
-            </>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Game Over!</h2>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
+              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg" />
+            </div>
           )}
-        </>
+        </div>
       )}
     </div>
   )

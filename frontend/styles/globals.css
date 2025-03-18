@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --background: #1a1a2e;
   --text: #e0e0e0;
@@ -11,7 +13,7 @@ body {
   padding: 0;
   background: var(--background);
   color: var(--text);
-  font-family: Arial, sans-serif;
+  font-family: InterVariable, sans-serif;
 }
 
 button {
@@ -25,7 +27,7 @@ button {
 }
 
 button:hover {
-  opacity: 0.9
+  opacity: 0.75
 }
 
 button:disabled {
