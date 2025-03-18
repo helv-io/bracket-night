@@ -35,16 +35,10 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   npm install
   ```
 
-3. **Setup Environment Variables**
-  Create a `.env` file in the root directory and add the following variables:
-  ```env
-  PUBLIC_URL=https://bracket.my.domain
-  ```
-
-4. **Configure TypeScript**
+3. **Configure TypeScript**
   Ensure `tsconfig.json` is properly set up for the project.
 
-5. **Folder Structure**
+4. **Folder Structure**
   ```
   bracket-night/
   ├── backend/
@@ -66,7 +60,7 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   └── README.md
   ```
 
-6. **Run the Project**
+5. **Run the Project**
   ```bash
   npm run dev
   ```
