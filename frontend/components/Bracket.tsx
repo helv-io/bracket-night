@@ -160,7 +160,7 @@ export default function Bracket({ matchups, currentMatchupIndex }: BracketProps)
   }, [matchups, currentMatchupIndex])
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '100vh', width: '95%', margin: '0 auto' }}>
+    <div ref={containerRef} style={{ position: 'relative', height: '100vh', width: '100%', margin: '0 auto' }}>
       <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} />
       {/* Round 1 Left */}
       {matchups.slice(0, 4).map((matchup, index) => (
