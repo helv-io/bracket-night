@@ -22,10 +22,12 @@ export class Game {
         currentMatchupIndex: 0,
         matchups: [],
         currentVotes: [],
-        gameStarted: false
+        isGameStarted: false,
+        isGameOver: false
       })
       socket.emit('game_created', { gameId })
       socket.join(gameId)
+      this.emitGameState(gameId) // Emit game state
     })
 
     socket.on('join', ({ gameId, playerName }) => {
@@ -38,19 +40,24 @@ export class Game {
       if (player) {
         player.id = socket.id // Update player ID to the new socket ID
       } else {
-        if (game.gameStarted) {
+        if (game.isGameStarted) {
           socket.emit('error', 'Game has already started')
           return
         }
         player = { id: socket.id, name: playerName }
         game.players.push(player)
       }
-      socket.join(gameId) // Explicitly join the room (good practice)
+      socket.join(gameId)
       const hasVoted = game.currentVotes.some(v => v.playerId === socket.id)
       socket.emit('vote_status', { hasVoted })
       this.io.to(gameId).emit('player_joined', { players: game.players })
+
+      // Send the current game state to the newly joined player
+      socket.emit('game_state', game)
+
+      // First player becomes game master
       if (game.players.length === 1) {
-        socket.emit('enter_bracket_code')
+        socket.emit('game_master')
       } else if (game.bracket) {
         // Send the current game state to the newly joined player
         socket.emit('bracket_set', {
@@ -59,6 +66,7 @@ export class Game {
           currentMatchupIndex: game.currentMatchupIndex
         })
       }
+      this.emitGameState(gameId) // Emit game state
     })
 
     socket.on('set_bracket', ({ gameId, code }) => {
@@ -79,6 +87,7 @@ export class Game {
         matchups: game.matchups,
         currentMatchupIndex: game.currentMatchupIndex
       })
+      this.emitGameState(gameId) // Emit game state
     })
 
     // Handle vote event
@@ -100,6 +109,7 @@ export class Game {
         currentVotes: game.currentVotes,
         players: game.players
       })
+      this.emitGameState(gameId) // Emit game state
       
       // If all players have voted, advance to the next matchup
       if (game.currentVotes.length === game.players.length) {
@@ -109,10 +119,15 @@ export class Game {
 
     socket.on('start_game', ({ gameId }) => {
       const game = this.games.get(gameId)
-      if (!game || game.gameStarted) return
-      game.gameStarted = true
-      this.io.to(gameId).emit('game_started')
+      if (!game) return
+      game.isGameStarted = true
+      this.emitGameState(gameId) // Emit game state
     })
+  }
+
+  private emitGameState(gameId: string) {
+    const game = this.games.get(gameId)
+    game && this.io.to(gameId).emit('game_state', game)
   }
 
   private createMatchups(contestants: Contestant[]): Matchup[] {
@@ -185,5 +200,6 @@ interface GameState {
   currentMatchupIndex: number
   matchups: Matchup[]
   currentVotes: Vote[]
-  gameStarted?: boolean
+  isGameStarted: boolean
+  isGameOver: boolean
 }
