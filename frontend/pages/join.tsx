@@ -72,6 +72,7 @@ export default function Join() {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
+      if (currentMatchupIndex === 15) setIsGameOver(true)
     })
     
     // When an error occurs, alert the user
