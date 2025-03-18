@@ -38,7 +38,7 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
           {matchup.left?.name || ''}
         </div>
       </div>
-      <div className="text-[var(--accent)] font-bold text-lg">✖️</div>
+      <div className="text-[var(--accent)] font-bold text-lg">🆚</div>
       <div className="flex items-center w-full">
         <div
           className={`flex-1 text-right transition-colors duration-300 ${
