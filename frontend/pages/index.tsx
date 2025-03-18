@@ -154,7 +154,7 @@ export default function Home() {
           <div className="mt-4">
             <ul className="list-none flex flex-wrap gap-4 justify-center">
               {players.map(player => {
-                const hasVoted = currentVotes.some(vote => vote.playerId === player.id);
+                const hasVoted = currentVotes.some(vote => vote.playerId === player.id)
                 return (
                   <li
                     key={player.id}
@@ -179,7 +179,7 @@ export default function Home() {
                       {hasVoted ? 'Voted' : 'Pending'}
                     </span>
                   </li>
-                );
+                )
               })}
             </ul>
           </div>
