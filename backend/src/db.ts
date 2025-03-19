@@ -60,8 +60,11 @@ export const createBracket = (title: string, subtitle: string, contestants: Cont
   const cInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url) VALUES (?, ?, ?)')
   contestants.forEach(contestant => cInsert.run(bId, contestant.name, contestant.image_url))
   
+  // Create an index for the contestant
+  let i = 1
+  
   // Save the contestants images to data
-  contestants.forEach(async (contestant) => await saveImage(contestant))
+  contestants.forEach(async (contestant) => await saveImage(contestant, bId, i++))
 
   return bCode
 }
