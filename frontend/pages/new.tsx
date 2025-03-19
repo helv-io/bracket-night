@@ -198,10 +198,6 @@ const NewBracket = () => {
                         maxLength={20}
                         className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
                       />
-                      {/* Preload images for each contestant */}
-                      {images[index].urls.map((img, imgIndex) => (
-                        <img key={imgIndex} src={img.url} alt="" style={{ display: 'none' }} />
-                      ))}
                     </div>
                   <div>
                     <input

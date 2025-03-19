@@ -37,6 +37,9 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
       const prefix = image.img_src.startsWith('//') ? 'https:' : ''
       const result = await fetch(`${prefix}${image.img_src}`)
       
+      if (!result.ok)
+        console.error(`Error getting image from ${image.img_src}:\n${result.statusText}`)
+      
       // Return true if image is accessible
       return result.ok
     }).map((image) => ({ url: image.img_src }))
