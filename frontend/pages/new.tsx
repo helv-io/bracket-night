@@ -188,7 +188,11 @@ const NewBracket = () => {
                       type="text"
                       value={contestant.name}
                       onChange={(e) => updateContestant(index, "name", e.target.value)}
-                      onBlur={() => ((contestant.choice = 0) || proposeImages(index, `${title} ${contestant.name}`))}
+                      onBlur={async () => {
+                        contestant.choice = 0
+                        await proposeImages(index, `${title} ${contestant.name}`)
+                        contestant.image_url = images[index].urls[contestant.choice]?.url || '/bn-logo-gold.svg'
+                      }}
                       placeholder="Name"
                       maxLength={20}
                       className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
