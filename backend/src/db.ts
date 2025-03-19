@@ -36,10 +36,6 @@ const contestantCols = db.prepare("PRAGMA table_info(contestants)").all().map((c
 if (!bracketCols.includes("isPublic"))
   db.exec("ALTER TABLE brackets ADD COLUMN isPublic BOOLEAN DEFAULT 0")
 
-// Add 'internal_url' column to contestants
-if (!contestantCols.includes("internal_url"))
-  db.exec("ALTER TABLE contestants ADD COLUMN internal_url TEXT")
-
 /* DATABASE MIGRATIONS END */
 
 // Create a new bracket with 16 contestants
@@ -58,8 +54,8 @@ export const createBracket = (title: string, subtitle: string, contestants: Cont
   const bracketInsert = db.prepare('INSERT INTO brackets (code, title, subtitle, isPublic) VALUES (?, ?, ?, ?)')
   const bracketId = bracketInsert.run(code, title, subtitle, isPublic ? 1 : 0).lastInsertRowid
 
-  const contestantInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url, internal_url) VALUES (?, ?, ?, ?)')
-  contestants.forEach(contestant => contestantInsert.run(bracketId, contestant.name, contestant.image_url, contestant.image_url))
+  const contestantInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url) VALUES (?, ?, ?)')
+  contestants.forEach(contestant => contestantInsert.run(bracketId, contestant.name, contestant.image_url))
 
   return bCode
 }
@@ -73,7 +69,7 @@ export const getBracketByCode = (code: string): Bracket | null => {
   if (!bracket) return null
 
   const contestants = db.prepare<number, Contestant>
-    (`SELECT id, bracket_id, name, image_url, internal_url FROM contestants WHERE bracket_id = ?`).all(bracket.id)
+    (`SELECT id, bracket_id, name, image_url FROM contestants WHERE bracket_id = ?`).all(bracket.id)
   
   return { ...bracket, contestants }
 }

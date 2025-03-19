@@ -12,7 +12,6 @@ export interface Contestant {
   bracket_id: number
   name: string
   image_url: string
-  internal_url: string
 }
 
 export interface Matchup {
