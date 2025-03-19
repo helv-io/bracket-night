@@ -1,7 +1,7 @@
 import gis from 'async-g-i-s'
 
 // Create a new bracket with 16 contestants
-export async function getImageURL(topic: string, choice: number): Promise<string> {
+export async function getImageURL(topic: string, choice: number): Promise<{ url: string, choice: number } | undefined> {
   // Get images from Google Image Search
   const images = await gis(topic)  
   
@@ -16,12 +16,12 @@ export async function getImageURL(topic: string, choice: number): Promise<string
       const i = Math.min(choice, bigSquareImages.length - 1) < 0 ? 0 : Math.min(choice, bigSquareImages.length - 1)
       
       // Return the URL
-      return bigSquareImages[i].url
+      return { url: bigSquareImages[i].url, choice: i }
     }
     
     // No images
-    return ''
+    return undefined
   }
   // No images
-  return ''
+  return undefined
 }
