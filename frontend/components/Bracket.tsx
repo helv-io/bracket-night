@@ -22,11 +22,11 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
             className={`w-8 h-8 rounded-full mr-2 transition-opacity duration-300 ${
               matchup.winner?.id === matchup.left?.id
                 ? 'opacity-100 border-2 border-[var(--winner-highlight)]'
-                : 'opacity-50'
+                : 'opacity-100'
             }`}
           />
         ) : (
-          <div className="w-8 h-8 mr-2 text-2xl text-[var(--text)] opacity-70">❓</div>
+          <div className="w-8 h-8 mr-2 text-2xl text-[var(--text)] opacity-100">❓</div>
         )}
         <div
           className={`flex-1 text-left transition-colors duration-300 ${
@@ -38,7 +38,7 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
           {matchup.left?.name || ''}
         </div>
       </div>
-      <div className="text-[var(--accent)] font-bold text-lg">✖️</div>
+      <div className="text-[var(--accent)] font-bold text-lg">🆚</div>
       <div className="flex items-center w-full">
         <div
           className={`flex-1 text-right transition-colors duration-300 ${
@@ -56,11 +56,11 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
             className={`w-8 h-8 rounded-full ml-2 transition-opacity duration-300 ${
               matchup.winner?.id === matchup.right?.id
                 ? 'opacity-100 border-2 border-[var(--winner-highlight)]'
-                : 'opacity-50'
+                : 'opacity-100'
             }`}
           />
         ) : (
-          <div className="w-8 h-8 ml-2 text-2xl text-[var(--text)] opacity-70">❔</div>
+          <div className="w-8 h-8 ml-2 text-2xl text-[var(--text)] opacity-100">❔</div>
         )}
       </div>
     </div>
