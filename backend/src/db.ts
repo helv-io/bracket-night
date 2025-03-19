@@ -58,7 +58,7 @@ export const createBracket = (title: string, subtitle: string, contestants: Cont
   const bracketInsert = db.prepare('INSERT INTO brackets (code, title, subtitle, isPublic) VALUES (?, ?, ?, ?)')
   const bracketId = bracketInsert.run(code, title, subtitle, isPublic ? 1 : 0).lastInsertRowid
 
-  const contestantInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url, internal_url) VALUES (?, ?, ?)')
+  const contestantInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url, internal_url) VALUES (?, ?, ?, ?)')
   contestants.forEach(contestant => contestantInsert.run(bracketId, contestant.name, contestant.image_url, contestant.image_url))
 
   return bCode
