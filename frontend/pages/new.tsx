@@ -106,8 +106,14 @@ export default function NewBracket() {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 transition-all duration-300">
+        {/* Logo bracket-night-gold.svg - full width */}
+        <img
+          src="/bracket-night-gold.svg"
+          alt="Bracket Night Logo"
+          className="w-full h-25 object-cover"
+        />
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6" style={{ textShadow: '2px 2px 4px var(--accent)' }}>
-          Create a New Bracket
+          New Bracket
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
