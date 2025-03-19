@@ -60,16 +60,14 @@ app.get('/api/public', (req, res) => {
 })
 
 // Get image URL from a search query
-app.get('/api/image/:topic/:choice', async (req, res) => {
-  // option is a number
-  const choice = parseInt(req.params.choice)
+app.get('/api/image/:topic', async (req, res) => {
   
   // Get image URL
-  const image = await getImageURL(req.params.topic, choice)
+  const images = await getImageURL(req.params.topic)
   
   // Return the image URL or 404 if not found
-  if(image && image.url) {
-    res.json(image)
+  if(images.length) {
+    res.json(images)
   } else {
     res.status(404).end()
   }

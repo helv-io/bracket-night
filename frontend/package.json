@@ -8,6 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "jimp": "^1.6.0",
     "next": "^15.2.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
