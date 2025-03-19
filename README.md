@@ -35,16 +35,10 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   npm install
   ```
 
-3. **Setup Environment Variables**
-  Create a `.env` file in the root directory and add the following variables:
-  ```env
-  PUBLIC_URL=https://bracket.my.domain
-  ```
-
-4. **Configure TypeScript**
+3. **Configure TypeScript**
   Ensure `tsconfig.json` is properly set up for the project.
 
-5. **Folder Structure**
+4. **Folder Structure**
   ```
   bracket-night/
   ├── backend/
@@ -61,12 +55,11 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   │   ├── styles/
   │   └── next.config.js
   ├── Dockerfile
-  ├── .env
   ├── package.json
   └── README.md
   ```
 
-6. **Run the Project**
+5. **Run the Project**
   ```bash
   npm run dev
   ```
@@ -80,7 +73,7 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 
 2. **Run Docker Container**
   ```bash
-  docker run -p 3000:3000 --env-file .env bracket-night
+  docker run -p 3000:3000 bracket-night
   ```
 
 ## Usage
@@ -100,4 +93,8 @@ Feel free to submit issues and pull requests to improve the project.
 
 ## License
 
-This project is licensed under the MIT License.
+This project does not currently have a License. It will be licensed once development is more stable.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=helv-io/bracket-night&type=Date&theme=dark)](https://www.star-history.com/#helv-io/bracket-night&Date)
