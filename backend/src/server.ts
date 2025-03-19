@@ -54,7 +54,7 @@ app.get('/api/unique/:code', (req, res) => {
 })
 
 // API endpoint to get all public brackets
-app.get('/api/public', (req, res) => {
+app.get('/api/public', (_req, res) => {
   const publicBrackets = getPublicBrackets()
   res.json(publicBrackets)
 })
@@ -64,9 +64,6 @@ app.get('/api/image/:topic', async (req, res) => {
   
   // Get image URL
   const images = await getImageURL(req.params.topic)
-  
-  // Log the images
-  console.log(images)
   
   // Return the image URL or 404 if not found
   if(images.length) {
