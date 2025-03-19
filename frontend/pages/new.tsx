@@ -223,6 +223,7 @@ const NewBracket = () => {
                         <img
                           src={contestant.image_url}
                           alt={contestant.name}
+                          onError={(e) => e.currentTarget.src = '/bn-logo-gold.svg'}
                           className="w-25 h-25 object-cover rounded-lg"
                         />
                         <button
