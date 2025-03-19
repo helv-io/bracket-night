@@ -187,7 +187,8 @@ const NewBracket = () => {
                       id={`name-${index}`}
                       type="text"
                       value={contestant.name}
-                      onChange={(e) => updateContestant(index, "name", e.target.value)}
+                      onChange={(e) => updateContestant(index, 'name', e.target.value)}
+                      onFocus={async () => images[index].urls = []}
                       onBlur={async () => {
                         contestant.choice = 0
                         await proposeImages(index, `${title} ${contestant.name}`)
@@ -208,6 +209,7 @@ const NewBracket = () => {
                       <div className="flex items-center justify-center space-x-2">
                       <button
                         type="button"
+                        disabled={images[index].urls.length === 0 || contestant.choice === 0}
                         onClick={() => {
                           const newChoice = Math.max(contestant.choice - 1, 0)
                           updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
@@ -224,6 +226,7 @@ const NewBracket = () => {
                       />
                       <button
                         type="button"
+                        disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
                         onClick={() => {
                           const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
                           updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
