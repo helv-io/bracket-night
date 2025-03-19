@@ -1,7 +1,8 @@
 import sqlite3 from 'better-sqlite3'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 import { config } from './config'
-import { Bracket, Contestant } from 'types'
+import { Bracket, Contestant } from './types'
+import { saveImage } from './image'
 
 const db = sqlite3(config.dbPath)
 
@@ -51,11 +52,16 @@ export const createBracket = (title: string, subtitle: string, contestants: Cont
     } while (db.prepare('SELECT 1 FROM brackets WHERE code = ?').get(bCode))
   }
 
-  const bracketInsert = db.prepare('INSERT INTO brackets (code, title, subtitle, isPublic) VALUES (?, ?, ?, ?)')
-  const bracketId = bracketInsert.run(code, title, subtitle, isPublic ? 1 : 0).lastInsertRowid
+  // Insert bracket into database
+  const bInsert = db.prepare('INSERT INTO brackets (code, title, subtitle, isPublic) VALUES (?, ?, ?, ?)')
+  const bId = bInsert.run(code, title, subtitle, isPublic ? 1 : 0).lastInsertRowid
 
-  const contestantInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url) VALUES (?, ?, ?)')
-  contestants.forEach(contestant => contestantInsert.run(bracketId, contestant.name, contestant.image_url))
+  // Insert contestants into database
+  const cInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url) VALUES (?, ?, ?)')
+  contestants.forEach(contestant => cInsert.run(bId, contestant.name, contestant.image_url))
+  
+  // Save the contestants images to data
+  contestants.forEach(async (contestant) => await saveImage(contestant))
 
   return bCode
 }
@@ -75,12 +81,7 @@ export const getBracketByCode = (code: string): Bracket | null => {
 }
 
 // Retrieve all public brackets
-export const getPublicBrackets = () => {
-  return db.prepare('SELECT code, title, subtitle FROM brackets WHERE isPublic = 1').all()
-}
+export const getPublicBrackets = () => db.prepare('SELECT code, title, subtitle FROM brackets WHERE isPublic = 1').all()
 
 // Check if a bracket code is unique
-export const isCodeUnique = (code: string): boolean => {
-  const bracket = db.prepare<string, { id: number }>('SELECT id FROM brackets WHERE LOWER(code) = LOWER(?)').get(code)
-  return !bracket
-}
+export const isCodeUnique = (code: string): boolean => !db.prepare<string, { id: number }>('SELECT id FROM brackets WHERE LOWER(code) = LOWER(?)').get(code)

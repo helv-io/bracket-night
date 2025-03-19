@@ -26,6 +26,9 @@ new Game(io)
 // Serve frontend static html files.
 app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['html'] }))
 
+// Serve data files statically
+app.use('/data', express.static(config.dataPath))
+
 // API endpoint to create a new bracket
 app.use(express.json())
 app.post('/api/create-bracket', (req, res) => {

@@ -1,5 +1,8 @@
 import gis from 'async-g-i-s'
-import { Contestant } from 'types'
+import { Jimp } from 'jimp'
+import { Contestant } from './types'
+import { config } from './config'
+import fs from 'fs/promises'
 
 // Create a new bracket with 16 contestants
 export const getImageURL = async (topic: string, choice: number): Promise<{ url: string, choice: number } | undefined> => {
@@ -27,21 +30,27 @@ export const getImageURL = async (topic: string, choice: number): Promise<{ url:
   return undefined
 }
 
-// TODO: Add a function that fetches images from Google Image Search
-//       Convert them to 400x400px PNGs
-//       Save them to the filesystem so they can be used in the bracket
-//       Format: /app/data/images/<bracket_id>_<contestant_id>.png
-//       <img> Fallback to Public URLs if the image is not found
-//       This must be done in the backend because the frontend cannot access the filesystem
-export const saveImages = async (url: string, contestant: Contestant): Promise<string> => {
-  // Fetch the image
-  const response = await fetch(url)
-  const blob = await response.blob()
-  const buffer = await blob.arrayBuffer()
-  console.log(buffer)
+/**
+ * Save an image from a URL to the file system
+ * @param url The URL of the image
+ * @param contestant The contestant object
+ * @returns The path of the saved image
+ */
+export const saveImage = async (contestant: Contestant): Promise<string> => {
+  // Create the images directory if it doesn't exist
+  await fs.mkdir(`${config.dataPath}/images`, { recursive: true })
   
-  // Save the image to the filesystem
-  const path = `/app/data/images/${contestant.bracket_id}_${contestant.id}.png`
+  // Read image and convert to 400x400 PNG
+  const image = await Jimp.read(contestant.image_url)
+  image.resize({ w: 400, h: 400 })
+  
+  // Define image path
+  const path = `${config.dataPath}/images`
+  const fileName = `${contestant.bracket_id}_${contestant.id}`
+  const extention = 'png'
+  
+  // Save the image to path
+  await image.write(`${path}/${fileName}.${extention}`)
   
   return path
 }
