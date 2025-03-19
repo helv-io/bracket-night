@@ -56,12 +56,14 @@ app.get('/api/image/:topic/:choice', async (req, res) => {
   // option is a number
   const choice = parseInt(req.params.choice)
   
-  const url = await getImageURL(req.params.topic, choice)
-  if(url) {
-    res.json({ url })
-  }
-  else {
-    res.status(404).json({ error: 'No images found' })
+  // Get image URL
+  const image = await getImageURL(req.params.topic, choice)
+  
+  // Return the image URL or 404 if not found
+  if(image && image.url) {
+    res.json(image)
+  } else {
+    res.status(404).end()
   }
 })
 

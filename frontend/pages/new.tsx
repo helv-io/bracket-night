@@ -71,16 +71,28 @@ export default function NewBracket() {
     setIsSubmitting(false)
   }
 
-  const updateContestant = (index: number, field: 'name' | 'image_url', value: string) => {
+  const updateContestant = (index: number, field: 'name' | 'image_url' | 'choice', value: string) => {
     const newContestants = [...contestants]
-    newContestants[index][field] = value
+    
+    // Update the field with the new value
+    if (field === 'choice')
+      newContestants[index].choice = parseInt(value)
+    else
+      newContestants[index][field] = value
     setContestants(newContestants)
   }
   
   const proposeImage = async (index: number, name: string, option: number) => {
-    const res = await (await fetch(`/api/image/${name}/${option}`)).json() as { url: string, error: string }
-    if (res.url)
-      updateContestant(index, 'image_url', res.url)
+    try {
+      const res = await (await fetch(`/api/image/${name}/${option}`)).json() as { url: string, choice: number }
+      if (res && res.url) {
+        updateContestant(index, 'image_url', res.url)
+        updateContestant(index, 'choice', res.choice.toString())
+      }
+    } catch (error) {
+      // Probably no images found
+      console.error(error)
+    }
   }
 
   const checkBracketCode = async () => {
