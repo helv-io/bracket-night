@@ -191,7 +191,7 @@ const NewBracket = () => {
                       onBlur={async () => {
                         contestant.choice = 0
                         await proposeImages(index, `${title} ${contestant.name}`)
-                        contestant.image_url = images[index].urls[contestant.choice]?.url || '/bn-logo-gold.svg'
+                        updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
                       }}
                       placeholder="Name"
                       maxLength={20}
