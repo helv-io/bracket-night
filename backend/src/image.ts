@@ -19,7 +19,7 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
     const result = await fetch(`https://${config.searxngHost}/search?q=${topic}&categories=images&format=json`)
     const data = await result.json() as SearXNG
   
-    const bigSquareImages = data.results.filter((image) => {
+    const bigSquareImages = data.results.filter(async (image) => {
       // Check if image has a resolution
       if (!image.resolution)
         return false
@@ -27,8 +27,18 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
       // Get image resolution. This handles strings like '500x500' or '500 x 500'
       const [w, h] = image.resolution.split('x').map(Number)
       
-      // Only return images that are square and at least 400x400
-      return w === h && w >= 400
+      // Check if image is square and at least 400x400
+      const square = w === h
+      const big = w >= 400
+      
+      if (!square || !big) return false
+      
+      // Check if image is accessible
+      const prefix = image.img_src.startsWith('//') ? 'https:' : ''
+      const result = await fetch(`${prefix}${image.img_src}`)
+      
+      // Return true if image is accessible
+      return result.ok
     }).map((image) => ({ url: image.img_src }))
   
     return bigSquareImages
