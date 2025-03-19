@@ -9,8 +9,13 @@ const NewBracket = () => {
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Arrays (16) for Contestants and Images
   const [contestants, setContestants] = useState(
     Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 }))
+  )
+  const [images, setImages] = useState(
+    Array.from({ length: 16 }, () => ({ urls: [{ url: '' }] }))
   )
   
   // Create a reference to the error message element
@@ -71,30 +76,23 @@ const NewBracket = () => {
     setIsSubmitting(false)
   }
 
-  const updateContestant = (index: number, field: 'name' | 'image_url' | 'choice', value: string) => {
+  const updateContestant = (index: number, field: 'name' | 'image_url', value: string) => {
     const newContestants = [...contestants]
-    
-    // Update the field with the new value
-    if (field === 'choice')
-      newContestants[index].choice = parseInt(value)
-    else
-      newContestants[index][field] = value
+    newContestants[index][field] = value
     setContestants(newContestants)
   }
   
-  const proposeImage = async (index: number, name: string, option: number) => {
-    try {
-      const res = await (await fetch(`/api/image/${name}/${option}`)).json() as { url: string, choice: number }
-      if (res && res.url) {
-        updateContestant(index, 'image_url', res.url)
-        updateContestant(index, 'choice', res.choice.toString())
-      }
-    } catch (error) {
-      // Probably no images found
-      console.error(error)
+  // Propose images for a contestant
+  const proposeImages = async (index: number, name: string) => {
+    const newImages = [...images]
+    const urls = await (await fetch(`/api/image/${name}`)).json() as { url: string }[]
+    if (urls.length) {
+      newImages[index].urls = urls
+      setImages(newImages)
     }
   }
 
+  // Check if a public bracket code is unique
   const checkUniqueCode = async () => {
     if (!code) return
     const response = await fetch(`/api/unique/${code}`)
@@ -190,7 +188,7 @@ const NewBracket = () => {
                       type="text"
                       value={contestant.name}
                       onChange={(e) => updateContestant(index, "name", e.target.value)}
-                      onKeyUp={() => proposeImage(index, `${title} ${contestant.name}`, contestant.choice = 0)}
+                      onBlur={() => ((contestant.choice = 0) || proposeImages(index, `${title} ${contestant.name}`))}
                       placeholder="Name"
                       maxLength={20}
                       className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
@@ -206,21 +204,20 @@ const NewBracket = () => {
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           type="button"
-                          disabled={!contestant.choice || !contestant.name}
-                          onClick={() => proposeImage(index, `${title} ${contestant.name}`, --contestant.choice)}
+                          onClick={() => (contestant.choice = Math.max(contestant.choice - 1, 0))}
                           className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
                         >
                           👈
                         </button>
                         <img
-                          src={contestant.image_url || '/bn-logo-gold.svg'}
+                          src={contestant.image_url = images[index].urls[contestant.choice].url && '/bn-logo-gold.svg'}
                           alt={contestant.name}
                           className="w-25 h-25 object-cover rounded-lg"
                           
                         />
                         <button
                           type="button"
-                          onClick={() => proposeImage(index, `${title} ${contestant.name}`, ++contestant.choice)}
+                          onClick={() => (contestant.choice = Math.min(contestant.choice + 1, images[index].urls.length - 1))}
                           className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
                         >
                           👉
