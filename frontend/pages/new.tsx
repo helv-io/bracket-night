@@ -1,11 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useRef, useEffect } from 'react'
 
-export default function NewBracket() {
+const NewBracket = () => {
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
   const [isPublic, setIsPublic] = useState(false)
-  const [bracketCode, setBracketCode] = useState('')
+  const [code, setCode] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -38,7 +38,7 @@ export default function NewBracket() {
       return
     }
     
-    if (isPublic && !bracketCode) {
+    if (isPublic && !code) {
       setErrorMessage('Bracket Code is required for public brackets')
       return
     }
@@ -51,19 +51,19 @@ export default function NewBracket() {
     const response = await fetch('/api/create-bracket', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, subtitle, contestants, isPublic, bracketCode })
+      body: JSON.stringify({ title, subtitle, contestants, isPublic, code })
     })
 
     if (response.ok) {
       const { code } = await response.json()
       setSuccessMessage(`Bracket created with code: ${code}`)
-      localStorage.setItem('bracketCode', code)
+      localStorage.setItem('code', code)
       
       // Clear all fields
       setTitle('')
       setSubtitle('')
       setIsPublic(false)
-      setBracketCode('')
+      setCode('')
       setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 })))
     } else {
       setErrorMessage('Something went wrong, try again')
@@ -95,9 +95,9 @@ export default function NewBracket() {
     }
   }
 
-  const checkBracketCode = async () => {
-    if (!bracketCode) return
-    const response = await fetch(`/api/unique/${bracketCode}`)
+  const checkUniqueCode = async () => {
+    if (!code) return
+    const response = await fetch(`/api/unique/${code}`)
     const { unique } = await response.json()
     if (!unique) {
       setErrorMessage('Bracket Code already taken, pick another')
@@ -157,9 +157,9 @@ export default function NewBracket() {
             {isPublic && (
               <input
                 type="text"
-                value={bracketCode}
-                onChange={e => setBracketCode(e.target.value)}
-                onBlur={checkBracketCode}
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                onBlur={checkUniqueCode}
                 placeholder="Bracket Code"
                 className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
               />
@@ -253,3 +253,5 @@ export default function NewBracket() {
     </div>
   )
 }
+
+export default NewBracket

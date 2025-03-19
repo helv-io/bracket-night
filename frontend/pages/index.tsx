@@ -8,7 +8,7 @@ import { socket } from '../lib/socket'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
 
-export default function Home() {
+const Home = () => {
   // Declare router for mobile navigation
   const router = useRouter()
   
@@ -191,3 +191,5 @@ export default function Home() {
     </div>
   )
 }
+
+export default Home

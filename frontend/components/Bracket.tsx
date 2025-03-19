@@ -7,7 +7,7 @@ interface BracketProps {
   currentMatchupIndex: number
 }
 
-function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent: boolean }) {
+const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent: boolean }) => {
   return (
     <div
       className={`p-2 rounded-lg text-center w-[180px] flex flex-col items-center justify-between h-[140px] shadow-md transition-all duration-300 bg-[var(--card-bg)] ${
@@ -67,7 +67,7 @@ function MatchupComponent({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
   )
 }
 
-export default function Bracket({ matchups, currentMatchupIndex }: BracketProps) {
+const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -277,3 +277,5 @@ export default function Bracket({ matchups, currentMatchupIndex }: BracketProps)
     </div>
   )
 }
+
+export default Bracket
