@@ -7,6 +7,7 @@ import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 import { getImageURL } from './image'
 import { config } from './config'
 import { Bracket } from 'types'
+import fs from 'fs'
 
 const app = express()
 const server = http.createServer(app)
@@ -25,6 +26,10 @@ new Game(io)
 
 // Serve frontend static html files.
 app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['html'] }))
+
+// Create the images directory if it doesn't exist
+if (!fs.existsSync(`${config.dataPath}/images`))
+  fs.mkdirSync(`${config.dataPath}/images`)
 
 // Serve data files statically
 app.use('/data', express.static(config.dataPath))
