@@ -25,3 +25,9 @@ export const getImageURL = async (topic: string, choice: number): Promise<{ url:
   // No images
   return undefined
 }
+
+// TODO: Add a function that fetches images from Google Image Search
+//       Convert them to 400x400px PNGs
+//       Save them to the filesystem so they can be used in the bracket
+//       Format: /app/data/images/<bracket_id>/<contestant_id>.png
+//       <img> Fallback to Public URLs if the image is not found
