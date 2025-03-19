@@ -2,7 +2,11 @@ import { Jimp } from 'jimp'
 import { Contestant, SearXNG } from './types'
 import { config } from './config'
 
-// Create a new bracket with 16 contestants
+/**
+ * Get image URL from SearxNG and filter for big square images (400x400 or larger)
+ * @param topic The search query
+ * @returns An array of image URLs
+ */
 export const getImageURL = async (topic: string): Promise<{ url: string }[]> => {
   // Check if topic and searxngHost are defined
   if (!topic || !config.searxngHost) {
