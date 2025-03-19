@@ -35,20 +35,20 @@ export const getImageURL = async (topic: string, choice: number): Promise<{ url:
  * @param contestant The contestant object
  * @returns The path of the saved image
  */
-export const saveImage = async (contestant: Contestant) => {
+export const saveImage = async (contestant: Contestant, bracket: number | bigint, index: number) => {
   // try-catch block to handle errors
   try {
     // Fetch image from URL using fetch
     const response = await fetch(contestant.image_url)
     const buffer = await response.arrayBuffer()
     
-    // Read image and convert to 400x400 PNG
-    const image = await Jimp.read(buffer)
+    // Read image and convert to 400x400
+    const image = await Jimp.fromBuffer(buffer)
     image.resize({ w: 400, h: 400 })
   
-    // Define image path
+    // Define image path and file name (png)
     const path = `${config.dataPath}/images`
-    const fileName = `${contestant.bracket_id}_${contestant.id}`
+    const fileName = `${bracket}_${index}`
     const extention = 'png'
   
     // Save the image to path
