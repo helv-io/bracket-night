@@ -48,7 +48,8 @@ export const saveImage = async (contestant: Contestant, bracket: number | bigint
   // try-catch block to handle errors
   try {    
     // Read image and convert to 400x400
-    const image = await Jimp.read(contestant.image_url)
+    const prefix = contestant.image_url.startsWith('//') ? 'https:' : ''
+    const image = await Jimp.read(`${prefix}${contestant.image_url}`)
     
     // Resize image to 400x400
     image.resize({ w: 400, h: 400 })
@@ -57,7 +58,6 @@ export const saveImage = async (contestant: Contestant, bracket: number | bigint
     const path = `${config.dataPath}/images`
     const name = `${bracket}_${contestant.name.replace(/[^a-z0-9]/gi, '')}`
     const ext = 'png'
-    console.log(`${path}/${name}.${ext}`)
   
     // Save the image to path
     await image.write(`${path}/${name}.${ext}`)
