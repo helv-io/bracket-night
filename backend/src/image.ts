@@ -16,7 +16,7 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
   // try-catch block to handle errors
   try {
     // Get result from SearxNG
-    const result = await fetch(`${config.searxngHost}/search?q=${topic}&categories=images&format=json`)
+    const result = await fetch(`https://${config.searxngHost}/search?q=${topic}&categories=images&format=json`)
     const data = await result.json() as SearXNG
   
     const bigSquareImages = data.results.filter((image) => {
