@@ -1,20 +1,38 @@
-import gis from 'async-g-i-s'
 import { Jimp } from 'jimp'
-import { Contestant } from './types'
+import { Contestant, SearXNG } from './types'
 import { config } from './config'
 
 // Create a new bracket with 16 contestants
 export const getImageURL = async (topic: string): Promise<{ url: string }[]> => {
-  // Get images from Google Image Search as if it was a Google bot
-  const images = await gis(topic, {userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'})  
-  
-  // If there are images
-  if (images.length) {
-    // Filter out images that are not square and not big enough
-    return images.filter(i => i.height === i.width && i.height >= 400)
+  // Check if topic and searxngHost are defined
+  if (!topic || !config.searxngHost) {
+    return []
   }
-  // No images
-  return []
+  
+  // try-catch block to handle errors
+  try {
+    // Get result from SearxNG
+    const result = await fetch(`${config.searxngHost}/search?q=${topic}&categories=images&format=json`)
+    const data = await result.json() as SearXNG
+  
+    const bigSquareImages = data.results.filter((image) => {
+      // Check if image has a resolution
+      if (!image.resolution)
+        return false
+      
+      // Get image resolution. This handles strings like '500x500' or '500 x 500'
+      const [w, h] = image.resolution.split('x').map(Number)
+      
+      // Only return images that are square and at least 400x400
+      return w === h && w >= 400
+    }).map((image) => ({ url: image.img_src }))
+  
+    return bigSquareImages
+  } catch (error) {
+    // Log error and return empty array
+    console.error(`Error getting image URL: ${error}`)
+    return []
+  }
 }
 
 /**
