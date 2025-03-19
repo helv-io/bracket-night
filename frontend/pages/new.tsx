@@ -1,21 +1,22 @@
-import { useState } from 'react'
-import { useRouter } from 'next/router'
+import { useState, useRef, useEffect } from 'react'
 
 export default function NewBracket() {
   const [title, setTitle] = useState('')
   const [subtitle, setSubtitle] = useState('')
-  const [contestants, setContestants] = useState(
-    Array.from({ length: 16 }, () => ({ name: '', image_url: '' }))
-  )
   const [isPublic, setIsPublic] = useState(false)
   const [bracketCode, setBracketCode] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showImageWarning, setShowImageWarning] = useState(false)
-  const router = useRouter()
+  const [contestants, setContestants] = useState(
+    Array.from({ length: 16 }, () => ({ name: '', image_url: '' }))
+  )
+  
+  // Create a reference to the error message element
+  const errorRef = useRef<HTMLDivElement>(null)
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setErrorMessage('')
     setSuccessMessage('')
@@ -57,7 +58,13 @@ export default function NewBracket() {
       const { code } = await response.json()
       setSuccessMessage(`Bracket created with code: ${code}`)
       localStorage.setItem('bracketCode', code)
-      setTimeout(() => router.push('/'), 2000)
+      
+      // Clear all fields
+      setTitle('')
+      setSubtitle('')
+      setIsPublic(false)
+      setBracketCode('')
+      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '' })))
     } else {
       setErrorMessage('Something went wrong, try again')
     }
@@ -82,18 +89,19 @@ export default function NewBracket() {
     }
   }
 
+  // Scroll to the error message when it changes
+  useEffect(() => {
+    if (errorMessage && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [errorMessage])
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 transition-all duration-300">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6" style={{ textShadow: '2px 2px 4px var(--accent)' }}>
           Create a New Bracket
         </h1>
-
-        {successMessage && (
-          <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg shadow">
-            {successMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -108,7 +116,7 @@ export default function NewBracket() {
             type="text"
             value={subtitle}
             onChange={e => setSubtitle(e.target.value)}
-            placeholder="Subtitle"
+            placeholder="Subtitle (Description)"
             className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
           />
 
@@ -121,7 +129,7 @@ export default function NewBracket() {
                 className="form-checkbox h-5 w-5 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500"
               />
               <span className="text-gray-700 dark:text-gray-300 font-medium">
-                Public Bracket (Pick your Code)
+                Public Bracket (Shareable & Searchable)
               </span>
             </label>
             {isPublic && (
@@ -135,13 +143,18 @@ export default function NewBracket() {
               />
             )}
           </div>
-          
+
+          {/* Attach the ref to the error message div */}
           {errorMessage && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg shadow">
+            <div
+              ref={errorRef}
+              className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg shadow"
+            >
               {errorMessage}
             </div>
           )}
 
+          {/* Display the contestants */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {contestants.map((contestant, index) => (
               <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
@@ -175,6 +188,7 @@ export default function NewBracket() {
             ))}
           </div>
 
+          {/* Display the image warning */}
           {showImageWarning && (
             <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-lg shadow">
               <p className="mb-2">Some image URLs are missing. They’re optional but recommended. Proceed anyway?</p>
@@ -196,7 +210,15 @@ export default function NewBracket() {
               </div>
             </div>
           )}
+          
+          {/* Display the success message */}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg shadow">
+              {successMessage}
+            </div>
+          )}
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={isSubmitting}
