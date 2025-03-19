@@ -45,20 +45,18 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
  * @param contestant The contestant object
  * @returns The path of the saved image
  */
-export const saveImage = async (contestant: Contestant, bracket: number | bigint, index: number) => {
+export const saveImage = async (contestant: Contestant, bracket: number | bigint) => {
   // try-catch block to handle errors
   try {    
     // Read image and convert to 400x400
     const image = await Jimp.read(contestant.image_url)
-    console.log(image)
     
     // Resize image to 400x400
     image.resize({ w: 400, h: 400 })
-    console.log(image)
   
-    // Define image path and file name (png)
+    // Define image path and file name (png). Remove all non-alphanumeric characters from name
     const path = `${config.dataPath}/images`
-    const name = `${bracket}_${index}`
+    const name = `${bracket}_${contestant.name.replace(/[^a-z0-9]/gi, '')}`
     const ext = 'png'
     console.log(`${path}/${name}.${ext}`)
   

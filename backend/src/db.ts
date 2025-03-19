@@ -2,7 +2,7 @@ import sqlite3 from 'better-sqlite3'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 import { config } from './config'
 import { Bracket, Contestant } from './types'
-// import { saveImage } from './image'
+import { saveImage } from './image'
 
 const db = sqlite3(config.dbPath)
 
@@ -60,11 +60,8 @@ export const createBracket = (title: string, subtitle: string, contestants: Cont
   const cInsert = db.prepare('INSERT INTO contestants (bracket_id, name, image_url) VALUES (?, ?, ?)')
   contestants.forEach(contestant => cInsert.run(bId, contestant.name, contestant.image_url))
   
-  // Create an index for the contestant
-  let i = 1
-  
   // Save the contestants images to data
-  // contestants.forEach(async (contestant) => await saveImage(contestant, bId, i++))
+  contestants.forEach(async (contestant) => await saveImage(contestant, bId))
 
   return bCode
 }
