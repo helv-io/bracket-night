@@ -202,26 +202,33 @@ const NewBracket = () => {
                     />
                     {contestant.name && (
                       <div className="flex items-center justify-center space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => (contestant.choice = Math.max(contestant.choice - 1, 0))}
-                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                        >
-                          👈
-                        </button>
-                        <img
-                          src={contestant.image_url = images[index].urls[contestant.choice].url && '/bn-logo-gold.svg'}
-                          alt={contestant.name}
-                          className="w-25 h-25 object-cover rounded-lg"
-                          
-                        />
-                        <button
-                          type="button"
-                          onClick={() => (contestant.choice = Math.min(contestant.choice + 1, images[index].urls.length - 1))}
-                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                        >
-                          👉
-                        </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newChoice = Math.max(contestant.choice - 1, 0)
+                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url || '/bn-logo-gold.svg')
+                          contestant.choice = newChoice
+                        }}
+                        className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                      >
+                        👈
+                      </button>
+                      <img
+                        src={contestant.image_url}
+                        alt={contestant.name}
+                        className="w-25 h-25 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
+                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url || '/bn-logo-gold.svg')
+                          contestant.choice = newChoice
+                        }}
+                        className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                      >
+                        👉
+                      </button>
                       </div>
                     )}
                   </div>
