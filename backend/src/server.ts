@@ -4,6 +4,7 @@ import { Server } from 'socket.io'
 import path from 'path'
 import { Game } from './game'
 import { createBracket, isBracketCodeUnique, getPublicBrackets } from './db'
+import { getImageURL } from './image'
 import { config } from './config'
 
 const app = express()
@@ -48,6 +49,20 @@ app.get('/api/unique/:code', (req, res) => {
 app.get('/api/public', (req, res) => {
   const publicBrackets = getPublicBrackets()
   res.json(publicBrackets)
+})
+
+// Get image URL from a search query
+app.get('/api/image/:topic/:choice', async (req, res) => {
+  // option is a number
+  const choice = parseInt(req.params.choice)
+  
+  const url = await getImageURL(req.params.topic, choice)
+  if(url) {
+    res.json({ url })
+  }
+  else {
+    res.status(404).json({ error: 'No images found' })
+  }
 })
 
 const port = config.dev ? 3001 : 3000

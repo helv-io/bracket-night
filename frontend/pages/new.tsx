@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState, useRef, useEffect } from 'react'
 
 export default function NewBracket() {
@@ -10,7 +11,7 @@ export default function NewBracket() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showImageWarning, setShowImageWarning] = useState(false)
   const [contestants, setContestants] = useState(
-    Array.from({ length: 16 }, () => ({ name: '', image_url: '' }))
+    Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 }))
   )
   
   // Create a reference to the error message element
@@ -64,7 +65,7 @@ export default function NewBracket() {
       setSubtitle('')
       setIsPublic(false)
       setBracketCode('')
-      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '' })))
+      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 })))
     } else {
       setErrorMessage('Something went wrong, try again')
     }
@@ -76,6 +77,12 @@ export default function NewBracket() {
     const newContestants = [...contestants]
     newContestants[index][field] = value
     setContestants(newContestants)
+  }
+  
+  const proposeImage = async (index: number, name: string, option: number) => {
+    const res = await (await fetch(`/api/image/${name}/${option}`)).json() as { url: string, error: string }
+    if (res.url)
+      updateContestant(index, 'image_url', res.url)
   }
 
   const checkBracketCode = async () => {
@@ -154,39 +161,64 @@ export default function NewBracket() {
             </div>
           )}
 
-          {/* Display the contestants */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {contestants.map((contestant, index) => (
-              <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
-                <legend className="text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 px-1">
-                  Contestant {index + 1}
-                </legend>
-                <div className="space-y-4">
-                  <div>
-                    <input
-                      id={`name-${index}`}
-                      type="text"
-                      value={contestant.name}
-                      onChange={(e) => updateContestant(index, "name", e.target.value)}
-                      placeholder="Name"
-                      maxLength={20}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                    />
+          {/* Display the contestants only if Title is set */}
+          {title && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {contestants.map((contestant, index) => (
+                <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
+                  <legend className="text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 px-1">
+                    Contestant {index + 1}
+                  </legend>
+                  <div className="space-y-4">
+                    <div>
+                      <input
+                        id={`name-${index}`}
+                        type="text"
+                        value={contestant.name}
+                        onChange={(e) => updateContestant(index, "name", e.target.value)}
+                        onBlur={(e) => proposeImage(index, e.target.value, 0)}
+                        placeholder="Name"
+                        maxLength={20}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="hidden"
+                        id={`image-${index}`}
+                        value={contestant.image_url}
+                      />
+                      {contestant.name && (
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            type="button"
+                            disabled={!contestant.choice || !contestant.name}
+                            onClick={() => proposeImage(index, `${title} ${contestant.name}`, --contestant.choice)}
+                            className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                          >
+                            &lt;
+                          </button>
+                          <img
+                            src={contestant.image_url || '/bn-logo-gold.svg'}
+                            alt={contestant.name}
+                            className="w-30 h-30 object-cover rounded-lg"
+                            
+                          />
+                          <button
+                            type="button"
+                            onClick={() => proposeImage(index, `${title} ${contestant.name}`, ++contestant.choice)}
+                            className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                          >
+                            &gt;
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      id={`image-${index}`}
-                      type="text"
-                      value={contestant.image_url}
-                      onChange={(e) => updateContestant(index, "image_url", e.target.value)}
-                      placeholder="Image URL (optional)"
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                    />
-                  </div>
-                </div>
-              </fieldset>
-            ))}
-          </div>
+                </fieldset>
+              ))}
+            </div>
+          )}
 
           {/* Display the image warning */}
           {showImageWarning && (
