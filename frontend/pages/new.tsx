@@ -210,7 +210,7 @@ const NewBracket = () => {
                         type="button"
                         onClick={() => {
                           const newChoice = Math.max(contestant.choice - 1, 0)
-                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url || '/bn-logo-gold.svg')
+                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
                           contestant.choice = newChoice
                         }}
                         className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
@@ -219,6 +219,7 @@ const NewBracket = () => {
                       </button>
                       <img
                         src={contestant.image_url}
+                        onError={(e) => { e.currentTarget.src = '/bn-logo-gold.svg' }}
                         alt={contestant.name}
                         className="w-25 h-25 object-cover rounded-lg"
                       />
@@ -226,7 +227,7 @@ const NewBracket = () => {
                         type="button"
                         onClick={() => {
                           const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
-                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url || '/bn-logo-gold.svg')
+                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
                           contestant.choice = newChoice
                         }}
                         className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
