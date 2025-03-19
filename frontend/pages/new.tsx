@@ -183,21 +183,25 @@ const NewBracket = () => {
                 </legend>
                 <div className="space-y-4">
                     <div>
-                    <input
-                      id={`name-${index}`}
-                      type="text"
-                      value={contestant.name}
-                      onChange={(e) => updateContestant(index, 'name', e.target.value)}
-                      onFocus={async () => images[index].urls = []}
-                      onBlur={async () => {
-                        contestant.choice = 0
-                        await proposeImages(index, `${title} ${contestant.name}`)
-                        updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
-                      }}
-                      placeholder="Name"
-                      maxLength={20}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                    />
+                      <input
+                        id={`name-${index}`}
+                        type="text"
+                        value={contestant.name}
+                        onChange={(e) => updateContestant(index, 'name', e.target.value)}
+                        onFocus={async () => images[index].urls = []}
+                        onBlur={async () => {
+                          contestant.choice = 0
+                          await proposeImages(index, `${title} ${contestant.name}`)
+                          updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
+                        }}
+                        placeholder="Name"
+                        maxLength={20}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+                      />
+                      {/* Preload images for each contestant */}
+                      {images[index].urls.map((img, imgIndex) => (
+                        <img key={imgIndex} src={img.url} alt="" style={{ display: 'none' }} />
+                      ))}
                     </div>
                   <div>
                     <input
@@ -207,35 +211,35 @@ const NewBracket = () => {
                     />
                     {contestant.name && contestant.image_url && (
                       <div className="flex items-center justify-center space-x-2">
-                      <button
-                        type="button"
-                        disabled={images[index].urls.length === 0 || contestant.choice === 0}
-                        onClick={() => {
-                          const newChoice = Math.max(contestant.choice - 1, 0)
-                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
-                          contestant.choice = newChoice
-                        }}
-                        className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                      >
-                        👈
-                      </button>
-                      <img
-                        src={contestant.image_url}
-                        alt={contestant.name}
-                        className="w-25 h-25 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
-                        onClick={() => {
-                          const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
-                          updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
-                          contestant.choice = newChoice
-                        }}
-                        className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                      >
-                        👉
-                      </button>
+                        <button
+                          type="button"
+                          disabled={images[index].urls.length === 0 || contestant.choice === 0}
+                          onClick={() => {
+                            const newChoice = Math.max(contestant.choice - 1, 0)
+                            updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                            contestant.choice = newChoice
+                          }}
+                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                        >
+                          👈
+                        </button>
+                        <img
+                          src={contestant.image_url}
+                          alt={contestant.name}
+                          className="w-25 h-25 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
+                          onClick={() => {
+                            const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
+                            updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                            contestant.choice = newChoice
+                          }}
+                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                        >
+                          👉
+                        </button>
                       </div>
                     )}
                   </div>
