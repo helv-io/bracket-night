@@ -65,6 +65,9 @@ app.get('/api/image/:topic', async (req, res) => {
   // Get image URL
   const images = await getImageURL(req.params.topic)
   
+  // Log the images
+  console.log(images)
+  
   // Return the image URL or 404 if not found
   if(images.length) {
     res.json(images)
