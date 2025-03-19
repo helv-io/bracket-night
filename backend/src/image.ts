@@ -41,9 +41,8 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
 
 /**
  * Save an image from a URL to the file system
- * @param url The URL of the image
  * @param contestant The contestant object
- * @returns The path of the saved image
+ * @param bracket The bracket ID
  */
 export const saveImage = async (contestant: Contestant, bracket: number | bigint) => {
   // try-catch block to handle errors
