@@ -1,14 +1,17 @@
 export interface Bracket {
   id: number
+  code: string
   title: string
   subtitle: string
   contestants: Contestant[]
+  isPublic: boolean
 }
 
 export interface Contestant {
   id: number
   name: string
   image_url: string
+  internal_url: string
 }
 
 export interface Matchup {

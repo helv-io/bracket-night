@@ -3,9 +3,10 @@ import http from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
 import { Game } from './game'
-import { createBracket, isBracketCodeUnique, getPublicBrackets } from './db'
+import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 import { getImageURL } from './image'
 import { config } from './config'
+import { Bracket } from 'types'
 
 const app = express()
 const server = http.createServer(app)
@@ -28,20 +29,19 @@ app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['
 // API endpoint to create a new bracket
 app.use(express.json())
 app.post('/api/create-bracket', (req, res) => {
-  const { title, subtitle, contestants, bracketCode, isPublic }:
-    { title: string, subtitle: string, contestants: { name: string, image_url: string }[], bracketCode?: string, isPublic: boolean } = req.body
-  if (!title || !subtitle || !contestants || contestants.length !== 16 || isPublic === undefined) {
+  const bracket: Bracket = req.body
+  if (!bracket.title || !bracket.subtitle || !bracket.contestants || bracket.contestants.length !== 16) {
     res.status(400).json({ error: 'Invalid input' })
     return
   }
-  const code = createBracket(title, subtitle, contestants, isPublic, bracketCode)
+  const code = createBracket(bracket.title, bracket.subtitle, bracket.contestants, bracket.isPublic, bracket.code)
   res.json({ code })
 })
 
 // API endpoint to check if a bracket code is unique
 app.get('/api/unique/:code', (req, res) => {
   const { code } = req.params
-  const isUnique = isBracketCodeUnique(code)
+  const isUnique = isCodeUnique(code)
   res.json({ unique: isUnique })
 })
 

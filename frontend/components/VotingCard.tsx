@@ -10,7 +10,7 @@ interface VotingCardProps {
   hasVoted: boolean
 }
 
-export default function VotingCard({ matchup, gameId, playerName, hasVoted }: VotingCardProps) {
+const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) => {
   const [voted, setVoted] = useState(hasVoted)
 
   useEffect(() => {
@@ -113,3 +113,5 @@ export default function VotingCard({ matchup, gameId, playerName, hasVoted }: Vo
     </div>
   )
 }
+
+export default VotingCard

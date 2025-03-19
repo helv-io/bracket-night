@@ -6,14 +6,14 @@ import { Bracket, Matchup, Player } from '../../backend/src/types'
 import Head from 'next/head'
 import VotingCard from '../components/VotingCard'
 
-export default function Join() {
+const Join = () => {
   // Get game ID from URL
   const router = useRouter()
   const { game } = router.query
   
   // Declare state variables
   const [name, setName] = useState('')
-  const [bracketCode, setBracketCode] = useState('')
+  const [code, setCode] = useState('')
   const [bracket, setBracket] = useState<Bracket | null>(null)
   const [isGameMaster, setIsGameMaster] = useState(false)
   const [matchups, setMatchups] = useState<Matchup[]>([])
@@ -33,9 +33,9 @@ export default function Join() {
       setName(storedName)
     }
     
-    const storedBracketCode = localStorage.getItem('bracketCode')
-    if (storedBracketCode) {
-      setBracketCode(storedBracketCode)
+    const storedCode = localStorage.getItem('code')
+    if (storedCode) {
+      setCode(storedCode)
     }
     
     if (game) {
@@ -139,9 +139,9 @@ export default function Join() {
 
   // Handle set bracket from button click
   const handleSetBracket = () => {
-    if (gameId && bracketCode) {
-      socket.emit('set_bracket', { gameId, code: bracketCode.toLowerCase() })
-      localStorage.setItem('bracketCode', bracketCode.toLowerCase())
+    if (gameId && code) {
+      socket.emit('set_bracket', { gameId, code: code.toLowerCase() })
+      localStorage.setItem('code', code.toLowerCase())
     }
   }
 
@@ -188,8 +188,8 @@ export default function Join() {
               <label className="block mb-2 text-gray-900 dark:text-gray-100">Bracket Code:</label>
               <input
                 type="text"
-                value={bracketCode}
-                onChange={e => setBracketCode(e.target.value)}
+                value={code}
+                onChange={e => setCode(e.target.value)}
                 placeholder="Enter Bracket Code"
                 className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 onKeyUp={e => { if (e.key === 'Enter') handleSetBracket() }}
@@ -243,3 +243,5 @@ export default function Join() {
     </div>
   )
 }
+
+export default Join
