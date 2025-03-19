@@ -204,7 +204,7 @@ const NewBracket = () => {
                       id={`image-${index}`}
                       value={contestant.image_url}
                     />
-                    {contestant.name && (
+                    {contestant.name && contestant.image_url && (
                       <div className="flex items-center justify-center space-x-2">
                       <button
                         type="button"
@@ -219,7 +219,6 @@ const NewBracket = () => {
                       </button>
                       <img
                         src={contestant.image_url}
-                        onError={(e) => { e.currentTarget.src = '/bn-logo-gold.svg' }}
                         alt={contestant.name}
                         className="w-25 h-25 object-cover rounded-lg"
                       />
