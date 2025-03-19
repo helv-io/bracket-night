@@ -8,7 +8,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "async-g-i-s": "^1.5.5",
     "next": "^15.2.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
