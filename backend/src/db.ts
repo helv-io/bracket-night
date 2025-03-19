@@ -73,7 +73,7 @@ export const getBracketByCode = (code: string): Bracket | null => {
   if (!bracket) return null
 
   const contestants = db.prepare<number, Contestant>
-    (`SELECT id, name, image_url, internal_url FROM contestants WHERE bracket_id = ?`).all(bracket.id)
+    (`SELECT id, bracket_id, name, image_url, internal_url FROM contestants WHERE bracket_id = ?`).all(bracket.id)
   
   return { ...bracket, contestants }
 }

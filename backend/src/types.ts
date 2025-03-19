@@ -9,6 +9,7 @@ export interface Bracket {
 
 export interface Contestant {
   id: number
+  bracket_id: number
   name: string
   image_url: string
   internal_url: string
