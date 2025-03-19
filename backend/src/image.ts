@@ -38,8 +38,12 @@ export const getImageURL = async (topic: string, choice: number): Promise<{ url:
 export const saveImage = async (contestant: Contestant) => {
   // try-catch block to handle errors
   try {
+    // Fetch image from URL using fetch
+    const response = await fetch(contestant.image_url)
+    const buffer = await response.arrayBuffer()
+    
     // Read image and convert to 400x400 PNG
-    const image = await Jimp.read(contestant.image_url)
+    const image = await Jimp.read(buffer)
     image.resize({ w: 400, h: 400 })
   
     // Define image path
