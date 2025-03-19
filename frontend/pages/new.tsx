@@ -9,7 +9,6 @@ export default function NewBracket() {
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showImageWarning, setShowImageWarning] = useState(false)
   const [contestants, setContestants] = useState(
     Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 }))
   )
@@ -33,14 +32,14 @@ export default function NewBracket() {
       return
     }
 
-    if (isPublic && !bracketCode) {
-      setErrorMessage('Bracket Code is required for public brackets')
+    const invalidImages = contestants.some(c => !c.image_url)
+    if (invalidImages) {
+      setErrorMessage('All contestant images must be filled')
       return
     }
-
-    const missingImages = contestants.some(c => !c.image_url)
-    if (missingImages && !showImageWarning) {
-      setShowImageWarning(true)
+    
+    if (isPublic && !bracketCode) {
+      setErrorMessage('Bracket Code is required for public brackets')
       return
     }
 
@@ -70,7 +69,6 @@ export default function NewBracket() {
       setErrorMessage('Something went wrong, try again')
     }
     setIsSubmitting(false)
-    setShowImageWarning(false)
   }
 
   const updateContestant = (index: number, field: 'name' | 'image_url', value: string) => {
@@ -104,14 +102,13 @@ export default function NewBracket() {
   }, [errorMessage])
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 flex-col">
+      <img
+        src="/bracket-night-gold.svg"
+        alt="Bracket Night Logo"
+        className="w-full sm:w-1/3 object-cover"
+      />
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 transition-all duration-300">
-        {/* Logo bracket-night-gold.svg - full width */}
-        <img
-          src="/bracket-night-gold.svg"
-          alt="Bracket Night Logo"
-          className="w-full h-25 object-cover"
-        />
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6" style={{ textShadow: '2px 2px 4px var(--accent)' }}>
           New Bracket
         </h1>
@@ -167,87 +164,62 @@ export default function NewBracket() {
             </div>
           )}
 
-          {/* Display the contestants only if Title is set */}
-          {title && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {contestants.map((contestant, index) => (
-                <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
-                  <legend className="text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 px-1">
-                    Contestant {index + 1}
-                  </legend>
-                  <div className="space-y-4">
+          {/* Contestants */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {contestants.map((contestant, index) => (
+              <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
+                <legend className="text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 px-1">
+                  Contestant {index + 1}
+                </legend>
+                <div className="space-y-4">
                     <div>
-                      <input
-                        id={`name-${index}`}
-                        type="text"
-                        value={contestant.name}
-                        onChange={(e) => updateContestant(index, "name", e.target.value)}
-                        onBlur={(e) => proposeImage(index, e.target.value, 0)}
-                        placeholder="Name"
-                        maxLength={20}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                      />
+                    <input
+                      id={`name-${index}`}
+                      type="text"
+                      value={contestant.name}
+                      onChange={(e) => updateContestant(index, "name", e.target.value)}
+                      onKeyUp={() => proposeImage(index, `${title} ${contestant.name}`, contestant.choice = 0)}
+                      placeholder="Name"
+                      maxLength={20}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+                    />
                     </div>
-                    <div>
-                      <input
-                        type="hidden"
-                        id={`image-${index}`}
-                        value={contestant.image_url}
-                      />
-                      {contestant.name && (
-                        <div className="flex items-center justify-center space-x-2">
-                          <button
-                            type="button"
-                            disabled={!contestant.choice || !contestant.name}
-                            onClick={() => proposeImage(index, `${title} ${contestant.name}`, --contestant.choice)}
-                            className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                          >
-                            &lt;
-                          </button>
-                          <img
-                            src={contestant.image_url || '/bn-logo-gold.svg'}
-                            alt={contestant.name}
-                            className="w-30 h-30 object-cover rounded-lg"
-                            
-                          />
-                          <button
-                            type="button"
-                            onClick={() => proposeImage(index, `${title} ${contestant.name}`, ++contestant.choice)}
-                            className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                          >
-                            &gt;
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  <div>
+                    <input
+                      type="hidden"
+                      id={`image-${index}`}
+                      value={contestant.image_url}
+                    />
+                    {contestant.name && (
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          type="button"
+                          disabled={!contestant.choice || !contestant.name}
+                          onClick={() => proposeImage(index, `${title} ${contestant.name}`, --contestant.choice)}
+                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                        >
+                          👈
+                        </button>
+                        <img
+                          src={contestant.image_url || '/bn-logo-gold.svg'}
+                          alt={contestant.name}
+                          className="w-25 h-25 object-cover rounded-lg"
+                          
+                        />
+                        <button
+                          type="button"
+                          onClick={() => proposeImage(index, `${title} ${contestant.name}`, ++contestant.choice)}
+                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                        >
+                          👉
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </fieldset>
-              ))}
-            </div>
-          )}
-
-          {/* Display the image warning */}
-          {showImageWarning && (
-            <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-lg shadow">
-              <p className="mb-2">Some image URLs are missing. They’re optional but recommended. Proceed anyway?</p>
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setShowImageWarning(false)}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                >
-                  Nope
-                </button>
-                <button
-                  type="button"
-                  onClick={submitBracket}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                  Yup!
-                </button>
-              </div>
-            </div>
-          )}
+                </div>
+              </fieldset>
+            ))}
+          </div>
           
           {/* Display the success message */}
           {successMessage && (
