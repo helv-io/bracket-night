@@ -5,8 +5,8 @@ import { config } from './config'
 
 // Create a new bracket with 16 contestants
 export const getImageURL = async (topic: string): Promise<{ url: string }[]> => {
-  // Get images from Google Image Search
-  const images = await gis(topic)  
+  // Get images from Google Image Search as if it was a Google bot
+  const images = await gis(topic, {userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'})  
   
   // If there are images
   if (images.length) {
