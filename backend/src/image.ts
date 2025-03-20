@@ -42,7 +42,7 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
       
       // Return true if image is accessible
       return result.ok
-    }).map((image) => ({ url: image.img_src }))
+    }).map((image) => ({ url: image.img_src, obj: image }))
   
     return bigSquareImages
   } catch (error) {
