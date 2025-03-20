@@ -15,7 +15,7 @@ const NewBracket = () => {
     Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 }))
   )
   const [images, setImages] = useState(
-    Array.from({ length: 16 }, () => ({ urls: [{ url: '' }] }))
+    Array.from({ length: 16 }, () => ({ urls: [{ url: '', thumb: '' }] }))
   )
   
   // Create a reference to the error message element
@@ -85,7 +85,7 @@ const NewBracket = () => {
   // Propose images for a contestant
   const proposeImages = async (index: number, name: string) => {
     const newImages = [...images]
-    const urls = await (await fetch(`/api/image/${name}`)).json() as { url: string }[]
+    const urls = await (await fetch(`/api/image/${name}`)).json() as { url: string, thumb: string }[]
     if (urls.length) {
       newImages[index].urls = urls
       setImages(newImages)
@@ -221,7 +221,7 @@ const NewBracket = () => {
                           👈
                         </button>
                         <img
-                          src={contestant.image_url}
+                          src={images[index].urls[contestant.choice]?.thumb}
                           alt={contestant.name}
                           onError={(e) => e.currentTarget.src = '/bn-logo-gold.svg'}
                           className="w-25 h-25 object-cover rounded-lg"
