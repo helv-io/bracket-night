@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
 import { Bracket, Matchup, Player } from '../../backend/src/types'
-import Head from 'next/head'
 import VotingCard from '../components/VotingCard'
 
 const Join = () => {
@@ -154,11 +153,7 @@ const Join = () => {
   const hasVoted = currentVotes.some(v => v.playerId === socket.id)
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-      </Head>
-      
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4">      
       {!hasJoined && (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
           <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Join Game</h1>
