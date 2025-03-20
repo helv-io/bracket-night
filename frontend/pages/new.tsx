@@ -119,7 +119,7 @@ const NewBracket = () => {
         className="w-full sm:w-1/3 object-cover"
       />
       <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 transition-all duration-300">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6" style={{ textShadow: '2px 2px 4px var(--accent)' }}>
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6 bracket-title">
           New Bracket
         </h1>
 

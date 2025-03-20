@@ -57,7 +57,7 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
           onClick={() => handleVote(0)}
           onMouseDown={(e) => e.currentTarget.blur()}
           disabled={voted || !matchup.left}
-          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 ${
+          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-56 ${
             voted || !matchup.left
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'
@@ -74,15 +74,18 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
               <span className="text-4xl text-[var(--text)]">❓</span>
             </div>
           )}
-          <span className="text-lg font-semibold text-[var(--text)] text-center truncate w-full">
-            {matchup.left?.name}
-          </span>
+          <div className="flex-grow flex items-center justify-center w-full">
+            <span className="text-lg font-semibold text-[var(--text)] text-center line-clamp-3 hyphens-auto w-full">
+              {matchup.left?.name}
+            </span>
+          </div>
         </button>
+
         <button
           onClick={() => handleVote(1)}
           onMouseDown={(e) => e.currentTarget.blur()}
           disabled={voted || !matchup.right}
-          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 ${
+          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-56 ${
             voted || !matchup.right
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'
@@ -99,13 +102,15 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
               <span className="text-4xl text-[var(--text)]">❓</span>
             </div>
           )}
-          <span className="text-lg font-semibold text-[var(--text)] text-center truncate w-full">
-            {matchup.right?.name}
-          </span>
+          <div className="flex-grow flex items-center justify-center w-full">
+            <span className="text-lg font-semibold text-[var(--text)] text-center line-clamp-3 hyphens-auto w-full">
+              {matchup.right?.name}
+            </span>
+          </div>
         </button>
       </div>
       {voted && (
-        <div className="mt-4 text-center">
+        <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg shadow text-center">
           <p className="text-lg text-[var(--text)] animate-pulse">Waiting for others to vote...</p>
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--accent)] mx-auto mt-2"></div>
         </div>

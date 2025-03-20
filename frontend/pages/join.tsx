@@ -216,13 +216,21 @@ const Join = () => {
       )}
       
       {hasJoined && isGameStarted && (
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl">
-          <h1 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Bracket Night</h1>
-          {bracket && <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100" style={{ textShadow: '2px 2px 4px var(--accent)' }}>{bracket.title}</h2>}
-          <p className="mb-4 text-gray-900 dark:text-gray-100">Players: {players.length}/10</p>
+        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl text-center">
+          <img
+            src="/bracket-night-gold.svg"
+            alt="Bracket Night Logo"
+            className="w-full sm:w-1/3 mx-auto mb-4"
+          />
+          {bracket && (
+            <>
+              <h2 className="text-4xl font-extrabold mb-2 text-gray-900 dark:text-gray-100" style={{ textShadow: '2px 2px 4px var(--accent)' }}>{bracket.title}</h2>
+              <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">{bracket.subtitle}</h3>
+            </>
+          )}
           {isGameStarted && !isGameOver && (
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Vote for your favorite</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Vote now!</h2>
               <VotingCard 
                 matchup={matchups[currentMatchupIndex]} 
                 gameId={gameId} 
@@ -235,7 +243,7 @@ const Join = () => {
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Game Over!</h2>
               <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Winner: {matchups[currentMatchupIndex - 1].winner?.name}</h3>
-              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg" />
+              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4" />
             </div>
           )}
         </div>
