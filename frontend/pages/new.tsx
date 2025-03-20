@@ -12,7 +12,7 @@ const NewBracket = () => {
   
   // Arrays (16) for Contestants and Images
   const [contestants, setContestants] = useState(
-    Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 }))
+    Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0, loading: false }))
   )
   const [images, setImages] = useState(
     Array.from({ length: 16 }, () => ({ urls: [{ url: '', thumb: '' }] }))
@@ -69,16 +69,19 @@ const NewBracket = () => {
       setSubtitle('')
       setIsPublic(false)
       setCode('')
-      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0 })))
+      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0, loading: false })))
     } else {
       setErrorMessage('Something went wrong, try again')
     }
     setIsSubmitting(false)
   }
 
-  const updateContestant = (index: number, field: 'name' | 'image_url', value: string) => {
+  const updateContestant = (index: number, field: 'name' | 'image_url' | 'loading', value: string | boolean) => {
     const newContestants = [...contestants]
-    newContestants[index][field] = value
+    if(field === 'loading')
+      newContestants[index].loading = value as boolean
+    else
+      newContestants[index][field] = value as string
     setContestants(newContestants)
   }
   
@@ -192,8 +195,10 @@ const NewBracket = () => {
                       onBlur={async () => {
                         if (!contestant.name.trim()) return
                         contestant.choice = 0
+                        updateContestant(index, 'loading', true)
                         await proposeImages(index, `${title} ${contestant.name}`)
                         updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
+                        updateContestant(index, 'loading', false)
                       }}
                       placeholder="Name"
                       maxLength={20}
@@ -206,38 +211,46 @@ const NewBracket = () => {
                       id={`image-${index}`}
                       value={contestant.image_url}
                     />
-                    {contestant.name && contestant.image_url && (
+                    {contestant.name && (
                       <div className="flex items-center justify-center space-x-2">
-                        <button
-                          type="button"
-                          disabled={images[index].urls.length === 0 || contestant.choice === 0}
-                          onClick={() => {
-                            const newChoice = Math.max(contestant.choice - 1, 0)
-                            updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
-                            contestant.choice = newChoice
-                          }}
-                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                        >
-                          👈
-                        </button>
-                        <img
-                          src={images[index].urls[contestant.choice]?.thumb}
-                          alt={contestant.name}
-                          onError={(e) => e.currentTarget.src = '/bn-logo-gold.svg'}
-                          className="w-25 h-25 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
-                          onClick={() => {
-                            const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
-                            updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
-                            contestant.choice = newChoice
-                          }}
-                          className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                        >
-                          👉
-                        </button>
+                        {/* Loading spinner as images populate */}
+                        {contestant.loading && (<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--accent)] mx-auto mt-2"></div>)}
+                        
+                        {/* Image selection buttons */}
+                        {contestant.image_url && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={images[index].urls.length === 0 || contestant.choice === 0}
+                              onClick={() => {
+                                const newChoice = Math.max(contestant.choice - 1, 0)
+                                updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                                contestant.choice = newChoice
+                              }}
+                              className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                            >
+                              👈
+                            </button>
+                            <img
+                              src={images[index].urls[contestant.choice]?.thumb}
+                              alt={contestant.name}
+                              onError={(e) => e.currentTarget.src = '/bn-logo-gold.svg'}
+                              className="w-25 h-25 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
+                              onClick={() => {
+                                const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
+                                updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                                contestant.choice = newChoice
+                              }}
+                              className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+                            >
+                              👉
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
