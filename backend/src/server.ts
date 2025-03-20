@@ -1,12 +1,5 @@
 import fs from 'fs'
 import { config } from './config'
-import express from 'express'
-import http from 'http'
-import { Server } from 'socket.io'
-import path from 'path'
-import { Game } from './game'
-import { getImageURL } from './image'
-import { Bracket } from 'types'
 
 // Create the db and data directories if they don't exist
 if (!fs.existsSync(config.dbFolder))
@@ -14,6 +7,13 @@ if (!fs.existsSync(config.dbFolder))
 if (!fs.existsSync(`${config.dataPath}/images`))
   fs.mkdirSync(`${config.dataPath}/images`, { recursive: true })
 
+import express from 'express'
+import http from 'http'
+import { Server } from 'socket.io'
+import path from 'path'
+import { Game } from './game'
+import { getImageURL } from './image'
+import { Bracket } from 'types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 
 const app = express()
