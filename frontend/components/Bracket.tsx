@@ -10,30 +10,33 @@ interface BracketProps {
 const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent: boolean }) => {
   return (
     <div
-      className={`p-2 rounded-lg text-center w-[180px] flex flex-col items-center justify-between h-[140px] shadow-md transition-all duration-300 bg-[var(--card-bg)] ${
-        isCurrent ? 'ring-4 ring-[var(--accent)]' : ''
-      }`}
+      className={`p-2 rounded-lg text-center w-[180px] flex flex-col items-center justify-between h-[140px] shadow-md transition-all duration-300 bg-[var(--card-bg)]
+        ${isCurrent ? 'ring-4 ring-[var(--active)]' : ''}`
+      }
     >
       <div className="flex items-center w-full">
         {matchup.left?.image_url ? (
           <img
             src={matchup.left.image_url}
             alt={matchup.left.name}
-            className={`w-8 h-8 rounded-full mr-2 transition-opacity duration-300 ${
-              matchup.winner?.id === matchup.left?.id
-                ? 'opacity-100 border-2 border-[var(--winner-highlight)]'
+            className={`w-10 h-10 rounded-full mr-2 transition-opacity duration-300
+              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
+              ${matchup.winner?.id === matchup.left?.id
+                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
                 : 'opacity-100'
-            }`}
+              }`
+            }
           />
         ) : (
           <div className="w-8 h-8 mr-2 text-2xl text-[var(--text)] opacity-100">❓</div>
         )}
         <div
-          className={`flex-1 text-left transition-colors duration-300 ${
-            matchup.winner?.id === matchup.left?.id
+          className={`flex-1 text-left transition-colors duration-300 
+            ${isCurrent ? 'font-bold' : ''}
+            ${matchup.winner?.id === matchup.left?.id
               ? 'text-[var(--winner-highlight)] font-bold'
-              : 'text-gray-400'
-          }`}
+              : 'text-gray-400'}`
+          }
         >
           {matchup.left?.name || ''}
         </div>
@@ -41,11 +44,13 @@ const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
       <div className="text-[var(--accent)] font-bold text-lg">🆚</div>
       <div className="flex items-center w-full">
         <div
-          className={`flex-1 text-right transition-colors duration-300 ${
-            matchup.winner?.id === matchup.right?.id
+          className={`flex-1 text-right transition-colors duration-300
+            ${isCurrent ? 'font-bold' : ''}
+            ${matchup.winner?.id === matchup.right?.id
               ? 'text-[var(--winner-highlight)] font-bold'
               : 'text-gray-400'
-          }`}
+            }`
+          }
         >
           {matchup.right?.name || ''}
         </div>
@@ -53,9 +58,10 @@ const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent:
           <img
             src={matchup.right.image_url}
             alt={matchup.right.name}
-            className={`w-8 h-8 rounded-full ml-2 transition-opacity duration-300 ${
-              matchup.winner?.id === matchup.right?.id
-                ? 'opacity-100 border-2 border-[var(--winner-highlight)]'
+            className={`w-10 h-10 rounded-full ml-2 transition-opacity duration-300
+              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
+              ${matchup.winner?.id === matchup.right?.id
+                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
                 : 'opacity-100'
             }`}
           />
@@ -85,7 +91,8 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      ctx.strokeStyle = '#D4AF37' // Golden color
+      // Same as --active from css
+      ctx.strokeStyle = '#dbfd1c'
       ctx.lineWidth = 5
 
       const getPosition = (element: HTMLElement, side: 'left' | 'right' | 'center') => {

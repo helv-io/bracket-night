@@ -11,6 +11,10 @@ const devConfig: NextConfig = {
       {
         source: '/api/:path*',
         destination: 'http://localhost:3001/api/:path*'
+      },
+      {
+        source: '/data/:path*',
+        destination: 'http://localhost:3001/data/:path*'
       }
     ]
   }

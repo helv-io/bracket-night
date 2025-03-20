@@ -30,7 +30,6 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
         const prefix = image.img_src.startsWith('//') ? 'https:' : ''
         const fetchResult = await fetch(`${prefix}${image.img_src}`)
         if (!fetchResult.ok) {
-          console.error(`Error getting image from ${image.img_src}:\n${fetchResult.statusText}`)
           return false
         }
         return true
@@ -49,7 +48,6 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
     // Return the filtered image URLs
     return bigSquareImages;
   } catch (error) {
-    console.error(`Error getting image URL: ${error}`)
     return []
   }
 }
@@ -59,7 +57,7 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
  * @param contestant The contestant object
  * @param bracket The bracket ID
  */
-export const saveImage = async (contestant: Contestant, bracket: number | bigint) => {
+export const saveImage = async (contestant: Contestant, bracket: number | bigint): Promise<string | undefined> => {
   // try-catch block to handle errors
   try {    
     // Read image and convert to 400x400
@@ -76,6 +74,9 @@ export const saveImage = async (contestant: Contestant, bracket: number | bigint
   
     // Save the image to path
     await image.write(`${path}/${name}.${ext}`)
+    
+    // Return the image path
+    return `/data/images/${name}.${ext}`
   } catch (error) {
     console.error(`Error saving image: ${error}`)
   }
