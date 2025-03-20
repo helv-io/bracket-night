@@ -1,13 +1,20 @@
+import fs from 'fs'
+import { config } from './config'
 import express from 'express'
 import http from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
 import { Game } from './game'
-import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 import { getImageURL } from './image'
-import { config } from './config'
 import { Bracket } from 'types'
-import fs from 'fs'
+
+// Create the db and data directories if they don't exist
+if (!fs.existsSync(config.dbFolder))
+  fs.mkdirSync(config.dbFolder, { recursive: true })
+if (!fs.existsSync(`${config.dataPath}/images`))
+  fs.mkdirSync(`${config.dataPath}/images`, { recursive: true })
+
+import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 
 const app = express()
 const server = http.createServer(app)
@@ -27,22 +34,18 @@ new Game(io)
 // Serve frontend static html files.
 app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['html'] }))
 
-// Create the images directory if it doesn't exist
-if (!fs.existsSync(`${config.dataPath}/images`))
-  fs.mkdirSync(`${config.dataPath}/images`)
-
 // Serve data files statically
 app.use('/data', express.static(config.dataPath))
 
 // API endpoint to create a new bracket
 app.use(express.json())
-app.post('/api/create-bracket', (req, res) => {
+app.post('/api/create-bracket', async (req, res) => {
   const bracket: Bracket = req.body
   if (!bracket.title || !bracket.subtitle || !bracket.contestants || bracket.contestants.length !== 16) {
     res.status(400).json({ error: 'Invalid input' })
     return
   }
-  const code = createBracket(bracket.title, bracket.subtitle, bracket.contestants, bracket.isPublic, bracket.code)
+  const code = await createBracket(bracket.title, bracket.subtitle, bracket.contestants, bracket.isPublic, bracket.code)
   res.json({ code })
 })
 
@@ -69,7 +72,7 @@ app.get('/api/image/:topic', async (req, res) => {
   if(images.length) {
     res.json(images)
   } else {
-    res.status(404).end()
+    res.json([ ])
   }
 })
 
