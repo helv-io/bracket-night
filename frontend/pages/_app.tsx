@@ -8,12 +8,11 @@ const App = ({ Component, pageProps }: AppProps) => {
       <Head>
         <title>Bracket Night</title>
         <meta name="description" content="Bracket Night - The ultimate bracket competition platform" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
         <meta property="og:title" content="Bracket Night" />
         <meta property="og:description" content="Bracket Night - The ultimate bracket competition platform" />
         <meta property="og:image" content="/og-image.png" />
         <meta property="og:url" content="https://bracket.helv.io" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Component {...pageProps} />

@@ -35,7 +35,7 @@ new Game(io)
 app.use(express.static(path.join(__dirname, '../frontend/out'), { extensions: ['html'] }))
 
 // Serve data files statically
-app.use('/data', express.static(config.dataPath))
+app.use('/data', express.static(config.dataPath, { maxAge: '1d' }))
 
 // API endpoint to create a new bracket
 app.use(express.json())
