@@ -12,7 +12,7 @@ import http from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
 import { Game } from './game'
-import { getImageURL } from './image'
+import { getImageURLs } from './image'
 import { Bracket } from 'types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 
@@ -66,7 +66,7 @@ app.get('/api/public', (_req, res) => {
 app.get('/api/image/:topic', async (req, res) => {
   
   // Get image URL
-  const images = await getImageURL(req.params.topic)
+  const images = await getImageURLs(req.params.topic)
   
   // Return the image URL or 404 if not found
   if(images.length) {

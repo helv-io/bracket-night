@@ -7,7 +7,7 @@ import { config } from './config'
  * @param topic The search query
  * @returns An array of image URLs
  */
-export const getImageURL = async (topic: string): Promise<{ url: string }[]> => {
+export const getImageURLs = async (topic: string): Promise<{ url: string, thumb: string }[]> => {
   if (!topic || !config.searxngHost) {
     return []
   }
@@ -43,7 +43,7 @@ export const getImageURL = async (topic: string): Promise<{ url: string }[]> => 
       // Sort images by score
       .sort((a, b) => b.score - a.score)
       // Get the URL of the images
-      .map(image => ({ url: image.img_src }))
+      .map(image => ({ url: image.img_src, thumb: image.thumbnail_src || image.img_src }))
 
     // Return the filtered image URLs
     return bigSquareImages;
