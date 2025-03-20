@@ -30,3 +30,7 @@ button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.bracket-title {
+  text-shadow: 2px 2px 4px var(--accent);
+}

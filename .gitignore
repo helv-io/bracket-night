@@ -81,4 +81,5 @@ frontend/.env*
 # Backend specific
 backend/dist/
 backend/config/
+backend/data/
 backend/.env*
