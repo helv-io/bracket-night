@@ -4,6 +4,32 @@ import { config } from './config'
 import z from 'zod'
 
 export const getContestants = async (topic: string) => {
+  // If in development mode, return a static list of pizza flavors
+  if (config.dev) {
+    return [
+      'Pepperoni',
+      'Cheese',
+      'Hawaiian',
+      'Meat Lovers',
+      'Veggie',
+      'BBQ Chicken',
+      'Buffalo Chicken',
+      'Margherita',
+      'Sausage',
+      'Mushroom',
+      'Supreme',
+      'Pineapple',
+      'White',
+      'Peppers',
+      'Onions',
+      'Olives'
+    ]
+  }
+  
+  if (!config.aiUrl || !config.aiKey || !config.aiModel) {
+    return []
+  }
+  
   const ai = new AI({
     baseURL: config.aiUrl,
     apiKey: config.aiKey
