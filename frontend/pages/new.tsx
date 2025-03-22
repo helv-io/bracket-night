@@ -115,6 +115,8 @@ const NewBracket = () => {
   }, [errorMessage])
 
   const magic = async () => {
+    // UI should be blocked while this is happening
+        
     const response = await (await fetch(`/api/ai/${title}`)).json() as string[]
     setContestants(contestants.map((c, i) => ({ name: response[i], image_url: '', choice: 0, loading: false })))
   }
@@ -136,6 +138,7 @@ const NewBracket = () => {
           <div className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
+              id="title"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="Title"
@@ -154,6 +157,7 @@ const NewBracket = () => {
   
           <input
             type="text"
+            id="subtitle"
             value={subtitle}
             onChange={e => setSubtitle(e.target.value)}
             placeholder="Subtitle (Description)"
@@ -206,7 +210,7 @@ const NewBracket = () => {
                       type="text"
                       value={contestant.name}
                       onChange={e => updateContestant(index, 'name', e.target.value)}
-                      onFocus={async () => (images[index].urls = [])}
+                      onFocus={async () => (title ? images[index].urls = [] : document.getElementById('title')?.focus())}
                       onBlur={async () => {
                         if (!contestant.name.trim()) return
                         contestant.choice = 0
@@ -215,7 +219,7 @@ const NewBracket = () => {
                         updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
                         updateContestant(index, 'loading', false)
                       }}
-                      placeholder="Name"
+                      placeholder={title ? `Contestant ${index + 1} Name` : 'Please enter Title first'}
                       maxLength={20}
                       className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
                     />
