@@ -20,7 +20,7 @@ export const getImageURLs = async (topic: string): Promise<{ url: string, thumb:
     const checks = await Promise.all(
       data.results.map(async (image) => {
         // Discard results without main or thumbnail image
-        if (!image.img_src || !image.thumbnail_src) return false
+        if (!image.img_src) return false
         
         // Check if the image has a resolution
         if (!image.resolution) return false
@@ -36,12 +36,12 @@ export const getImageURLs = async (topic: string): Promise<{ url: string, thumb:
           return false
         }
         
-        // Check if the thumbnail is accessible
-        const prefixThumb = image.thumbnail_src.startsWith('//') ? 'https:' : ''
-        const fetchThumb = await fetch(`${prefixThumb}${image.thumbnail_src}`)
-        if (!fetchThumb.ok) {
-          return false
-        }
+        // // Check if the thumbnail is accessible
+        // const prefixThumb = image.thumbnail_src.startsWith('//') ? 'https:' : ''
+        // const fetchThumb = await fetch(`${prefixThumb}${image.thumbnail_src}`)
+        // if (!fetchThumb.ok) {
+        //   return false
+        // }
         return true
       })
     )
