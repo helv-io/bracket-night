@@ -9,6 +9,7 @@ const NewBracket = () => {
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAiHappening, setIsAiHappening] = useState(false)
   
   // Arrays (16) for Contestants and Images
   const [contestants, setContestants] = useState(
@@ -122,9 +123,31 @@ const NewBracket = () => {
 
   const magic = async () => {
     // UI should be blocked while this is happening
-        
-    const response = await (await fetch(`/api/ai/${title}`)).json() as string[]
-    setContestants(contestants.map((c, i) => ({ name: response[i], image_url: '', choice: 0, loading: false })))
+    setIsAiHappening(true)
+    
+    // Get AI contestants
+    const aiContestants = await (await fetch(`/api/ai/${title}`)).json() as string[]
+    
+    // Clone existing contestants and images
+    const newContestants = [...contestants]
+    // const newImages = [...images]
+    
+    // Async Loop on new contestants and update names, while skipping if the name is already filled
+    await Promise.all(aiContestants.map(async (name, index) => {
+      // Only run if no name
+      if (!newContestants[index].name) {
+        newContestants[index].name = name
+        newContestants[index].choice = 0
+        await proposeImages(index, `${title} ${name}`)
+        newContestants[index].image_url = images[index].urls[0]?.url || '/bn-logo-gold.svg'
+      }
+    }))
+    
+    // Update contestants with new contestants
+    setContestants(newContestants)
+    
+    // UI should be unblocked after this is done
+    setIsAiHappening(false)
   }
 
   return (
@@ -139,6 +162,18 @@ const NewBracket = () => {
           New Bracket
         </h1>
   
+        {/* AI is happening - Draw a full screen, blocking progress spinner with some AI Doing Magic text */}
+        {/* This should fade in / out based on the isAiHappening boolean */}
+        {isAiHappening && (
+          <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 space-y-4">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[var(--accent)] mx-auto"></div>
+              <p className="text-gray-900 dark:text-white text-lg font-semibold text-center">AI is doing magic...</p>
+            </div>
+          </div>
+        )}
+  
+        {/* Form for creating a new bracket */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title Input with AI Button */}
           <div className="flex flex-col sm:flex-row gap-2">
