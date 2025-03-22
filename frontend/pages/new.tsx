@@ -133,15 +133,14 @@ const NewBracket = () => {
     // const newImages = [...images]
     
     // Async Loop on new contestants and update names, while skipping if the name is already filled
-    await Promise.all(aiContestants.map(async (name, index) => {
-      // Only run if no name
-      if (!newContestants[index].name) {
-        newContestants[index].name = name
-        newContestants[index].choice = 0
-        await proposeImages(index, `${title} ${name}`)
-        newContestants[index].image_url = images[index].urls[0]?.url || '/bn-logo-gold.svg'
-      }
-    }))
+    // Must run sequentially as to not overload the search API
+    for (let i = 0; i < aiContestants.length; i++) {
+      if (newContestants[i].name) continue
+      newContestants[i].name = aiContestants[i]
+      newContestants[i].choice = 0
+      await proposeImages(i, `${title} ${aiContestants[i]}`)
+      newContestants[i].image_url = images[i].urls[0]?.url || '/bn-logo-gold.svg'
+    }
     
     // Update contestants with new contestants
     setContestants(newContestants)
