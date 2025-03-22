@@ -1,3 +1,4 @@
+// Core imports for fs
 import fs from 'fs'
 import { config } from './config'
 
@@ -7,14 +8,18 @@ if (!fs.existsSync(config.dbFolder))
 if (!fs.existsSync(`${config.dataPath}/images`))
   fs.mkdirSync(`${config.dataPath}/images`, { recursive: true })
 
+// External imports
 import express from 'express'
 import http from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
+
+// Local imports
 import { Game } from './game'
 import { getImageURLs } from './image'
-import { Bracket } from 'types'
+import { Bracket } from './types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
+import { getContestants } from './ai'
 
 const app = express()
 const server = http.createServer(app)
@@ -47,6 +52,12 @@ app.post('/api/create-bracket', async (req, res) => {
   }
   const code = await createBracket(bracket.title, bracket.subtitle, bracket.contestants, bracket.isPublic, bracket.code)
   res.json({ code })
+})
+
+// API endpoint for AI
+app.get('/api/ai/:topic', async (req, res) => {
+  const contestants = await getContestants(req.params.topic)
+  res.json(contestants)
 })
 
 // API endpoint to check if a bracket code is unique

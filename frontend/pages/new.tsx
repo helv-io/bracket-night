@@ -114,6 +114,11 @@ const NewBracket = () => {
     }
   }, [errorMessage])
 
+  const magic = async () => {
+    const response = await (await fetch(`/api/ai/${title}`)).json() as string[]
+    setContestants(contestants.map((c, i) => ({ name: response[i], image_url: '', choice: 0, loading: false })))
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 flex-col">
       <img
@@ -125,16 +130,28 @@ const NewBracket = () => {
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6 bracket-title">
           New Bracket
         </h1>
-
+  
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="Title"
-            className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-          />
-
+          {/* Title Input with AI Button */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Title"
+              className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+            />
+            <button
+              type="button"
+              disabled={title.length < 3}
+              onClick={magic}
+              className="w-full sm:w-12 sm:h-12 flex items-center justify-center bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed p-3 sm:p-0"
+              aria-label="Generate contestants with AI"
+            >
+              🪄
+            </button>
+          </div>
+  
           <input
             type="text"
             value={subtitle}
@@ -142,7 +159,7 @@ const NewBracket = () => {
             placeholder="Subtitle (Description)"
             className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
           />
-
+  
           <div className="flex flex-col space-y-2">
             <label className="flex items-center space-x-2 cursor-pointer">
               <input
@@ -166,8 +183,7 @@ const NewBracket = () => {
               />
             )}
           </div>
-
-          {/* Attach the ref to the error message div */}
+  
           {errorMessage && (
             <div
               ref={errorRef}
@@ -176,8 +192,7 @@ const NewBracket = () => {
               {errorMessage}
             </div>
           )}
-
-          {/* Contestants */}
+  
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {contestants.map((contestant, index) => (
               <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
@@ -190,8 +205,8 @@ const NewBracket = () => {
                       id={`name-${index}`}
                       type="text"
                       value={contestant.name}
-                      onChange={(e) => updateContestant(index, 'name', e.target.value)}
-                      onFocus={async () => images[index].urls = []}
+                      onChange={e => updateContestant(index, 'name', e.target.value)}
+                      onFocus={async () => (images[index].urls = [])}
                       onBlur={async () => {
                         if (!contestant.name.trim()) return
                         contestant.choice = 0
@@ -213,10 +228,9 @@ const NewBracket = () => {
                     />
                     {contestant.name && (
                       <div className="flex items-center justify-center space-x-2">
-                        {/* Loading spinner as images populate */}
-                        {contestant.loading && (<div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--accent)] mx-auto mt-2"></div>)}
-                        
-                        {/* Image selection buttons */}
+                        {contestant.loading && (
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--accent)] mx-auto mt-2"></div>
+                        )}
                         {contestant.image_url && (
                           <>
                             <button
@@ -234,14 +248,20 @@ const NewBracket = () => {
                             <img
                               src={images[index].urls[contestant.choice]?.thumb}
                               alt={contestant.name}
-                              onError={(e) => e.currentTarget.src = '/bn-logo-gold.svg'}
+                              onError={e => (e.currentTarget.src = '/bn-logo-gold.svg')}
                               className="w-25 h-25 object-cover rounded-lg"
                             />
                             <button
                               type="button"
-                              disabled={images[index].urls.length === 0 || contestant.choice === images[index].urls.length - 1}
+                              disabled={
+                                images[index].urls.length === 0 ||
+                                contestant.choice === images[index].urls.length - 1
+                              }
                               onClick={() => {
-                                const newChoice = Math.min(contestant.choice + 1, images[index].urls.length - 1)
+                                const newChoice = Math.min(
+                                  contestant.choice + 1,
+                                  images[index].urls.length - 1
+                                )
                                 updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
                                 contestant.choice = newChoice
                               }}
@@ -258,15 +278,13 @@ const NewBracket = () => {
               </fieldset>
             ))}
           </div>
-          
-          {/* Display the success message */}
+  
           {successMessage && (
             <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg shadow">
               {successMessage}
             </div>
           )}
-
-          {/* Submit button */}
+  
           <button
             type="submit"
             disabled={isSubmitting}
