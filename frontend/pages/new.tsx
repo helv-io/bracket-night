@@ -250,11 +250,18 @@ const NewBracket = () => {
                       id={`name-${index}`}
                       type="text"
                       value={contestant.name}
-                      onChange={e => updateContestant(index, 'name', e.target.value)}
+                      onChange={e => {
+                        updateContestant(index, 'name', e.target.value)
+                        updateContestant(index, 'image_url', '')
+                      }}
                       onFocus={async () => (title ? images[index].urls = [] : document.getElementById('title')?.focus())}
                       onBlur={async () => {
+                        // If the name is empty or the same as before, return
                         if (!contestant.name.trim()) return
+                        if (contestant.name === contestants[index].name) return
+                        
                         contestant.choice = 0
+                        updateContestant(index, 'image_url', '')
                         updateContestant(index, 'loading', true)
                         await proposeImages(index, `${title} ${contestant.name}`)
                         updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
