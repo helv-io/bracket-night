@@ -36,6 +36,12 @@ const NewBracket = () => {
       setErrorMessage('All contestant names must be filled and within 20 characters')
       return
     }
+    
+    const repeatedName = contestants.some((c, i) => contestants.slice(i + 1).some(c2 => c.name === c2.name))
+    if (repeatedName) {
+      setErrorMessage('Contestant names must be unique')
+      return
+    }
 
     const invalidImages = contestants.some(c => !c.image_url)
     if (invalidImages) {
