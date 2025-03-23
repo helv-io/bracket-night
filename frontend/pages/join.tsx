@@ -171,12 +171,6 @@ const Join = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center p-4">
-      {/* Logo */}
-      <img
-        src="/bracket-night-gold.svg"
-        alt="Bracket Night Logo"
-        className="w-full sm:w-1/3 object-cover mb-4"
-      />
   
       {/* Join Form - Vertically Centered */}
       {!hasJoined && (
