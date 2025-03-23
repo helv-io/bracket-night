@@ -14,7 +14,7 @@ export class Game {
 
   private handleConnection(socket: Socket) {
     socket.on('create_game', () => {
-      const gameId = Math.random().toString(36).substring(2, 6).toUpperCase()
+      const gameId = config.dev ? 'DEV' : Math.random().toString(36).substring(2, 6).toUpperCase()
       this.games.set(gameId, {
         gameId: gameId,
         bracket: null,
