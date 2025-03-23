@@ -13,10 +13,10 @@ const NewBracket = () => {
   
   // Arrays (16) for Contestants and Images
   const [contestants, setContestants] = useState(
-    Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0, loading: false }))
+    Array.from({ length: 16 }, () => ({ name: '', previousName: '', image_url: '', choice: 0, loading: false }))
   )
   const [images, setImages] = useState(
-    Array.from({ length: 16 }, () => ({ urls: [{ url: '', thumb: '' }] }))
+    Array.from({ length: 16 }, () => ({ urls: [ '' ] }))
   )
   
   // Create a reference to the error message element
@@ -76,7 +76,7 @@ const NewBracket = () => {
       setSubtitle('')
       setIsPublic(false)
       setCode('')
-      setContestants(Array.from({ length: 16 }, () => ({ name: '', image_url: '', choice: 0, loading: false })))
+      setContestants(Array.from({ length: 16 }, () => ({ name: '', previousName: '', image_url: '', choice: 0, loading: false })))
     } else {
       setErrorMessage('Something went wrong, try again')
     }
@@ -95,7 +95,7 @@ const NewBracket = () => {
   // Propose images for a contestant
   const proposeImages = async (index: number, name: string) => {
     const newImages = [...images]
-    const urls = await (await fetch(`/api/image/${name}`)).json() as { url: string, thumb: string }[]
+    const urls = await (await fetch(`/api/image/${name}`)).json() as string[]
     if (urls.length) {
       newImages[index].urls = urls
       setImages(newImages)
@@ -132,15 +132,14 @@ const NewBracket = () => {
     const newContestants = [...contestants]
     // const newImages = [...images]
     
-    // Async Loop on new contestants and update names, while skipping if the name is already filled
-    // Must run sequentially as to not overload the search API
-    for (let i = 0; i < aiContestants.length; i++) {
-      if (newContestants[i].name) continue
+    // Parallel Loop on new contestants and update names,  skipping if the name is already filled
+    await Promise.all(newContestants.map(async (contestant, i) => {
+      if (contestant.name) return
       newContestants[i].name = aiContestants[i]
       newContestants[i].choice = 0
       await proposeImages(i, `${title} ${aiContestants[i]}`)
-      newContestants[i].image_url = images[i].urls[0]?.url || '/bn-logo-gold.svg'
-    }
+      newContestants[i].image_url = images[i].urls[0] || '/bn-logo-gold.svg'
+    }))
     
     // Update contestants with new contestants
     setContestants(newContestants)
@@ -249,21 +248,23 @@ const NewBracket = () => {
                       id={`name-${index}`}
                       type="text"
                       value={contestant.name}
-                      onChange={e => {
-                        updateContestant(index, 'name', e.target.value)
-                        updateContestant(index, 'image_url', '')
+                      onChange={e => updateContestant(index, 'name', e.target.value)}
+                      onFocus={() => {
+                        if (!title)
+                          document.getElementById('title')?.focus()
+                        contestants[index].previousName = contestant.name
                       }}
-                      onFocus={async () => (title ? images[index].urls = [] : document.getElementById('title')?.focus())}
                       onBlur={async () => {
                         // If the name is empty or the same as before, return
                         if (!contestant.name.trim()) return
-                        if (contestant.name === contestants[index].name) return
+                        if (contestant.previousName === contestants[index].name) return
                         
                         contestant.choice = 0
                         updateContestant(index, 'image_url', '')
                         updateContestant(index, 'loading', true)
                         await proposeImages(index, `${title} ${contestant.name}`)
-                        updateContestant(index, 'image_url', images[index].urls[0]?.url || '/bn-logo-gold.svg')
+                        const url = images[index].urls.length > 0 && images[index].urls[0] || '/bn-logo-gold.svg'
+                        updateContestant(index, 'image_url', url)
                         updateContestant(index, 'loading', false)
                       }}
                       placeholder={title ? `Contestant ${index + 1} Name` : 'Please enter Title first'}
@@ -289,7 +290,7 @@ const NewBracket = () => {
                               disabled={images[index].urls.length === 0 || contestant.choice === 0}
                               onClick={() => {
                                 const newChoice = Math.max(contestant.choice - 1, 0)
-                                updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                                updateContestant(index, 'image_url', images[index].urls[newChoice])
                                 contestant.choice = newChoice
                               }}
                               className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
@@ -297,7 +298,7 @@ const NewBracket = () => {
                               👈
                             </button>
                             <img
-                              src={images[index].urls[contestant.choice]?.thumb}
+                              src={images[index].urls[contestant.choice] || '/bn-logo-gold.svg'}
                               alt={contestant.name}
                               onError={e => (e.currentTarget.src = '/bn-logo-gold.svg')}
                               className="w-25 h-25 object-cover rounded-lg"
@@ -313,7 +314,7 @@ const NewBracket = () => {
                                   contestant.choice + 1,
                                   images[index].urls.length - 1
                                 )
-                                updateContestant(index, 'image_url', images[index].urls[newChoice]?.url)
+                                updateContestant(index, 'image_url', images[index].urls[newChoice])
                                 contestant.choice = newChoice
                               }}
                               className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
