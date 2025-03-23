@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
-import { Bracket, Matchup, Player } from '../../backend/src/types'
+import { Bracket, Matchup, Player, PublicBracket } from '../../backend/src/types'
 import VotingCard from '../components/VotingCard'
 
 const Join = () => {
@@ -24,6 +24,7 @@ const Join = () => {
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
+  const [publicBrackets, setPublicBrackets] = useState<PublicBracket[]>([])
 
   // Load stored name, bracket code and game ID
   useEffect(() => {
@@ -126,6 +127,22 @@ const Join = () => {
       }
     }
   }, [wakeLock])
+  
+  // Initial list of public brackets, using async/await
+  useEffect(() => {
+    const fetchPublicBrackets = async () => {
+      // Fetch public brackets
+      const response = await fetch('/api/public')
+      
+      // Parse response
+      const data = await response.json()
+      
+      // Set public brackets
+      setPublicBrackets(data)
+    }
+
+    fetchPublicBrackets()
+  }, [])
 
   // Handle join game from button click
   const handleJoin = () => {
@@ -264,7 +281,38 @@ const Join = () => {
           )}
         </div>
       )}
-  
+      
+      {/* Public Brackets with Buttons to fill the Game ID */}
+      {publicBrackets.length > 0 && isGameMaster && !bracket && (
+        <div className="mt-8 w-full">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Public Brackets:</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+            {publicBrackets.map((publicBracket, index) => (
+              <div
+                key={index}
+                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+              >
+                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
+                  {publicBracket.title}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  {publicBracket.subtitle}
+                </p>
+                <button
+                  onClick={() => {
+                    setCode(publicBracket.code)
+                    handleSetBracket()
+                  }}
+                  className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-semibold"
+                >
+                  Fill Bracket
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <br/>
       {/* Footer */}
       <footer className="mt-auto w-full bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-200 p-2 sm:p-4 text-center">
         <p className="text-xs sm:text-sm">

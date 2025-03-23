@@ -1,7 +1,7 @@
 import sqlite3 from 'better-sqlite3'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 import { config } from './config'
-import { Bracket, Contestant } from './types'
+import { Bracket, Contestant, PublicBracket } from './types'
 import { saveImage } from './image'
 
 // Initialize database
@@ -95,7 +95,7 @@ export const getBracketByCode = (code: string): Bracket | null => {
   if (!bracket) return null
 
   const contestants = db.prepare<number, Contestant>
-    (`SELECT id, bracket_id, name, image_url FROM contestants WHERE bracket_id = ?`).all(bracket.id)
+    (`SELECT id, bracket_id, name, image_url FROM contestants WHERE bracket_id = ? order by name`).all(bracket.id)
   
   return { ...bracket, contestants }
 }
@@ -104,7 +104,7 @@ export const getBracketByCode = (code: string): Bracket | null => {
  * Get all public brackets
  * @returns All public brackets
  */
-export const getPublicBrackets = () => db.prepare('SELECT code, title, subtitle FROM brackets WHERE isPublic = 1').all()
+export const getPublicBrackets = () => db.prepare('SELECT code, title, subtitle FROM brackets WHERE isPublic = 1').all() as PublicBracket[]
 
 /**
  * Check if a bracket code is unique
