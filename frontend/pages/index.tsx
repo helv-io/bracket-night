@@ -7,7 +7,7 @@ import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
-// import CoinToss from '@/components/CoinToss'
+import CoinToss from '@/components/CoinToss'
 
 const Home = () => {
   // Declare router for mobile navigation
@@ -153,9 +153,11 @@ const Home = () => {
       )}
       
       {/* Coin Toss */}
-      {/* <div className="flex justify-center items-center h-screen" >
-        <CoinToss headsImage="/data/images/1_Pepperoni.png" tailsImage="/data/images/1_Pineapple.png" />
-      </div> */}
+      {isGameStarted && matchups && (
+        <div style={{ position: 'absolute', right: 0, bottom: 0 }} >
+          <CoinToss contestants={[matchups[0].left!, matchups[1].right!]} leftOrRight={Math.round(Math.random()) as 0|1} />
+        </div>
+      )}
   
       {/* Player Voting Status (Centered) */}
       <div className="w-full flex justify-center">
