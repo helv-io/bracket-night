@@ -11,7 +11,7 @@ const App = ({ Component, pageProps }: AppProps) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
         <meta property="og:title" content="Bracket Night" />
         <meta property="og:description" content="Bracket Night - The ultimate bracket competition platform" />
-        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:image" content="/bracket-night-embed.png" />
         <meta property="og:url" content="https://bracket.helv.io" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
