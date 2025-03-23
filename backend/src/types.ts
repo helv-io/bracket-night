@@ -64,3 +64,9 @@ export interface SearXNGResult {
   author?: string
   publishedDate?: string
 }
+
+export interface PublicBracket {
+  code: string
+  title: string
+  subtitle: string
+}
