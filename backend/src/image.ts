@@ -3,21 +3,26 @@ import { config } from './config'
 import * as fs from 'fs'
 
 /**
- * Get image URL from SearxNG and filter for big square images (400x400 or larger)
+ * Get image URL from SearxNG and filter for big images (400x400 or larger)
  * @param topic The search query
  * @returns An array of image URLs
  */
 export const getImageURLs = async (topic: string): Promise<string[]> => {
+  // If no topic or SearxNG host is defined, return an empty array
   if (!topic || !config.searxngHost) {
     return []
   }
 
   try {
+    // Fetch images from SearxNG
     const result = await fetch(`https://${config.searxngHost}/search?q=${topic}&categories=images&format=json&safe_search=2`);
+    
+    // Parse the JSON response
     const data = await result.json() as SearXNG
 
     // Evaluate all conditions asynchronously
     const checks = await Promise.all(
+      // Check each image
       data.results.map(async (image) => {
         // Discard results without main or thumbnail image
         if (!image.img_src) return false
@@ -27,8 +32,11 @@ export const getImageURLs = async (topic: string): Promise<string[]> => {
         
         // Check if the image is big enough
         const [w, h] = image.resolution.split('x').map(Number)
+        
+        // Check if the image is at least 400x400
         if (isNaN(w) || isNaN(h) || h < 400 || w < 400) return false
 
+        // If all checks pass, return true
         return true
       })
     )
