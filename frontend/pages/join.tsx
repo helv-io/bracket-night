@@ -247,11 +247,6 @@ const Join = () => {
       {/* Game Section */}
       {hasJoined && isGameStarted && (
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl text-center">
-          <img
-            src="/bracket-night-gold.svg"
-            alt="Bracket Night Logo"
-            className="w-full sm:w-1/3 mx-auto mb-4"
-          />
   
           {bracket && (
             <>
