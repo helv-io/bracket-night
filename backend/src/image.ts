@@ -37,8 +37,6 @@ export const getImageURLs = async (topic: string): Promise<string[]> => {
     const goodImages = data.results
       // Filter out images that don't pass the checks
       .filter((_, index) => checks[index])
-      // Sort images by score
-      .sort((a, b) => b.score - a.score)
       // Get the URL of the images
       .map(image => (proxyImageUrl(image.img_src)))
 
