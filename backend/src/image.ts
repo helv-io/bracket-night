@@ -63,20 +63,27 @@ export const saveImage = async (contestant: Contestant, bracket: number | bigint
     
     // Define image path and file name (png). Remove all non-alphanumeric characters from name
     const path = `${config.dataPath}/images`
-    const name = `${bracket}_${contestant.name.replace(/[^a-z0-9]/gi, '')}`
-    const ext = 'png'
+    const name = `${bracket}_${contestant.name.replace(/[^a-z0-9]/gi, '')}.png`
   
     // Save the image to path
-    fs.writeFileSync(`${path}/${name}.${ext}`, Buffer.from(response))
+    fs.writeFileSync(`${path}/${name}`, Buffer.from(response))
     
     // Return the image path
-    return `/data/images/${name}.${ext}`
+    return `/data/images/${name}`
   } catch (error) {
     console.error(`Error saving image: ${error}`)
   }
 }
 
+/**
+ * Proxy an image URL through imgproxy
+ * @param url The image URL
+ * @returns The proxied image URL, as PNG and resized to 400x400
+ */
 const proxyImageUrl = (url: string) => {
+  // Check if the URL starts with a protocol
   const prefix = url.startsWith('//') ? 'https:' : ''
+  
+  // Return the proxied image URL, with the added protocol and resized to 400x400
   return `https://${config.imgProxyHost}/proxy/resize:fill-down:400:400/plain/${prefix}${url}@png`
 }
