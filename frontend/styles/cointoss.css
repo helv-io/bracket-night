@@ -1,23 +1,57 @@
 @import "tailwindcss";
 
 @layer components {
+  /* Existing styles remain unchanged */
   .coin-container {
-    @apply w-52 h-52 relative;
+    @apply w-52 h-52 relative shadow-lg;
     transform-style: preserve-3d;
   }
 
   .coin-side {
     @apply absolute w-full h-full rounded-full;
     backface-visibility: hidden;
+  }
+
+  .coin-image {
+    @apply w-full h-full rounded-full;
     background-size: cover;
+    filter: grayscale(100%);
+  }
+
+  .coin-side::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 4px solid #C0C0C0;
+    border-radius: 50%;
+    box-sizing: border-box;
+    z-index: 1;
   }
 
   .heads {
-    transform: rotateY(0deg);
+    transform: translateZ(5px); /* Adjusted for thickness */
   }
 
   .tails {
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) translateZ(5px); /* Adjusted for thickness */
+  }
+
+  /* New styles for coin edges */
+  .coin-edge {
+    @apply absolute h-full;
+    width: 10px; /* Thickness of the coin */
+    background: #C0C0C0; /* Silver color matching the rim */
+  }
+
+  .edge-90 {
+    transform: rotateY(90deg);
+  }
+
+  .edge-270 {
+    transform: rotateY(270deg);
   }
 }
 
@@ -47,10 +81,10 @@
   }
 
   .animate-spinToHeads {
-    animation: spinToHeads 1.5s linear forwards;
+    animation: spinToHeads 4s linear forwards;
   }
 
   .animate-spinToTails {
-    animation: spinToTails 1.5s linear forwards;
+    animation: spinToTails 4s linear forwards;
   }
 }
