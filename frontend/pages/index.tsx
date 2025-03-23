@@ -71,10 +71,6 @@ const Home = () => {
       {/* Logo */}
       <div className="logo-container">
         <img src="/bracket-night-gold.svg" alt="Logo" className="logo" />
-      </div>
-  
-      {/* Main Content */}
-      <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
         {bracket && (
           <>
             <h1
@@ -91,6 +87,10 @@ const Home = () => {
             </h2>
           </>
         )}
+      </div>
+  
+      {/* Main Content */}
+      <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
