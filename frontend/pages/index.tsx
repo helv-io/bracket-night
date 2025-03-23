@@ -7,6 +7,7 @@ import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
+// import CoinToss from '@/components/CoinToss'
 
 const Home = () => {
   // Declare router for mobile navigation
@@ -73,7 +74,7 @@ const Home = () => {
       </div>
   
       {/* Main Content */}
-      <div className="flex-grow flex flex-col items-center justify-center text-center relative">
+      <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
         {bracket && (
           <>
             <h1
@@ -109,34 +110,16 @@ const Home = () => {
             </p>
           </div>
         )}
-        {!isGameStarted && gameId && matchups.length === 0 && (
-          <div style={{ position: "absolute", bottom: "0", width: "100%" }} className="text-center">
-            <p className="text-lg md:text-xl lg:text-2xl">
-              Join the game at:
-              <br/>
-              <span
-                className="text-[var(--accent)] font-semibold hover:underline hover:text-[var(--winner-highlight)] transition-colors duration-200"
-              >
-                {window.location.origin}/join
-              </span>
-            </p>
-            <p className="text-lg md:text-xl lg:text-2xl">
-              Game ID:
-              <span className="font-bold text-[var(--winner-highlight)] bg-[var(--card-bg)] px-2 py-1 rounded shadow-md">
-                {gameId}
-              </span>
-              <br/>
-              Or scan the QR code.
-            </p>
-          </div>
-        )}
       </div>
   
-      {/* QR Code (Bottom Right) */}
+      {/* QR Code */}
       {!isGameStarted && gameId && (
-        <div style={{ position: "absolute", bottom: "20px", right: "20px" }} className="text-center">
+        <div className="text-center qr-container">
           <div className="border-2 border-dashed border-[var(--accent)] p-4 bg-white rounded-lg shadow-lg inline-block transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_var(--accent)]">
-            <div className="w-32 md:w-48 lg:w-48 mx-auto">
+            <p className="text-sm text-gray-600 mb-1">
+              Scan this code to join
+            </p>
+            <div className="w-24 md:w-32 lg:w-48 mx-auto">
               <QRCodeSVG
                 value={`${window.location.origin}/join?game=${gameId}`}
                 imageSettings={{ src: "/bn-logo.svg", height: 64, width: 64, excavate: true }}
@@ -145,9 +128,6 @@ const Home = () => {
               />
             </div>
             <div className="mt-2">
-              <p className="text-sm text-gray-600 mb-1">
-                Scan or enter this code to join:
-              </p>
               <a
                 href={`${window.location.origin}/join?game=${gameId}`}
                 target="_blank"
@@ -165,12 +145,17 @@ const Home = () => {
             )}
             {players.length > 0 && (
               <div className="px-3 py-1 border border-[var(--accent)] rounded text-[var(--text)] bg-[var(--card-bg)] shadow-sm hover:bg-[var(--accent)]/10 transition-colors duration-200">
-                {players.length} Players In!
+                {players.length} Player{players.length > 1 ? 's' : ''} joined!
               </div>
             )}
           </div>
         </div>
       )}
+      
+      {/* Coin Toss */}
+      {/* <div className="flex justify-center items-center h-screen" >
+        <CoinToss headsImage="/data/images/1_Pepperoni.png" tailsImage="/data/images/1_Pineapple.png" />
+      </div> */}
   
       {/* Player Voting Status (Centered) */}
       <div className="w-full flex justify-center">
@@ -214,6 +199,7 @@ const Home = () => {
         )}
       </div>
   
+      
       {/* Confetti */}
       {isGameOver && <Confetti />}
     </div>
