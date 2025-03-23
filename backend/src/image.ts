@@ -28,14 +28,7 @@ export const getImageURLs = async (topic: string): Promise<string[]> => {
         // Check if the image is big enough
         const [w, h] = image.resolution.split('x').map(Number)
         if (isNaN(w) || isNaN(h) || h < 400 || w < 400) return false
-        
-        // Check if the image is accessible
-        const url = proxyImageUrl(image.img_src)
-        const fetchTest = await fetch(url)
-        if (!fetchTest.ok) {
-          return false
-        }
-        
+
         return true
       })
     )
