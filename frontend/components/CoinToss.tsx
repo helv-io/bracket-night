@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import '../styles/cointoss.css'
 import { Contestant } from '../../backend/src/types'
 
 interface CoinTossProps {
