@@ -1,9 +1,8 @@
 @import "tailwindcss";
 
 @layer components {
-  /* Existing styles remain unchanged */
   .coin-container {
-    @apply w-52 h-52 relative shadow-lg;
+    @apply w-52 h-52 relative;
     transform-style: preserve-3d;
   }
 
@@ -32,59 +31,56 @@
   }
 
   .heads {
-    transform: translateZ(5px); /* Adjusted for thickness */
+    transform: translateZ(20px); /* Increased for thickness */
   }
 
   .tails {
-    transform: rotateY(180deg) translateZ(5px); /* Adjusted for thickness */
-  }
-
-  /* New styles for coin edges */
-  .coin-edge {
-    @apply absolute h-full;
-    width: 10px; /* Thickness of the coin */
-    background: #C0C0C0; /* Silver color matching the rim */
-  }
-
-  .edge-90 {
-    transform: rotateY(90deg);
-  }
-
-  .edge-270 {
-    transform: rotateY(270deg);
+    transform: rotateX(180deg) translateZ(20px); /* Increased for thickness */
   }
 }
 
 @layer utilities {
   @keyframes spinToHeads {
     0% {
-      transform: rotateY(0deg) translateY(0);
+      transform: translateY(0) rotateX(0deg);
+    }
+    25% {
+      transform: translateY(-800px) rotateX(720deg);
     }
     50% {
-      transform: rotateY(900deg) translateY(-100px);
+      transform: translateY(0) rotateX(1440deg);
+    }
+    75% {
+      transform: translateY(-200px) rotateX(1980deg);
     }
     100% {
-      transform: rotateY(1800deg) translateY(0);
+      transform: translateY(0) rotateX(2700deg);
     }
   }
 
   @keyframes spinToTails {
     0% {
-      transform: rotateY(0deg) translateY(0);
+      transform: translateY(0) rotateX(0deg);
+    }
+    25% {
+      transform: translateY(-800px) rotateX(810deg);
     }
     50% {
-      transform: rotateY(990deg) translateY(-100px);
+      transform: translateY(0) rotateX(1620deg);
+    }
+    75% {
+      transform: translateY(-200px) rotateX(2160deg);
     }
     100% {
-      transform: rotateY(1980deg) translateY(0);
+      transform: translateY(0) rotateX(2880deg);
     }
   }
 
   .animate-spinToHeads {
-    animation: spinToHeads 4s linear forwards;
+    animation: spinToHeads 2s linear forwards;
   }
 
   .animate-spinToTails {
-    animation: spinToTails 4s linear forwards;
+    animation: spinToTails 1.5s linear forwards;
   }
 }

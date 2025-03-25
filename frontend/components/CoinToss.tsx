@@ -20,7 +20,14 @@ export default function CoinToss({ contestants, leftOrRight }: CoinTossProps) {
   }
 
   const handleAnimationEnd = async () => {
-    setShowResult(true) // Show result after animation
+    // Show result after animation
+    setShowResult(true)
+    
+    // Wait 3s
+    await new Promise((resolve) => setTimeout(resolve, 3000))
+    
+    // Reset
+    setIsTossing(false)
   }
 
   return (
@@ -33,13 +40,10 @@ export default function CoinToss({ contestants, leftOrRight }: CoinTossProps) {
       </button>
 
       {isTossing && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-          onClick={() => setIsTossing(false)}
-        >
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" style={{ zIndex: 1000 }}>
           <div
             className="flex flex-col items-center bg-[var(--card-bg)] p-8 rounded-lg shadow-xl"
-            onClick={(e) => e.stopPropagation()}
+            // onClick={(e) => e.stopPropagation()}
           >
             <div
               key={tossKey}
@@ -60,20 +64,10 @@ export default function CoinToss({ contestants, leftOrRight }: CoinTossProps) {
                   style={{ backgroundImage: `url(${contestants[1].image_url})` }}
                 ></div>
               </div>
-              <div className="coin-edge edge-90"></div>
-              <div className="coin-edge edge-270"></div>
             </div>
-            {showResult && winner && (
-              <p className="mt-4 text-2xl text-[var(--winner-highlight)] font-bold">
-                {contestants[leftOrRight].name} wins!
-              </p>
-            )}
-            <button
-              className="mt-4 px-4 py-2 bg-[var(--accent)] text-[var(--text)] rounded hover:opacity-80 transition"
-              onClick={() => setIsTossing(false)}
-            >
-              Close
-            </button>
+            <p className="mt-4 text-2xl text-[var(--winner-highlight)] font-bold">
+              {!showResult ? '🤞 🤞 🤞 🤞 🤞' : `${contestants[leftOrRight].name} wins!`}
+            </p>
           </div>
         </div>
       )}
