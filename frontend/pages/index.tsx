@@ -115,7 +115,7 @@ const Home = () => {
       {/* QR Code */}
       {!isGameStarted && gameId && (
         <div className="text-center qr-container">
-          <div className="border-2 border-dashed border-[var(--accent)] p-4 bg-white rounded-lg shadow-lg inline-block transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_var(--accent)]">
+          <div className="border-2 border-dashed border-[var(--accent)] p-4 bg-white rounded-lg shadow-lg inline-block">
             <p className="text-sm text-gray-600 mb-1">
               Scan this code to join
             </p>
@@ -131,7 +131,7 @@ const Home = () => {
               <a
                 href={`${window.location.origin}/join?game=${gameId}`}
                 target="_blank"
-                className="text-xl md:text-2xl font-bold text-[var(--accent)] bg-[var(--card-bg)] px-3 py-1 rounded-md shadow-md hover:text-[var(--winner-highlight)] transition-colors duration-200"
+                className="text-xl md:text-2xl font-bold text-[var(--accent)] bg-[var(--card-bg)] px-3 py-1 rounded-md shadow-md"
               >
                 {gameId}
               </a>
