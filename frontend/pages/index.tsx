@@ -122,7 +122,7 @@ const Home = () => {
             <div className="w-24 md:w-32 lg:w-48 mx-auto">
               <QRCodeSVG
                 value={`${window.location.origin}/join?game=${gameId}`}
-                imageSettings={{ src: "/bn-logo-gold.svg", height: 64, width: 64, excavate: true }}
+                imageSettings={{ src: "/bn-logo-gold.svg", height: 48, width: 48, excavate: true }}
                 size={256}
                 className="w-full h-auto"
               />
