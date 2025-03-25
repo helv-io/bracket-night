@@ -70,7 +70,7 @@ const Home = () => {
   
       {/* Logo */}
       <div className="logo-container">
-        <img src="/bracket-night-gold.svg" alt="Logo" className="logo" />
+        <img src="/bracket-night-gold.svg" alt="Logo" className="logo border-40 border-transparent" />
         {bracket && (
           <>
             <h1
@@ -122,7 +122,7 @@ const Home = () => {
             <div className="w-24 md:w-32 lg:w-48 mx-auto">
               <QRCodeSVG
                 value={`${window.location.origin}/join?game=${gameId}`}
-                imageSettings={{ src: "/bn-logo.svg", height: 64, width: 64, excavate: true }}
+                imageSettings={{ src: "/bn-logo-gold.svg", height: 64, width: 64, excavate: true }}
                 size={256}
                 className="w-full h-auto"
               />

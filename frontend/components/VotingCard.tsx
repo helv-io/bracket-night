@@ -57,7 +57,7 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
           onClick={() => handleVote(0)}
           onMouseDown={(e) => e.currentTarget.blur()}
           disabled={voted || !matchup.left}
-          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-56 ${
+          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-46 ${
             voted || !matchup.left
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'
@@ -85,7 +85,7 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
           onClick={() => handleVote(1)}
           onMouseDown={(e) => e.currentTarget.blur()}
           disabled={voted || !matchup.right}
-          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-56 ${
+          className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-46 ${
             voted || !matchup.right
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'

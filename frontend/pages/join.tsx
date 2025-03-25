@@ -171,7 +171,14 @@ const Join = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center p-4">
-  
+      {/* Logo */}
+      {(!isGameStarted || isGameOver) && (
+        <img
+          src="/bracket-night-gold.svg"
+          alt="Bracket Night Logo"
+          className="w-full sm:w-1/3 object-cover mb-4 border-10 border-transparent"
+        />
+      )}
       {/* Join Form - Vertically Centered */}
       {!hasJoined && (
         <div className="flex-grow flex items-center justify-center w-full">
@@ -205,7 +212,7 @@ const Join = () => {
         <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
           {isGameMaster && !bracket && (
             <div>
-              <label className="block mb-2 text-gray-900 dark:text-gray-100">Bracket Code:</label>
+              <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Bracket Code:</h1>
   
               <input
                 type="text"
@@ -251,7 +258,6 @@ const Join = () => {
   
           {isGameStarted && !isGameOver && (
             <div>
-              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Vote now! 🗳️</h2>
               <VotingCard 
                 matchup={matchups[currentMatchupIndex]} 
                 gameId={gameId} 
@@ -264,46 +270,46 @@ const Join = () => {
           {isGameOver && (
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Game Over!</h2>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Winner: {matchups[currentMatchupIndex - 1].winner?.name} 🏆</h3>
-              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4" />
+              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">🏆 {matchups[currentMatchupIndex - 1].winner?.name} 🏆</h3>
+              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4 border-4 border-[var(--winner-highlight)]" />
             </div>
           )}
         </div>
       )}
       
       {/* Public Brackets with Buttons to fill the Game ID */}
-      {publicBrackets.length > 0 && isGameMaster && !bracket && (
-        <div className="mt-8 w-full">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Public Brackets:</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {publicBrackets.map((publicBracket, index) => (
-              <div
-                key={index}
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
-              >
-                <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-gray-100">
-                  {publicBracket.title}
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
-                  {publicBracket.subtitle}
-                </p>
+      {isGameMaster && !bracket && (
+        <>
+          <br />
+          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Public Games:</h1>
+          {publicBrackets.map((publicBracket, index) => (
+            <div key={index} className="flex-grow flex items-center justify-center w-full border-b-10 border-transparent">
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    {publicBracket.title}
+                  </h3>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {publicBracket.subtitle}
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     setCode(publicBracket.code)
-                    handleSetBracket()
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
                   }}
-                  className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-semibold"
+                  className="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-semibold"
                 >
-                  Fill Bracket
+                  Fill Code
                 </button>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))}
+        </>
       )}
-      <br/>
+      
       {/* Footer */}
-      <footer className="mt-auto w-full bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-200 p-2 sm:p-4 text-center">
+      <footer className="mt-auto w-full bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-200 p-2 sm:p-4 text-center rounded-4xl">
         <p className="text-xs sm:text-sm">
           Bracket Night was lovingly crafted ❤️ by Helvio for the world.<br/> 
           A heartfelt thank you to my amazing wife Jackie for her unwavering support and endless snacks 🍿 during development.<br/>
