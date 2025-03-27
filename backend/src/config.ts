@@ -13,6 +13,8 @@ export const config = {
   
   searxngHost: process.env.SEARXNG_HOST || '',
   imgProxyHost: process.env.IMGPROXY_HOST || '',
+  imgProxyKey: process.env.IMGPROXY_KEY || '',
+  imgProxySalt: process.env.IMGPROXY_SALT || '',
   
   aiKey: process.env.OPENAI_API_KEY || '',
   aiModel: process.env.OPENAI_MODEL || '',

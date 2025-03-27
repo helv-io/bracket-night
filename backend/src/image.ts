@@ -1,5 +1,6 @@
 import { Contestant, SearXNG } from './types'
 import { config } from './config'
+import Imgproxy from 'imgproxy'
 import * as fs from 'fs'
 
 /**
@@ -89,7 +90,22 @@ export const saveImage = async (contestant: Contestant, bracket: number | bigint
 const proxyImageUrl = (url: string) => {
   // Check if the URL starts with a protocol
   const prefix = url.startsWith('//') ? 'https:' : ''
+  const fullUrl = `${prefix}${url}`
+  
+  // Instantiate the Imgproxy object
+  const imgproxy = new Imgproxy({
+    baseUrl: `https://${config.imgProxyHost}`,
+    key: config.imgProxyKey,
+    salt: config.imgProxySalt,
+    encode: true
+  })
+  
+  // Generate the imgproxy URL
+  const imgproxyUrl = imgproxy.builder()
+    .resize('fill-down', 400, 400)
+    .format('png')
+    .generateUrl(fullUrl)
   
   // Return the proxied image URL, with the added protocol and resized to 400x400
-  return `https://${config.imgProxyHost}/proxy/resize:fill-down:400:400/plain/${prefix}${url}@png`
+  return imgproxyUrl
 }
