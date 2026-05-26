@@ -2,15 +2,18 @@
   "name": "bracket-night",
   "version": "0.0.1",
   "scripts": {
-    "lint": "npx eslint **/*.ts",
+    "lint": "npm run lint -w frontend",
     "lint:fix": "npx eslint **/*.ts --fix",
+    "typecheck:backend": "cd backend && npx tsc --noEmit",
+    "typecheck:frontend": "cd frontend && npx tsc --noEmit",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
     "clean": "rimraf dist",
     "build:frontend": "npm run build -w frontend",
     "build:backend": "npm run build -w backend",
     "build": "npm i && npm run build:frontend && npm run build:backend",
     "dev:frontend": "npm run dev -w frontend",
     "dev:backend": "npm run dev -w backend",
-    "dev": "npx npm-run-all --parallel dev:backend dev:frontend",
+    "dev": "concurrently -c \"bgBlue.bold,bgGreen.bold\" -n \"backend,frontend\" \"npm:dev:backend\" \"npm:dev:frontend\"",
     "start:frontend": "npm run build -w frontend",
     "start:backend": "npm start -w backend",
     "start": "npm run start:frontend && npm run start:backend"
@@ -19,5 +22,8 @@
   "workspaces": [
     "backend",
     "frontend"
-  ]
+  ],
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

@@ -7,7 +7,7 @@ import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
-import CoinToss from '@/components/CoinToss'
+import { GAME_OVER_INDEX } from '../../backend/src/constants'
 
 const Home = () => {
   // Declare router for mobile navigation
@@ -34,8 +34,10 @@ const Home = () => {
       return
     }
   
-    // Create a new game on page load
-    socket.emit('create_game')
+    // Create (or reclaim) a game on page load.
+    // This makes the display / big-screen view rejoin-stable after refresh or kiosk restart.
+    const previousGameId = localStorage.getItem('hostGameId')
+    socket.emit('create_game', previousGameId || undefined)
     
     // When a matchup is advanced, update matchups and current matchup index
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
@@ -44,7 +46,7 @@ const Home = () => {
       setCurrentVotes([])
       
       // Check if game is over, aka last matchup is complete
-      if (currentMatchupIndex === 15) setIsGameOver(true)
+      if (currentMatchupIndex === GAME_OVER_INDEX) setIsGameOver(true)
     })
     
     socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, isGameStarted, isGameOver }) => {
@@ -56,6 +58,11 @@ const Home = () => {
       setCurrentVotes(currentVotes)
       setIsGameStarted(isGameStarted)
       setIsGameOver(isGameOver)
+
+      // Persist so a refresh of the display can reclaim the same game (rejoin-stable for the host view)
+      if (gameId) {
+        localStorage.setItem('hostGameId', gameId)
+      }
     })
   
     return () => {
@@ -92,7 +99,9 @@ const Home = () => {
       {/* Main Content */}
       <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
         {matchups.length > 0 && (
-          <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
+          <div className="relative w-full flex-1 flex items-center justify-center min-h-[600px] max-h-[90vh] overflow-hidden">
+            <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
+          </div>
         )}
         {matchups.length === 0 && (
           <div>
@@ -108,6 +117,39 @@ const Home = () => {
             <p className="text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto">
               ⚔️ Only one will rise victorious. ⚔️
             </p>
+
+            {/* Rejoin existing game (high value / low risk) */}
+            <div className="mt-8">
+              <details className="max-w-md mx-auto text-left">
+                <summary className="cursor-pointer text-[var(--accent)] hover:underline text-sm">
+                  Rejoin an existing game (if display was refreshed)
+                </summary>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Game ID (e.g. ABCD)"
+                    className="flex-1 px-3 py-2 rounded bg-[var(--card-bg)] text-sm border border-white/10 focus:outline-none focus:border-[var(--accent)]"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = (e.target as HTMLInputElement).value.trim().toUpperCase()
+                        if (val) socket.emit('create_game', val)
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={(e) => {
+                      const input = (e.currentTarget.parentElement?.querySelector('input') as HTMLInputElement)
+                      const val = input?.value.trim().toUpperCase()
+                      if (val) socket.emit('create_game', val)
+                    }}
+                    className="px-4 py-2 text-sm bg-[var(--accent)] text-black font-medium rounded hover:opacity-90"
+                  >
+                    Reclaim
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Useful after the display browser restarts.</p>
+              </details>
+            </div>
           </div>
         )}
       </div>
@@ -151,14 +193,7 @@ const Home = () => {
           </div>
         </div>
       )}
-      
-      {/* Coin Toss */}
-      {isGameStarted && matchups && (
-        <div style={{ position: 'absolute', right: 0, bottom: 0 }} >
-          <CoinToss contestants={[matchups[0].left!, matchups[1].right!]} leftOrRight={Math.round(Math.random()) as 0|1} />
-        </div>
-      )}
-  
+
       {/* Player Voting Status (Centered) */}
       <div className="w-full flex justify-center">
         {isGameStarted && !isGameOver && (

@@ -42,18 +42,26 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
   ```
   bracket-night/
   ├── backend/
-  │   ├── controllers/
-  │   ├── models/
-  │   ├── routes/
-  │   ├── services/
-  │   ├── config.ts
-  │   └── server.ts
+  │   └── src/
+  │       ├── ai.ts
+  │       ├── config.ts
+  │       ├── constants.ts
+  │       ├── db.ts
+  │       ├── game.ts
+  │       ├── image.ts
+  │       ├── server.ts
+  │       └── types.ts
   ├── frontend/
   │   ├── components/
+  │   ├── lib/
   │   ├── pages/
   │   ├── public/
   │   ├── styles/
-  │   └── next.config.js
+  │   └── ...
+  ├── .github/
+  │   ├── dependabot.yml
+  │   └── workflows/
+  │       └── ci.yml
   ├── Dockerfile
   ├── package.json
   └── README.md
@@ -86,6 +94,8 @@ Bracket Night is a fun and interactive game similar to a Jackbox Party game. Pla
 - **TypeScript**: Use 2-space indentation and avoid semicolons.
 - **Database**: Use SQLite for storing bracket details and game management.
 - **Effects**: Add pleasant night-time colors and effects to enhance the game experience.
+- **Configuration**: Copy `.env.example` to `.env` and adjust as needed (SearxNG + imgproxy are optional but recommended for the "Magic" button).
+- **Quality**: Run `npm run lint`, `npm run typecheck`, and `npm test` (when added) before committing. GitHub Actions runs lint + typecheck on every PR.
 
 ## Contributing
 

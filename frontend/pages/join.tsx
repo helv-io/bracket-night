@@ -2,7 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
+import { toast } from '../lib/toast'
+import { useHasVoted } from '../lib/useHasVoted'
 import { Bracket, Matchup, Player, PublicBracket } from '../../backend/src/types'
+import { GAME_OVER_INDEX } from '../../backend/src/constants'
 import VotingCard from '../components/VotingCard'
 
 const Join = () => {
@@ -72,11 +75,11 @@ const Join = () => {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
-      if (currentMatchupIndex === 15) setIsGameOver(true)
+      if (currentMatchupIndex === GAME_OVER_INDEX) setIsGameOver(true)
     })
     
     // When an error occurs, alert the user
-    socket.on('error', (msg) => alert(msg))
+    socket.on('error', (msg) => toast(msg, 'error'))
     
     // When players update, update players
     socket.on('players_update', (updatedPlayers) => {
@@ -93,6 +96,14 @@ const Join = () => {
       setCurrentVotes(currentVotes)
       setIsGameStarted(isGameStarted)
       setIsGameOver(isGameOver)
+
+      // Derive and persist our stable player id (from the players list) so rejoin + hasVoted works correctly
+      if (name) {
+        const me = players.find((p: { name?: string; id?: string }) => p.name === name)
+        if (me?.id) {
+          localStorage.setItem('playerId', me.id)
+        }
+      }
     })
 
     // Clean up listeners
@@ -106,6 +117,7 @@ const Join = () => {
       socket.off('players_update')
       socket.off('game_state')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, gameId])
 
   // Request wake lock on mount, so the screen doesn't turn off
@@ -166,8 +178,9 @@ const Join = () => {
     socket.emit('start_game', { gameId })
   }
 
-  // Check if user has voted
-  const hasVoted = currentVotes.some(v => v.playerId === socket.id)
+  // Centralized hasVoted computation (stable id + socket id)
+  const stablePlayerId = typeof window !== 'undefined' ? localStorage.getItem('playerId') : null
+  const hasVoted = useHasVoted(currentVotes, stablePlayerId, socket.id)
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center p-4">
@@ -271,7 +284,14 @@ const Join = () => {
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Game Over!</h2>
               <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">🏆 {matchups[currentMatchupIndex - 1].winner?.name} 🏆</h3>
-              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4 border-4 border-[var(--winner-highlight)]" />
+              <img
+                src={matchups[currentMatchupIndex - 1].winner?.image_url}
+                alt="Winner"
+                className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4 border-4 border-[var(--winner-highlight)]"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/bn-logo-gold.svg'
+                }}
+              />
             </div>
           )}
         </div>

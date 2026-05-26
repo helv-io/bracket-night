@@ -2,6 +2,14 @@ import { Server, Socket } from 'socket.io'
 import { getBracketByCode } from './db'
 import { Bracket, Contestant, Matchup, Player, Vote } from './types'
 import { config } from './config'
+import { rateLimit, getClientKey } from './rateLimit'
+import {
+  CONTESTANTS_PER_BRACKET,
+  FIRST_ROUND_MATCHUPS,
+  TOTAL_ROUNDS,
+  FINAL_MATCHUP_INDEX,
+  GAME_OVER_INDEX,
+} from './constants'
 
 export class Game {
   private io: Server
@@ -13,8 +21,27 @@ export class Game {
   }
 
   private handleConnection(socket: Socket) {
-    socket.on('create_game', () => {
-      const gameId = config.dev ? 'DEV' : Math.random().toString(36).substring(2, 6).toUpperCase()
+    // Generate a stable player identifier (used for vote tracking across reconnects)
+    const generateStablePlayerId = () =>
+      'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
+
+    socket.on('create_game', (requestedGameId?: string) => {
+      const key = getClientKey(socket)
+      if (!rateLimit(key + ':create', 5, 60_000)) {
+        socket.emit('error', 'Too many game creations. Please wait a minute.')
+        return
+      }
+
+      let gameId = requestedGameId
+
+      if (gameId && this.games.has(gameId)) {
+        socket.emit('game_created', { gameId })
+        socket.join(gameId)
+        this.emitGameState(gameId)
+        return
+      }
+
+      gameId = config.dev ? 'DEV' : Math.random().toString(36).substring(2, 6).toUpperCase()
       this.games.set(gameId, {
         gameId: gameId,
         bracket: null,
@@ -27,46 +54,62 @@ export class Game {
       })
       socket.emit('game_created', { gameId })
       socket.join(gameId)
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
     })
 
     socket.on('join', ({ gameId, playerName }) => {
+      const key = getClientKey(socket)
+      if (!rateLimit(key + ':join', 20, 60_000)) {
+        socket.emit('error', 'Too many join attempts. Slow down.')
+        return
+      }
+
       const game = this.games.get(gameId)
       if (!game || game.players.length >= config.maxPlayers) {
         socket.emit('error', 'Game is full')
         return
       }
+
       let player = game.players.find(p => p.name === playerName)
       if (player) {
-        player.id = socket.id // Update player ID to the new socket ID
+        // Rejoin: keep the stable player.id, just update the current connection
+        player.socketId = socket.id
       } else {
         if (game.isGameStarted) {
           socket.emit('error', 'Game has already started')
           return
         }
-        player = { id: socket.id, name: playerName }
+        // New player gets a stable id that will be used for all vote tracking
+        player = {
+          id: generateStablePlayerId(),
+          name: playerName,
+          socketId: socket.id
+        }
         game.players.push(player)
       }
+
       socket.join(gameId)
-      const hasVoted = game.currentVotes.some(v => v.playerId === socket.id)
+
+      // hasVoted must be computed against the *stable* player id, not the transient socket id
+      const hasVoted = game.currentVotes.some(v => v.playerId === player!.id)
       socket.emit('vote_status', { hasVoted })
+
       this.io.to(gameId).emit('player_joined', { players: game.players })
 
-      // Send the current game state to the newly joined player
+      // Send full current state so the client can fully rehydrate (critical for rejoin)
       socket.emit('game_state', game)
 
-      // First player becomes game master
+      // First player becomes (or stays) game master
       if (game.players.length === 1) {
         socket.emit('game_master')
       } else if (game.bracket) {
-        // Send the current game state to the newly joined player
         socket.emit('bracket_set', {
           bracket: game.bracket,
           matchups: game.matchups,
           currentMatchupIndex: game.currentMatchupIndex
         })
       }
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
     })
 
     socket.on('set_bracket', ({ gameId, code }) => {
@@ -92,26 +135,27 @@ export class Game {
 
     // Handle vote event
     socket.on('vote', ({ gameId, choice }) => {
-      // Retrieve the game game
+      const key = getClientKey(socket)
+      if (!rateLimit(key + ':vote', 10, 30_000)) {
+        return // silently drop spam votes
+      }
+
       const game = this.games.get(gameId)
-      
-      // Check if game exists, bracket is set, and current matchup is valid
       if (!game || !game.bracket || game.currentMatchupIndex >= game.matchups.length) return
-      
-      // Prevent duplicate votes from the same player
-      if (game.currentVotes.find(v => v.playerId === socket.id)) return
-      
-      // Record the vote
-      game.currentVotes.push({ playerId: socket.id, choice })
-      
-      // Notify all clients in the game about the vote
+
+      const player = game.players.find(p => p.socketId === socket.id)
+      if (!player) return
+
+      if (game.currentVotes.find(v => v.playerId === player.id)) return
+
+      game.currentVotes.push({ playerId: player.id, choice })
+
       this.io.to(gameId).emit('vote_cast', {
         currentVotes: game.currentVotes,
         players: game.players
       })
-      this.emitGameState(gameId) // Emit game state
-      
-      // If all players have voted, advance to the next matchup
+      this.emitGameState(gameId)
+
       if (game.currentVotes.length === game.players.length) {
         this.advanceMatchup(gameId)
       }
@@ -121,7 +165,19 @@ export class Game {
       const game = this.games.get(gameId)
       if (!game) return
       game.isGameStarted = true
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
+    })
+
+    // Handle disconnects gracefully for rejoin stability
+    socket.on('disconnect', () => {
+      // We keep players in the list (they may rejoin by name).
+      // Just clear the transient socketId so we don't accidentally think an old connection is still active.
+      for (const game of this.games.values()) {
+        const p = game.players.find(p => p.socketId === socket.id)
+        if (p) {
+          p.socketId = undefined
+        }
+      }
     })
   }
 
@@ -133,8 +189,8 @@ export class Game {
   private createMatchups(contestants: Contestant[]): Matchup[] {
     const shuffledContestants = contestants.sort(() => Math.random() - 0.5)
     const matchups: Matchup[] = []
-    // First round: 8 matchups with 16 contestants
-    for (let i = 0; i < 8; i++) {
+    // First round
+    for (let i = 0; i < FIRST_ROUND_MATCHUPS; i++) {
       matchups.push({
         id: i,
         left: shuffledContestants[i * 2],
@@ -143,8 +199,8 @@ export class Game {
       })
     }
     // Subsequent rounds: quarter-finals, semi-finals, final
-    for (let round = 1; round < 4; round++) {
-      for (let i = 0; i < 8 / Math.pow(2, round); i++) {
+    for (let round = 1; round < TOTAL_ROUNDS; round++) {
+      for (let i = 0; i < FIRST_ROUND_MATCHUPS / Math.pow(2, round); i++) {
         matchups.push({
           id: matchups.length,
           left: null,
@@ -174,8 +230,8 @@ export class Game {
     currentMatchup.winner = winner
 
     // Update next matchup if not final round
-    if (game.currentMatchupIndex < 14) {
-      const nextMatchupIndex = 8 + Math.floor(game.currentMatchupIndex / 2)
+    if (game.currentMatchupIndex < FINAL_MATCHUP_INDEX) {
+      const nextMatchupIndex = FIRST_ROUND_MATCHUPS + Math.floor(game.currentMatchupIndex / 2)
       const nextMatchup = game.matchups[nextMatchupIndex]
       if (game.currentMatchupIndex % 2 === 0) {
         nextMatchup.left = winner

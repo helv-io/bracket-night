@@ -22,8 +22,9 @@ export interface Matchup {
 }
 
 export interface Player {
-  id: string
+  id: string        // stable player identifier (never changes during the game)
   name: string
+  socketId?: string // current socket connection id (updated on reconnect/rejoin)
 }
 
 export interface Vote {
@@ -35,9 +36,9 @@ export interface SearXNG {
   query: string
   number_of_results: number
   results: SearXNGResult[]
-  answers: any[]
-  corrections: any[]
-  infoboxes: any[]
+  answers: unknown[]
+  corrections: unknown[]
+  infoboxes: unknown[]
   suggestions: string[]
   unresponsive_engines: string[][]
 }

@@ -34,6 +34,7 @@ jspm_packages/
 # dotenv environment variables file
 .env
 .env.*
+!.env.example
 
 # MacOS
 .DS_Store
@@ -64,9 +65,8 @@ coverage/
 *.seed
 *.pid.lock
 
-# Docker
-docker-compose.yml
-Dockerfile
+# Docker (do NOT ignore the actual Dockerfile or .dockerignore - they're needed in the repo)
+docker-compose*.yml
 
 # Frontend specific
 frontend/.next/

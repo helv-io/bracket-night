@@ -29,8 +29,9 @@ db.exec(`
 `)
 
 // Get column names for brackets and contestants tables
-const bracketCols = db.prepare("PRAGMA table_info(brackets)").all().map((col: any) => col.name)
-const contestantCols = db.prepare("PRAGMA table_info(contestants)").all().map((col: any) => col.name)
+interface PragmaColumn { name: string }
+const bracketCols = (db.prepare("PRAGMA table_info(brackets)").all() as PragmaColumn[]).map(col => col.name)
+const contestantCols = (db.prepare("PRAGMA table_info(contestants)").all() as PragmaColumn[]).map(col => col.name)
 
 /* DATABASE MIGRATIONS START */
 

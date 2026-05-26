@@ -11,7 +11,9 @@ RUN npm run build
 FROM node:lts-alpine AS backend-build
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install
+RUN apk add --no-cache python3 make g++ \
+ && npm install \
+ && apk del python3 make g++
 COPY backend ./
 RUN npm run build
 
@@ -21,7 +23,9 @@ WORKDIR /app/backend
 COPY --from=backend-build /app/backend/dist /app/backend
 COPY --from=frontend-build /app/frontend/out /app/frontend/out
 COPY backend/package*.json /app/backend/
-RUN cd /app/backend && npm install --omit=dev
+RUN apk add --no-cache python3 make g++ \
+ && cd /app/backend && npm install --omit=dev \
+ && apk del python3 make g++
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node", "server.js"]

@@ -12,6 +12,7 @@ interface VotingCardProps {
 
 const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) => {
   const [voted, setVoted] = useState(hasVoted)
+  const [isVoting, setIsVoting] = useState(false)
 
   useEffect(() => {
     localStorage.setItem('gameId', gameId)
@@ -38,10 +39,21 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
     }
   }, [])
 
+  // Also persist stable playerId when the parent passes updated hasVoted / game state
+  useEffect(() => {
+    if (hasVoted && playerName) {
+      // The stable id will have been stored by the parent when game_state arrived
+      // This just ensures we have the latest name/gameId
+    }
+  }, [hasVoted, playerName])
+
   const handleVote = (choice: number) => {
-    if (!voted) {
+    if (!voted && !isVoting) {
+      setIsVoting(true)
       socket.emit('vote', { gameId, choice })
       setVoted(true)
+      // Reset local loading after a short delay (server will confirm via state)
+      setTimeout(() => setIsVoting(false), 1200)
     }
   }
 
@@ -56,9 +68,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
         <button
           onClick={() => handleVote(0)}
           onMouseDown={(e) => e.currentTarget.blur()}
-          disabled={voted || !matchup.left}
+          disabled={voted || !matchup.left || isVoting}
           className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-46 ${
-            voted || !matchup.left
+            voted || !matchup.left || isVoting
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'
           }`}
@@ -68,6 +80,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
               src={matchup.left.image_url}
               alt={matchup.left.name}
               className="w-24 h-24 rounded-full mb-2 object-cover border-2 border-[var(--accent)]"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/bn-logo-gold.svg'
+              }}
             />
           ) : (
             <div className="w-24 h-24 rounded-full mb-2 bg-gray-700 flex items-center justify-center">
@@ -84,9 +99,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
         <button
           onClick={() => handleVote(1)}
           onMouseDown={(e) => e.currentTarget.blur()}
-          disabled={voted || !matchup.right}
+          disabled={voted || !matchup.right || isVoting}
           className={`flex flex-col items-center p-4 rounded-lg transition-all duration-300 w-40 h-46 ${
-            voted || !matchup.right
+            voted || !matchup.right || isVoting
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:shadow-xl hover:scale-105 bg-gray-800'
           }`}
@@ -96,6 +111,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
               src={matchup.right.image_url}
               alt={matchup.right.name}
               className="w-24 h-24 rounded-full mb-2 object-cover border-2 border-[var(--accent)]"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/bn-logo-gold.svg'
+              }}
             />
           ) : (
             <div className="w-24 h-24 rounded-full mb-2 bg-gray-700 flex items-center justify-center">

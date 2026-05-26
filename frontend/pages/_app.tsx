@@ -1,7 +1,7 @@
 import '../styles/globals.css'
-import '../styles/cointoss.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
+import { ToastProvider } from '../components/Toast'
 
 const App = ({ Component, pageProps }: AppProps) => {
   return (
@@ -16,7 +16,9 @@ const App = ({ Component, pageProps }: AppProps) => {
         <meta property="og:url" content="https://bracket.helv.io" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Component {...pageProps} />
+      <ToastProvider>
+        <Component {...pageProps} />
+      </ToastProvider>
     </>
   )
 }

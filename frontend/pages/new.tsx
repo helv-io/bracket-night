@@ -10,6 +10,7 @@ const NewBracket = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAiHappening, setIsAiHappening] = useState(false)
+  const [aiAbortController, setAiAbortController] = useState<AbortController | null>(null)
   
   // Arrays (16) for Contestants and Images
   const [contestants, setContestants] = useState(
@@ -122,30 +123,54 @@ const NewBracket = () => {
   }, [errorMessage])
 
   const magic = async () => {
-    // UI should be blocked while this is happening
     setIsAiHappening(true)
-    
-    // Get AI contestants
-    const aiContestants = await (await fetch(`/api/ai/${title}`)).json() as string[]
-    
-    // Clone existing contestants and images
-    const newContestants = [...contestants]
-    // const newImages = [...images]
-    
-    // Parallel Loop on new contestants and update names,  skipping if the name is already filled
-    await Promise.all(newContestants.map(async (contestant, i) => {
-      if (contestant.name) return
-      newContestants[i].name = aiContestants[i]
-      newContestants[i].choice = 0
-      await proposeImages(i, `${title} ${aiContestants[i]}`)
-      newContestants[i].image_url = images[i].urls[0] || '/bn-logo-gold.svg'
-    }))
-    
-    // Update contestants with new contestants
-    setContestants(newContestants)
-    
-    // UI should be unblocked after this is done
-    setIsAiHappening(false)
+    const controller = new AbortController()
+    setAiAbortController(controller)
+
+    try {
+      const res = await fetch(`/api/ai/${encodeURIComponent(title)}`, { signal: controller.signal })
+      if (!res.ok) throw new Error('AI request failed')
+      const aiContestants = (await res.json()) as string[]
+
+      const newContestants = [...contestants]
+
+      await Promise.all(
+        newContestants.map(async (contestant, i) => {
+          if (contestant.name || controller.signal.aborted) return
+          newContestants[i].name = aiContestants[i] || `Contestant ${i + 1}`
+          newContestants[i].choice = 0
+          newContestants[i].loading = true
+
+          try {
+            await proposeImages(i, `${title} ${aiContestants[i]}`)
+            newContestants[i].image_url = images[i].urls[0] || '/bn-logo-gold.svg'
+          } catch (err) {
+            console.error('Image proposal failed for', i, err)
+            newContestants[i].image_url = '/bn-logo-gold.svg'
+          } finally {
+            newContestants[i].loading = false
+          }
+        })
+      )
+
+      setContestants(newContestants)
+    } catch (err: unknown) {
+      const error = err as { name?: string }
+      if (error.name !== 'AbortError') {
+        setErrorMessage('AI generation failed. Please try again or fill manually.')
+      }
+    } finally {
+      setIsAiHappening(false)
+      setAiAbortController(null)
+    }
+  }
+
+  const cancelAi = () => {
+    if (aiAbortController) {
+      aiAbortController.abort()
+      setAiAbortController(null)
+      setIsAiHappening(false)
+    }
   }
 
   return (
@@ -164,9 +189,15 @@ const NewBracket = () => {
         {/* This should fade in / out based on the isAiHappening boolean */}
         {isAiHappening && (
           <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 space-y-4 text-center">
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[var(--accent)] mx-auto"></div>
-              <p className="text-gray-900 dark:text-white text-lg font-semibold text-center">AI is doing magic...</p>
+              <p className="text-gray-900 dark:text-white text-lg font-semibold">AI is doing magic...</p>
+              <button
+                onClick={cancelAi}
+                className="mt-2 px-4 py-1 text-sm bg-red-600 hover:bg-red-700 text-white rounded"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}

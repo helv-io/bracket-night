@@ -20,6 +20,7 @@ import { getImageURLs } from './image'
 import { Bracket } from './types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
 import { getContestants } from './ai'
+import { rateLimit } from './rateLimit'
 
 const app = express()
 const server = http.createServer(app)
@@ -45,6 +46,12 @@ app.use('/data', express.static(config.dataPath, { maxAge: '1d' }))
 // API endpoint to create a new bracket
 app.use(express.json())
 app.post('/api/create-bracket', async (req, res) => {
+  const key = req.ip || 'unknown'
+  if (!rateLimit(key + ':create-bracket', 6, 60_000)) {
+    res.status(429).json({ error: 'Too many bracket creations. Please wait.' })
+    return
+  }
+
   const bracket: Bracket = req.body
   if (!bracket.title || !bracket.subtitle || !bracket.contestants || bracket.contestants.length !== 16) {
     res.status(400).json({ error: 'Invalid input' })
@@ -54,8 +61,13 @@ app.post('/api/create-bracket', async (req, res) => {
   res.json({ code })
 })
 
-// API endpoint for AI
+// API endpoint for AI (rate limited)
 app.get('/api/ai/:topic', async (req, res) => {
+  const key = req.ip || 'unknown'
+  if (!rateLimit(key + ':ai', 8, 60_000)) {
+    res.status(429).json({ error: 'Too many AI requests. Please wait a minute.' })
+    return
+  }
   const contestants = await getContestants(req.params.topic)
   res.json(contestants)
 })
@@ -85,6 +97,11 @@ app.get('/api/image/:topic', async (req, res) => {
   } else {
     res.json([ ])
   }
+})
+
+// Simple health check for monitoring / load balancers
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() })
 })
 
 const port = config.dev ? 3001 : 3000
