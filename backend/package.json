@@ -13,7 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "better-sqlite3": "^11.10.0",
-    "dotenv": "^16.6.1",
+    "dotenv": "^17.4.2",
     "express": "^4.22.2",
     "imgproxy": "^1.4.1",
     "openai": "^4.104.0",
