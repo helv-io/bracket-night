@@ -14,7 +14,7 @@
   "dependencies": {
     "better-sqlite3": "^11.10.0",
     "dotenv": "^16.6.1",
-    "express": "^4.22.2",
+    "express": "^5.2.1",
     "imgproxy": "^1.4.1",
     "openai": "^4.104.0",
     "socket.io": "^4.8.3",
