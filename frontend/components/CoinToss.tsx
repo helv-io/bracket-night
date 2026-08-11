@@ -15,11 +15,11 @@ export interface CoinTossProps {
 }
 
 /**
- * Stacked circular slices along Z create a chunky reeded rim that reads
- * when the coin is edge-on during rotateY. Half-depth in px (full ≈ 2×).
+ * Continuous metallic cylinder rim: thin wall panels around the
+ * circumference (rotateZ + rotateY(90°) + translateZ(radius)).
+ * NOT stacked discs along Z.
  */
-const EDGE_SLICES = 32
-const COIN_HALF_DEPTH_PX = 50
+const RIM_SEGMENTS = 48
 
 const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   id: i,
@@ -117,15 +117,22 @@ export default function CoinToss({
     []
   )
 
-  const edgeNodes = useMemo(() => {
-    const step = (COIN_HALF_DEPTH_PX * 2) / (EDGE_SLICES - 1)
-    return Array.from({ length: EDGE_SLICES }, (_, i) => {
-      const z = -COIN_HALF_DEPTH_PX + i * step
+  const rimNodes = useMemo(() => {
+    const step = 360 / RIM_SEGMENTS
+    // Chord width with slight overlap so the cylinder reads solid edge-on
+    const segmentWidth = `calc((3.14159 * var(--coin-size) / ${RIM_SEGMENTS}) + 1.5px)`
+    return Array.from({ length: RIM_SEGMENTS }, (_, i) => {
+      const angle = i * step
+      const ridge = i % 2 === 0
       return (
         <span
           key={i}
-          className={`coin-edge-slice ${i % 2 === 0 ? 'is-ridge' : 'is-valley'}`}
-          style={{ transform: `translateZ(${z.toFixed(2)}px)` }}
+          className={`coin-rim-segment ${ridge ? 'is-ridge' : 'is-valley'}`}
+          style={{
+            width: segmentWidth,
+            height: 'var(--coin-thickness)',
+            transform: `rotateZ(${angle}deg) rotateY(90deg) translateZ(calc(var(--coin-size) / 2 - 0.5px))`,
+          }}
         />
       )
     })
@@ -200,8 +207,8 @@ export default function CoinToss({
                 } ${showResult ? '' : 'is-spinning'}`}
                 onAnimationEnd={handleAnimationEnd}
               >
-                <div className="coin-edge" aria-hidden>
-                  {edgeNodes}
+                <div className="coin-rim" aria-hidden>
+                  {rimNodes}
                 </div>
                 <div className="coin-side heads">
                   <div

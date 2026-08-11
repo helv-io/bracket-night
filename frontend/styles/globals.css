@@ -14,8 +14,8 @@
   --gold: #e8c46a;
   --gold-bright: #ffe9a8;
   --gold-deep: #a67c2e;
-  --neon-line: rgba(255, 214, 102, 0.85);
-  --neon-dim: rgba(255, 214, 102, 0.22);
+  --neon-line: rgba(255, 230, 140, 0.95);
+  --neon-dim: rgba(255, 214, 102, 0.4);
   --spotlight: rgba(120, 170, 255, 0.18);
   --danger: #ff6f61;
   --surface-glow: 0 0 40px rgba(232, 196, 106, 0.18);
@@ -67,8 +67,10 @@ a {
   position: fixed;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 12, 24, 0.55), rgba(8, 12, 24, 0.78)),
+    /* Heavy dim so stadium plate stays empty and neon lines pop */
+    linear-gradient(180deg, rgba(2, 4, 12, 0.72), rgba(2, 4, 12, 0.88)),
     url('/bracket-bg.jpg') center / cover no-repeat;
+  filter: saturate(0.85) brightness(0.72);
   z-index: -2;
   pointer-events: none;
 }
@@ -78,8 +80,9 @@ a {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 50% 35% at 50% 0%, var(--spotlight), transparent 70%),
-    radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.55), transparent 55%);
+    radial-gradient(ellipse 55% 40% at 50% 0%, rgba(100, 150, 255, 0.12), transparent 70%),
+    radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.72), transparent 55%),
+    radial-gradient(circle at 50% 45%, transparent 20%, rgba(0, 0, 0, 0.45) 100%);
   z-index: -1;
   pointer-events: none;
 }

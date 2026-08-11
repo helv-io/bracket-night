@@ -174,14 +174,16 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         }
 
         if (isActive) {
-          stroke('rgba(255, 229, 102, 0.25)', 10, 16)
-          stroke('rgba(255, 229, 102, 0.95)', 3.5, 8)
+          // Bright neon gold — high contrast vs dark empty plate
+          stroke('rgba(255, 229, 102, 0.35)', 14, 28)
+          stroke('rgba(255, 236, 150, 0.85)', 6, 16)
+          stroke('rgba(255, 248, 210, 1)', 2.5, 6)
         } else if (completed) {
-          stroke('rgba(232, 196, 106, 0.18)', 4, 0)
-          stroke('rgba(232, 196, 106, 0.42)', 2, 4)
+          stroke('rgba(255, 214, 102, 0.28)', 7, 12)
+          stroke('rgba(255, 220, 120, 0.85)', 3, 8)
         } else {
-          stroke('rgba(232, 196, 106, 0.12)', 3, 0)
-          stroke('rgba(232, 196, 106, 0.28)', 1.5, 2)
+          stroke('rgba(255, 214, 102, 0.22)', 5, 10)
+          stroke('rgba(255, 220, 130, 0.72)', 2.25, 6)
         }
       }
 
