@@ -134,9 +134,7 @@
   .coin-scene {
     /* Chunky disk: stacked Z slices + face caps for TV-readable thickness */
     --coin-size: min(46vw, 340px);
-    --coin-depth: 48px; /* half-thickness; full rim ≈ 96px */
-    --coin-slice-count: 28;
-    --coin-slice-step: calc(var(--coin-depth) * 2 / var(--coin-slice-count));
+    --coin-depth: 50px; /* half-thickness; full rim ≈ 100px — keep in sync with CoinToss.tsx */
     position: relative;
     width: var(--coin-size);
     height: var(--coin-size);
@@ -166,8 +164,10 @@
     will-change: transform, filter;
   }
 
-  .coin-container.is-spinning {
-    filter: contrast(1.08) saturate(1.12);
+  /* Do not put filter/opacity on .coin-container — that flattens preserve-3d
+     and collapses the extruded rim to a paper-thin edge during the flip. */
+  .coin-container.is-spinning .coin-face {
+    filter: saturate(1.2) contrast(1.1) brightness(1.05);
   }
 
   /* ——— Faces: original gold art, full circle ——— */
@@ -232,13 +232,10 @@
   }
 
   .coin-edge-slice {
-    --s: var(--slice, 0);
     position: absolute;
-    inset: 0;
+    inset: -1px;
     border-radius: 50%;
-    transform: translateZ(
-      calc((var(--s) - (var(--coin-slice-count) - 1) / 2) * var(--coin-slice-step))
-    );
+    /* transform: translateZ(...) set inline from CoinToss for reliable depth */
     background:
       radial-gradient(
         circle at 35% 30%,
@@ -249,8 +246,9 @@
         #5a3a0c 100%
       );
     box-shadow:
-      inset 0 0 0 2px rgba(255, 230, 160, 0.35),
-      inset 0 0 18px rgba(0, 0, 0, 0.35);
+      inset 0 0 0 2px rgba(255, 230, 160, 0.45),
+      inset 0 0 18px rgba(0, 0, 0, 0.4);
+    backface-visibility: visible;
   }
 
   .coin-edge-slice.is-ridge {
