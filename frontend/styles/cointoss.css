@@ -132,9 +132,10 @@
   }
 
   .coin-scene {
-    /* Chunky disk: stacked Z slices + face caps for TV-readable thickness */
+    /* Chunky disk: stacked Z slices + cylinder walls for TV-readable thickness */
     --coin-size: min(46vw, 340px);
-    --coin-depth: 50px; /* half-thickness; full rim ≈ 100px — keep in sync with CoinToss.tsx */
+    --coin-depth: 52px; /* half-thickness; full rim ≈ 104px — keep in sync with CoinToss.tsx */
+    --coin-walls: 48;
     position: relative;
     width: var(--coin-size);
     height: var(--coin-size);
@@ -269,6 +270,60 @@
         #d4a63a 0%,
         #8a5f18 45%,
         #5a3a0c 100%
+      );
+  }
+
+  /* Cylinder wall panels: width spans thickness (Z), sits on the rim */
+  .coin-wall {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--coin-depth) * 2);
+    height: calc(3.14159265 * var(--coin-size) / var(--coin-walls) + 2px);
+    transform-style: preserve-3d;
+    transform:
+      translate(-50%, -50%)
+      rotateZ(calc(var(--w, 0) * 360deg / var(--coin-walls)))
+      translateY(calc(var(--coin-size) / -2))
+      rotateX(90deg);
+    background:
+      linear-gradient(
+        90deg,
+        #4a3008 0%,
+        #8a5f18 12%,
+        #f0d27a 28%,
+        #fff1c2 48%,
+        #e8c46a 62%,
+        #8a5f18 82%,
+        #4a3008 100%
+      );
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+  }
+
+  .coin-wall.is-ridge {
+    background:
+      linear-gradient(
+        90deg,
+        #5a3a0c 0%,
+        #c8962e 14%,
+        #ffe9a8 32%,
+        #fff8d6 50%,
+        #f0d27a 68%,
+        #a67c22 86%,
+        #5a3a0c 100%
+      );
+  }
+
+  .coin-wall.is-valley {
+    background:
+      linear-gradient(
+        90deg,
+        #3a2506 0%,
+        #6e4a12 18%,
+        #c8962e 40%,
+        #e0b84a 50%,
+        #8a5f18 72%,
+        #3a2506 100%
       );
   }
 

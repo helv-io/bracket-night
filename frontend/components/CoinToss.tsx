@@ -14,12 +14,10 @@ export interface CoinTossProps {
   onComplete?: () => void
 }
 
-/**
- * Stacked circular slices along Z create a chunky reeded rim that reads
- * when the coin is edge-on during rotateY. Half-depth in px (full ≈ 2×).
- */
-const EDGE_SLICES = 32
-const COIN_HALF_DEPTH_PX = 50
+/** Stacked Z discs + cylindrical wall panels for a chunky rim during rotateY. */
+const EDGE_SLICES = 24
+const COIN_HALF_DEPTH_PX = 52
+const WALL_SEGMENTS = 48
 
 const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   id: i,
@@ -119,16 +117,29 @@ export default function CoinToss({
 
   const edgeNodes = useMemo(() => {
     const step = (COIN_HALF_DEPTH_PX * 2) / (EDGE_SLICES - 1)
-    return Array.from({ length: EDGE_SLICES }, (_, i) => {
+    const slices = Array.from({ length: EDGE_SLICES }, (_, i) => {
       const z = -COIN_HALF_DEPTH_PX + i * step
       return (
         <span
-          key={i}
+          key={`s-${i}`}
           className={`coin-edge-slice ${i % 2 === 0 ? 'is-ridge' : 'is-valley'}`}
           style={{ transform: `translateZ(${z.toFixed(2)}px)` }}
         />
       )
     })
+    const walls = Array.from({ length: WALL_SEGMENTS }, (_, i) => (
+      <span
+        key={`w-${i}`}
+        className={`coin-wall ${i % 2 === 0 ? 'is-ridge' : 'is-valley'}`}
+        style={{ ['--w' as string]: i } as React.CSSProperties}
+      />
+    ))
+    return (
+      <>
+        {slices}
+        {walls}
+      </>
+    )
   }, [])
 
   if (!contestants[0] || !contestants[1]) return null
