@@ -7,68 +7,91 @@ interface BracketProps {
   currentMatchupIndex: number
 }
 
-const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent: boolean }) => {
+const CONNECTIONS: Array<{ from: number; to: number; leftSide: boolean }> = [
+  { from: 0, to: 8, leftSide: true },
+  { from: 1, to: 8, leftSide: true },
+  { from: 2, to: 9, leftSide: true },
+  { from: 3, to: 9, leftSide: true },
+  { from: 8, to: 12, leftSide: true },
+  { from: 9, to: 12, leftSide: true },
+  { from: 12, to: 14, leftSide: true },
+  { from: 4, to: 10, leftSide: false },
+  { from: 5, to: 10, leftSide: false },
+  { from: 6, to: 11, leftSide: false },
+  { from: 7, to: 11, leftSide: false },
+  { from: 10, to: 13, leftSide: false },
+  { from: 11, to: 13, leftSide: false },
+  { from: 13, to: 14, leftSide: false },
+]
+
+function pathToCurrent(currentMatchupIndex: number): Set<string> {
+  const active = new Set<string>()
+  // Emphasize inbound edges into the current matchup (and recent completed feeder)
+  for (const c of CONNECTIONS) {
+    if (c.to === currentMatchupIndex || c.from === currentMatchupIndex) {
+      active.add(`${c.from}-${c.to}`)
+    }
+  }
+  return active
+}
+
+const MatchupComponent = ({
+  matchup,
+  isCurrent,
+}: {
+  matchup: Matchup
+  isCurrent: boolean
+}) => {
+  const isComplete = Boolean(matchup.winner)
+  const isPending = !matchup.left && !matchup.right
+
+  const renderSide = (side: 'left' | 'right') => {
+    const contestant = side === 'left' ? matchup.left : matchup.right
+    const isWinner = Boolean(contestant && matchup.winner?.id === contestant.id)
+    const nameClass = [
+      'matchup-name',
+      isCurrent || isWinner ? 'is-strong' : '',
+      isWinner ? 'is-winner' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    return (
+      <div className={`matchup-row ${side === 'right' ? 'is-right' : ''}`}>
+        {contestant?.image_url ? (
+          <img
+            src={contestant.image_url}
+            alt={contestant.name}
+            className={[
+              'matchup-avatar',
+              isCurrent ? 'is-current' : '',
+              isWinner ? 'is-winner' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          />
+        ) : (
+          <div className="matchup-avatar-placeholder">?</div>
+        )}
+        <div className={nameClass}>{contestant?.name || 'TBD'}</div>
+      </div>
+    )
+  }
+
   return (
     <div
-      className={`p-2 rounded-lg text-center w-[180px] flex flex-col items-center justify-between h-[140px] shadow-md transition-all duration-300 bg-[var(--card-bg)]
-        ${isCurrent ? 'ring-4 ring-[var(--active)]' : ''}`
-      }
+      className={[
+        'matchup-card',
+        isCurrent ? 'is-current' : '',
+        isComplete ? 'is-complete' : '',
+        isPending ? 'is-pending' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <div className="flex items-center w-full">
-        {matchup.left?.image_url ? (
-          <img
-            src={matchup.left.image_url}
-            alt={matchup.left.name}
-            className={`w-10 h-10 rounded-full mr-2 transition-opacity duration-300
-              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
-              ${matchup.winner?.id === matchup.left?.id
-                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
-                : 'opacity-100'
-              }`
-            }
-          />
-        ) : (
-          <div className="w-8 h-8 mr-2 text-2xl text-[var(--text)] opacity-100">❓</div>
-        )}
-        <div
-          className={`flex-1 text-left transition-colors duration-300 
-            ${isCurrent ? 'font-bold' : ''}
-            ${matchup.winner?.id === matchup.left?.id
-              ? 'text-[var(--winner-highlight)] font-bold'
-              : 'text-gray-400'}`
-          }
-        >
-          {matchup.left?.name || ''}
-        </div>
-      </div>
-      <div className="text-[var(--accent)] font-bold text-lg">🆚</div>
-      <div className="flex items-center w-full">
-        <div
-          className={`flex-1 text-right transition-colors duration-300
-            ${isCurrent ? 'font-bold' : ''}
-            ${matchup.winner?.id === matchup.right?.id
-              ? 'text-[var(--winner-highlight)] font-bold'
-              : 'text-gray-400'
-            }`
-          }
-        >
-          {matchup.right?.name || ''}
-        </div>
-        {matchup.right?.image_url ? (
-          <img
-            src={matchup.right.image_url}
-            alt={matchup.right.name}
-            className={`w-10 h-10 rounded-full ml-2 transition-opacity duration-300
-              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
-              ${matchup.winner?.id === matchup.right?.id
-                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
-                : 'opacity-100'
-            }`}
-          />
-        ) : (
-          <div className="w-8 h-8 ml-2 text-2xl text-[var(--text)] opacity-100">❔</div>
-        )}
-      </div>
+      {renderSide('left')}
+      <div className="matchup-vs">VS</div>
+      {renderSide('right')}
     </div>
   )
 }
@@ -86,14 +109,17 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      canvas.width = container.clientWidth
-      canvas.height = container.clientHeight
+      const dpr = window.devicePixelRatio || 1
+      const width = container.clientWidth
+      const height = container.clientHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, width, height)
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Same as --active from css
-      ctx.strokeStyle = '#dbfd1c'
-      ctx.lineWidth = 5
+      const activePaths = pathToCurrent(currentMatchupIndex)
 
       const getPosition = (element: HTMLElement, side: 'left' | 'right' | 'center') => {
         const rect = element.getBoundingClientRect()
@@ -113,52 +139,55 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       const drawConnection = (fromIndex: number, toIndex: number, isLeftSide: boolean) => {
         const fromSide = isLeftSide ? 'right' : 'left'
         const toSide = isLeftSide ? 'left' : 'right'
-        const fromElement = container.querySelector(`[data-matchup-id="${matchups[fromIndex].id}"]`) as HTMLElement
-        const toElement = container.querySelector(`[data-matchup-id="${matchups[toIndex].id}"]`) as HTMLElement
+        const fromElement = container.querySelector(
+          `[data-matchup-id="${matchups[fromIndex].id}"]`
+        ) as HTMLElement
+        const toElement = container.querySelector(
+          `[data-matchup-id="${matchups[toIndex].id}"]`
+        ) as HTMLElement
         if (!fromElement || !toElement) return
 
         const fromPos = getPosition(fromElement, fromSide)
         const toPos = getPosition(toElement, toSide)
-
         const dx = toPos.x - fromPos.x
         const d = 0.2 * Math.abs(dx)
-        let cp1x, cp1y, cp2x, cp2y
+        const cp1x = dx > 0 ? fromPos.x + d : fromPos.x - d
+        const cp2x = dx > 0 ? toPos.x - d : toPos.x + d
+        const key = `${fromIndex}-${toIndex}`
+        const completed = Boolean(matchups[fromIndex]?.winner)
+        const isActive = activePaths.has(key)
 
-        if (dx > 0) { // Left to right
-          cp1x = fromPos.x + d
-          cp1y = fromPos.y
-          cp2x = toPos.x - d
-          cp2y = toPos.y
-        } else { // Right to left
-          cp1x = fromPos.x - d
-          cp1y = fromPos.y
-          cp2x = toPos.x + d
-          cp2y = toPos.y
+        const stroke = (color: string, widthPx: number, blur = 0) => {
+          ctx.save()
+          ctx.strokeStyle = color
+          ctx.lineWidth = widthPx
+          ctx.lineCap = 'round'
+          if (blur) {
+            ctx.shadowColor = color
+            ctx.shadowBlur = blur
+          }
+          ctx.beginPath()
+          ctx.moveTo(fromPos.x, fromPos.y)
+          ctx.bezierCurveTo(cp1x, fromPos.y, cp2x, toPos.y, toPos.x, toPos.y)
+          ctx.stroke()
+          ctx.restore()
         }
 
-        ctx.beginPath()
-        ctx.moveTo(fromPos.x, fromPos.y)
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toPos.x, toPos.y)
-        ctx.stroke()
+        if (isActive) {
+          stroke('rgba(255, 229, 102, 0.25)', 10, 16)
+          stroke('rgba(255, 229, 102, 0.95)', 3.5, 8)
+        } else if (completed) {
+          stroke('rgba(232, 196, 106, 0.18)', 4, 0)
+          stroke('rgba(232, 196, 106, 0.42)', 2, 4)
+        } else {
+          stroke('rgba(232, 196, 106, 0.12)', 3, 0)
+          stroke('rgba(232, 196, 106, 0.28)', 1.5, 2)
+        }
       }
 
-      // Left-side connections
-      drawConnection(0, 8, true)
-      drawConnection(1, 8, true)
-      drawConnection(2, 9, true)
-      drawConnection(3, 9, true)
-      drawConnection(8, 12, true)
-      drawConnection(9, 12, true)
-      drawConnection(12, 14, true)
-
-      // Right-side connections
-      drawConnection(4, 10, false)
-      drawConnection(5, 10, false)
-      drawConnection(6, 11, false)
-      drawConnection(7, 11, false)
-      drawConnection(10, 13, false)
-      drawConnection(11, 13, false)
-      drawConnection(13, 14, false)
+      for (const c of CONNECTIONS) {
+        drawConnection(c.from, c.to, c.leftSide)
+      }
     }
 
     drawLines()
@@ -166,121 +195,63 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     return () => window.removeEventListener('resize', drawLines)
   }, [matchups, currentMatchupIndex])
 
+  const place = (
+    items: Matchup[],
+    left: string,
+    topForIndex: (index: number) => string
+  ) =>
+    items.map((matchup, index) => (
+      <div
+        key={matchup.id}
+        data-matchup-id={matchup.id}
+        style={{
+          position: 'absolute',
+          left,
+          top: topForIndex(index),
+          transform: 'translateY(-50%)',
+          zIndex: 1,
+        }}
+      >
+        <MatchupComponent
+          matchup={matchup}
+          isCurrent={matchup.id === currentMatchupIndex}
+        />
+      </div>
+    ))
+
   return (
-    <div ref={containerRef} style={{ position: 'absolute', height: '100vh', width: '100%', margin: '0 auto', transform: 'translateX(-5px)' }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} />
-      {/* Round 1 Left */}
-      {matchups.slice(0, 4).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '0%',
-            top: `${(2 * index + 1) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Round 1 Right */}
-      {matchups.slice(4, 8).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '90%',
-            top: `${(2 * index + 1) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Quarter-Finals Left */}
-      {matchups.slice(8, 10).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '15%',
-            top: `${(4 * index + 2) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Quarter-Finals Right */}
-      {matchups.slice(10, 12).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '75%',
-            top: `${(4 * index + 2) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Semi-Finals Left */}
-      {matchups.slice(12, 13).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '30%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Semi-Finals Right */}
-      {matchups.slice(13, 14).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '60%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Final */}
-      {matchups.slice(14, 15).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '45%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
+    <div ref={containerRef} className="bracket-stage">
+      <canvas ref={canvasRef} className="bracket-canvas" />
+
+      <div className="bracket-round-label" style={{ left: '1%', top: '2%' }}>
+        Round of 16
+      </div>
+      <div className="bracket-round-label" style={{ right: '1%', top: '2%' }}>
+        Round of 16
+      </div>
+      <div className="bracket-round-label" style={{ left: '16%', top: '8%' }}>
+        QF
+      </div>
+      <div className="bracket-round-label" style={{ right: '16%', top: '8%' }}>
+        QF
+      </div>
+      <div className="bracket-round-label" style={{ left: '31%', top: '18%' }}>
+        SF
+      </div>
+      <div className="bracket-round-label" style={{ right: '31%', top: '18%' }}>
+        SF
+      </div>
+      <div className="bracket-round-label" style={{ left: '46%', top: '22%' }}>
+        Finals
+      </div>
+
+      {place(matchups.slice(0, 4), '0%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
+      {place(matchups.slice(4, 8), '90%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
+      {place(matchups.slice(8, 10), '15%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
+      {place(matchups.slice(10, 12), '75%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
+      {place(matchups.slice(12, 13), '30%', () => '50%')}
+      {place(matchups.slice(13, 14), '60%', () => '50%')}
+      {place(matchups.slice(14, 15), '45%', () => '50%')}
     </div>
   )
 }

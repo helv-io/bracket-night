@@ -154,14 +154,14 @@ const NewBracket = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4 flex-col">
+    <div className="bn-page bn-page--stadium min-h-screen flex items-center justify-center p-4 flex-col">
       <img
         src="/bracket-night-gold.svg"
         alt="Bracket Night Logo"
         className="w-full sm:w-1/3 object-cover"
       />
-      <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 transition-all duration-300">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white text-center mb-6 bracket-title">
+      <div className="w-full max-w-2xl bn-card p-6 transition-all duration-300">
+        <h1 className="text-3xl font-extrabold text-center mb-6 bracket-title text-[var(--gold-bright)]">
           New Bracket
         </h1>
   

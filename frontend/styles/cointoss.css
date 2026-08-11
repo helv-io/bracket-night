@@ -1,86 +1,477 @@
-@import "tailwindcss";
-
 @layer components {
-  .coin-container {
-    @apply w-52 h-52 relative;
+  .coin-toss-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 55% 45% at 50% 35%, rgba(255, 214, 120, 0.16), transparent 60%),
+      radial-gradient(ellipse 80% 70% at 50% 100%, rgba(0, 0, 0, 0.85), transparent 55%),
+      rgba(4, 6, 14, 0.92);
+    perspective: 1200px;
+  }
+
+  .coin-toss-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 40%, transparent 18%, rgba(0, 0, 0, 0.55) 70%, rgba(0, 0, 0, 0.88) 100%);
+  }
+
+  .coin-toss-spotlight {
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    width: 55vw;
+    height: 80vh;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(140, 180, 255, 0.22), rgba(140, 180, 255, 0.05) 45%, transparent 75%);
+    filter: blur(8px);
+    animation: coinSpotlightPulse 2.8s ease-in-out infinite;
+  }
+
+  .coin-toss-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .coin-spark {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff7d1 0%, var(--gold) 45%, transparent 70%);
+    opacity: 0;
+    animation: coinSparkle 2.4s ease-in-out infinite;
+  }
+
+  .coin-toss-stage {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .coin-toss-kicker {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    letter-spacing: 0.18em;
+    color: var(--gold-bright);
+    text-shadow: 0 0 24px rgba(232, 196, 106, 0.45);
+  }
+
+  .coin-scene {
+    position: relative;
+    width: min(42vw, 320px);
+    height: min(42vw, 320px);
+    max-width: 320px;
+    max-height: 320px;
     transform-style: preserve-3d;
   }
 
-  .coin-side {
-    @apply absolute w-full h-full rounded-full;
-    backface-visibility: hidden;
+  .coin-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: -18%;
+    width: 70%;
+    height: 18%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.65), transparent 70%);
+    filter: blur(4px);
+    opacity: 0.8;
   }
 
-  .coin-image {
-    @apply w-full h-full rounded-full;
-    background-size: cover;
-    filter: grayscale(100%);
+  .coin-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    will-change: transform, filter;
+  }
+
+  .coin-container.is-spinning {
+    filter: blur(0.6px) contrast(1.08) saturate(1.15);
+  }
+
+  .coin-side {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 2px rgba(255, 236, 180, 0.35),
+      0 18px 40px rgba(0, 0, 0, 0.55),
+      inset 0 0 28px rgba(255, 220, 140, 0.18);
   }
 
   .coin-side::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.35), transparent 28%),
+      radial-gradient(circle at 70% 75%, rgba(0, 0, 0, 0.35), transparent 35%);
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .coin-shell {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background-position: center;
+    background-size: 112%;
+    background-repeat: no-repeat;
+    filter: saturate(1.15) contrast(1.05);
+  }
+
+  .heads .coin-shell {
+    background-image: url('/coin-a.jpg');
+  }
+
+  .tails .coin-shell {
+    background-image: url('/coin-b.jpg');
+  }
+
+  .coin-photo-ring {
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    z-index: 2;
+    padding: 5%;
+    background:
+      linear-gradient(145deg, var(--gold-bright), var(--gold-deep));
+    box-shadow:
+      0 0 0 2px rgba(90, 55, 10, 0.55),
+      0 0 24px rgba(255, 214, 120, 0.35),
+      inset 0 0 10px rgba(0, 0, 0, 0.35);
+  }
+
+  .coin-photo {
     width: 100%;
     height: 100%;
-    border: 4px solid #C0C0C0;
     border-radius: 50%;
-    box-sizing: border-box;
-    z-index: 1;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba(255, 236, 180, 0.55);
+    box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .coin-rim {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform: translateZ(-10px);
+    background:
+      repeating-conic-gradient(
+        from 0deg,
+        #c8962e 0deg 6deg,
+        #f0d27a 6deg 10deg,
+        #8a5f18 10deg 14deg
+      );
+    box-shadow: 0 0 20px rgba(232, 196, 106, 0.25);
   }
 
   .heads {
-    transform: translateZ(20px); /* Increased for thickness */
+    transform: translateZ(14px);
   }
 
   .tails {
-    transform: rotateX(180deg) translateZ(20px); /* Increased for thickness */
+    transform: rotateY(180deg) translateZ(14px);
+  }
+
+  .coin-glint {
+    position: absolute;
+    top: 8%;
+    right: 14%;
+    width: 18%;
+    height: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
+    filter: blur(1px);
+    z-index: 5;
+    opacity: 0.85;
+    animation: coinGlint 1.6s ease-in-out infinite;
+  }
+
+  .coin-status {
+    min-height: 4.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .coin-status-line {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: 0.06em;
+    color: var(--text);
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);
+  }
+
+  .coin-status-line.is-winner {
+    color: var(--gold-bright);
+    text-shadow:
+      0 0 24px rgba(232, 196, 106, 0.55),
+      0 6px 20px rgba(0, 0, 0, 0.55);
+    animation: coinWinnerPop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+  }
+
+  .coin-winner-photo {
+    width: clamp(72px, 12vw, 110px);
+    height: clamp(72px, 12vw, 110px);
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 28px rgba(232, 196, 106, 0.45);
+    animation: coinWinnerPop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+  }
+
+  .coin-burst {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .coin-burst.is-on {
+    animation: coinBurstFlash 0.8s ease-out both;
+  }
+
+  .coin-burst::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 0 rgba(255, 230, 150, 0.8),
+      0 -80px 0 -4px #ffe9a8,
+      0 80px 0 -4px #e8c46a,
+      80px 0 0 -4px #fff4c4,
+      -80px 0 0 -4px #e8c46a,
+      56px -56px 0 -4px #ffe9a8,
+      -56px 56px 0 -4px #fff4c4,
+      56px 56px 0 -4px #e8c46a,
+      -56px -56px 0 -4px #ffe9a8;
+  }
+
+  .coin-toss-trigger {
+    border: 1px solid rgba(232, 196, 106, 0.4);
+    background: linear-gradient(180deg, rgba(40, 32, 14, 0.9), rgba(20, 16, 8, 0.95));
+    color: var(--gold-bright);
+    font-family: var(--font-display);
+    letter-spacing: 0.12em;
+    font-size: 1.05rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(232, 196, 106, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .coin-toss-trigger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 28px rgba(232, 196, 106, 0.3);
+  }
+
+  .coin-toss-mobile {
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto 1rem;
+    padding: 1.25rem 1.4rem;
+    text-align: center;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(232, 196, 106, 0.4);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 214, 120, 0.18), transparent 55%),
+      rgba(12, 18, 36, 0.92);
+    box-shadow: var(--surface-glow);
+  }
+
+  .coin-toss-mobile h3 {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    letter-spacing: 0.08em;
+    color: var(--gold-bright);
+  }
+
+  .coin-toss-mobile p {
+    margin: 0;
+    color: var(--text-muted);
   }
 }
 
 @layer utilities {
+  /* Land on heads (contestant 0): final Y rotation must be n * 360 */
   @keyframes spinToHeads {
     0% {
-      transform: translateY(0) rotateX(0deg);
+      transform: translateY(40px) rotateY(0deg) scale(0.9);
     }
-    25% {
-      transform: translateY(-800px) rotateX(720deg);
+    18% {
+      transform: translateY(-180px) rotateY(540deg) scale(1.05);
     }
-    50% {
-      transform: translateY(0) rotateX(1440deg);
+    42% {
+      transform: translateY(-40px) rotateY(1260deg) scale(1);
     }
-    75% {
-      transform: translateY(-200px) rotateX(1980deg);
+    68% {
+      transform: translateY(-120px) rotateY(1980deg) scale(1.04);
+    }
+    84% {
+      transform: translateY(12px) rotateY(2520deg) scale(0.98);
+    }
+    92% {
+      transform: translateY(-18px) rotateY(2750deg) scale(1.02);
     }
     100% {
-      transform: translateY(0) rotateX(2700deg);
+      transform: translateY(0) rotateY(2880deg) scale(1);
     }
   }
 
+  /* Land on tails (contestant 1): final Y rotation must be 180 + n * 360 */
   @keyframes spinToTails {
     0% {
-      transform: translateY(0) rotateX(0deg);
+      transform: translateY(40px) rotateY(0deg) scale(0.9);
     }
-    25% {
-      transform: translateY(-800px) rotateX(810deg);
+    18% {
+      transform: translateY(-180px) rotateY(630deg) scale(1.05);
     }
-    50% {
-      transform: translateY(0) rotateX(1620deg);
+    42% {
+      transform: translateY(-40px) rotateY(1350deg) scale(1);
     }
-    75% {
-      transform: translateY(-200px) rotateX(2160deg);
+    68% {
+      transform: translateY(-120px) rotateY(2070deg) scale(1.04);
+    }
+    84% {
+      transform: translateY(12px) rotateY(2610deg) scale(0.98);
+    }
+    92% {
+      transform: translateY(-18px) rotateY(2840deg) scale(1.02);
     }
     100% {
-      transform: translateY(0) rotateX(2880deg);
+      transform: translateY(0) rotateY(3060deg) scale(1);
+    }
+  }
+
+  @keyframes coinFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes coinSpotlightPulse {
+    0%,
+    100% {
+      opacity: 0.65;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes coinSparkle {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translateY(0) scale(0.6);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-12px) scale(1);
+    }
+    70% {
+      opacity: 0.2;
+    }
+  }
+
+  @keyframes coinGlint {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(0.85);
+    }
+    50% {
+      opacity: 0.95;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes coinWinnerPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.7) translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes coinBurstFlash {
+    0% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    35% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.8);
     }
   }
 
   .animate-spinToHeads {
-    animation: spinToHeads 2s linear forwards;
+    animation: spinToHeads 3.1s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
   }
 
   .animate-spinToTails {
-    animation: spinToTails 1.5s linear forwards;
+    animation: spinToTails 3.1s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
+  }
+
+  .animate-coinFadeIn {
+    animation: coinFadeIn 0.45s ease both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coin-toss-spotlight,
+  .coin-spark,
+  .coin-glint {
+    animation: none !important;
+  }
+
+  .animate-spinToHeads,
+  .animate-spinToTails {
+    animation: coinFadeIn 0.6s ease forwards !important;
+  }
+
+  .animate-spinToTails {
+    transform: rotateY(180deg);
   }
 }
