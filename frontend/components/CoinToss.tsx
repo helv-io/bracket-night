@@ -1,76 +1,215 @@
-import React, { useState } from 'react'
+/* eslint-disable @next/next/no-img-element */
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Confetti from 'react-confetti'
 import { Contestant } from '../../backend/src/types'
 
-interface CoinTossProps {
-  contestants: Contestant[]
-  leftOrRight: 0 | 1
+export interface CoinTossProps {
+  contestants: [Contestant, Contestant]
+  /** 0 = left/heads, 1 = right/tails */
+  winner: 0 | 1
+  /** Auto-start the cinematic toss when mounted / when key changes */
+  autoStart?: boolean
+  /** Show the host manual trigger button */
+  showTrigger?: boolean
+  onComplete?: () => void
 }
 
-export default function CoinToss({ contestants, leftOrRight }: CoinTossProps) {
-  const [isTossing, setIsTossing] = useState<boolean>(false)
-  const [winner, setWinner] = useState<0 | 1>(0)
-  const [tossKey, setTossKey] = useState<number>(0)
-  const [showResult, setShowResult] = useState<boolean>(false)
+const SPARKS = Array.from({ length: 18 }, (_, i) => ({
+  id: i,
+  left: `${6 + ((i * 17) % 88)}%`,
+  top: `${10 + ((i * 29) % 70)}%`,
+  delay: `${(i % 9) * 0.18}s`,
+  size: 3 + (i % 5),
+}))
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+export default function CoinToss({
+  contestants,
+  winner,
+  autoStart = false,
+  showTrigger = false,
+  onComplete,
+}: CoinTossProps) {
+  const [isTossing, setIsTossing] = useState(false)
+  const [showResult, setShowResult] = useState(false)
+  const [tossKey, setTossKey] = useState(0)
+  const [burst, setBurst] = useState(false)
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
+  const completedRef = useRef(false)
+  const onCompleteRef = useRef(onComplete)
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete
+  }, [onComplete])
+
+  useEffect(() => {
+    const update = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
 
   const startToss = () => {
+    completedRef.current = false
     setShowResult(false)
-    setWinner(leftOrRight)
+    setBurst(false)
     setTossKey((prev) => prev + 1)
     setIsTossing(true)
   }
 
-  const handleAnimationEnd = async () => {
-    // Show result after animation
+  useEffect(() => {
+    if (autoStart && contestants[0] && contestants[1]) {
+      startToss()
+    }
+    // Only re-trigger when autoStart flips on or contestant pair / winner changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, contestants[0]?.id, contestants[1]?.id, winner])
+
+  const winnerContestant = contestants[winner]
+
+  const handleAnimationEnd = () => {
+    if (completedRef.current) return
+    completedRef.current = true
     setShowResult(true)
-    
-    // Wait 3s
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-    
-    // Reset
-    setIsTossing(false)
+    setBurst(true)
+
+    const holdMs = prefersReducedMotion() ? 1600 : 2800
+    window.setTimeout(() => {
+      setIsTossing(false)
+      setBurst(false)
+      onCompleteRef.current?.()
+    }, holdMs)
   }
 
+  // Reduced-motion path: skip long spin, reveal quickly
+  useEffect(() => {
+    if (!isTossing || !prefersReducedMotion()) return
+    const t = window.setTimeout(handleAnimationEnd, 650)
+    return () => window.clearTimeout(t)
+  }, [isTossing, tossKey])
+
+  const sparkNodes = useMemo(
+    () =>
+      SPARKS.map((s) => (
+        <span
+          key={s.id}
+          className="coin-spark"
+          style={{
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            animationDelay: s.delay,
+          }}
+        />
+      )),
+    []
+  )
+
+  if (!contestants[0] || !contestants[1]) return null
+
   return (
-    <div>
-      <button
-        onClick={startToss}
-        className="px-4 py-2 bg-[var(--accent)] text-[var(--text)] rounded hover:opacity-80 transition"
-      >
-        Toss Coin
-      </button>
+    <>
+      {showTrigger && !isTossing && (
+        <button type="button" className="coin-toss-trigger" onClick={startToss}>
+          Toss Coin
+        </button>
+      )}
 
       {isTossing && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" style={{ zIndex: 1000 }}>
-          <div
-            className="flex flex-col items-center bg-[var(--card-bg)] p-8 rounded-lg shadow-xl"
-            // onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              key={tossKey}
-              className={`coin-container ${
-                winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
-              }`}
-              onAnimationEnd={handleAnimationEnd}
-            >
-              <div className="coin-side heads">
-                <div
-                  className="coin-image"
-                  style={{ backgroundImage: `url(${contestants[0].image_url})` }}
-                ></div>
-              </div>
-              <div className="coin-side tails">
-                <div
-                  className="coin-image"
-                  style={{ backgroundImage: `url(${contestants[1].image_url})` }}
-                ></div>
+        <div className="coin-toss-overlay animate-coinFadeIn" role="dialog" aria-label="Coin toss">
+          <div className="coin-toss-vignette" />
+          <div className="coin-toss-spotlight" />
+          <div className="coin-toss-particles">{sparkNodes}</div>
+          <div className={`coin-burst ${burst ? 'is-on' : ''}`} />
+
+          {showResult && windowSize.width > 0 && (
+            <Confetti
+              width={windowSize.width}
+              height={windowSize.height}
+              numberOfPieces={160}
+              recycle={false}
+              colors={['#e8c46a', '#ffe9a8', '#ff6f61', '#5dffa8', '#ffffff']}
+            />
+          )}
+
+          <div className="coin-toss-stage">
+            <div className="coin-toss-kicker">
+              {showResult ? 'Decided!' : 'Tiebreaker'}
+            </div>
+
+            <div className="coin-scene">
+              <div className="coin-shadow" />
+              <div
+                key={tossKey}
+                className={`coin-container ${
+                  winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
+                } ${showResult ? '' : 'is-spinning'}`}
+                onAnimationEnd={handleAnimationEnd}
+              >
+                <div className="coin-rim" aria-hidden />
+                <div className="coin-side heads">
+                  <div className="coin-shell" />
+                  <div className="coin-photo-ring">
+                    <div
+                      className="coin-photo"
+                      style={{ backgroundImage: `url(${contestants[0].image_url})` }}
+                      role="img"
+                      aria-label={contestants[0].name}
+                    />
+                  </div>
+                  <div className="coin-glint" />
+                </div>
+                <div className="coin-side tails">
+                  <div className="coin-shell" />
+                  <div className="coin-photo-ring">
+                    <div
+                      className="coin-photo"
+                      style={{ backgroundImage: `url(${contestants[1].image_url})` }}
+                      role="img"
+                      aria-label={contestants[1].name}
+                    />
+                  </div>
+                  <div className="coin-glint" />
+                </div>
               </div>
             </div>
-            <p className="mt-4 text-2xl text-[var(--winner-highlight)] font-bold">
-              {!showResult ? '🤞 🤞 🤞 🤞 🤞' : `${contestants[leftOrRight].name} wins!`}
-            </p>
+
+            <div className="coin-status">
+              {!showResult ? (
+                <div className="coin-status-line">In the air…</div>
+              ) : (
+                <>
+                  <img
+                    className="coin-winner-photo"
+                    src={winnerContestant.image_url}
+                    alt={winnerContestant.name}
+                  />
+                  <div className="coin-status-line is-winner">{winnerContestant.name} wins!</div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
+    </>
+  )
+}
+
+/** Compact mobile notice while the host TV runs the toss */
+export function CoinTossMobileNotice({ winnerName }: { winnerName?: string }) {
+  return (
+    <div className="coin-toss-mobile">
+      <h3>Tie!</h3>
+      <p>
+        {winnerName
+          ? `Coin toss on the big screen — ${winnerName} advances!`
+          : 'Coin toss on the big screen… watch the host TV!'}
+      </p>
     </div>
   )
 }
