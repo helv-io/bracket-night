@@ -5,6 +5,8 @@ COPY frontend/package*.json ./
 RUN npm install
 COPY frontend ./
 COPY backend/ ../backend
+# next.config only enables `output: 'export'` when NODE_ENV=production
+ENV NODE_ENV=production
 RUN npm run build
 
 # Build backend

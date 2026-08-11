@@ -1,10 +1,15 @@
+import { randomBytes } from 'crypto'
 import { Server, Socket } from 'socket.io'
 import { getBracketByCode } from './db'
 import { Bracket, Contestant, Matchup, Player, Vote } from './types'
 import { config } from './config'
 
+/** 8-char hex join codes (QR/URL accept any length; avoids short guessable IDs). */
+const generateGameId = () => randomBytes(4).toString('hex').toUpperCase()
+
 export class Game {
   private io: Server
+  // Live rooms are in-process only; process restarts wipe active games.
   private games: Map<string, GameState> = new Map()
 
   constructor(io: Server) {
@@ -14,7 +19,11 @@ export class Game {
 
   private handleConnection(socket: Socket) {
     socket.on('create_game', () => {
-      const gameId = config.dev ? 'DEV' : Math.random().toString(36).substring(2, 6).toUpperCase()
+      let gameId = config.dev ? 'DEV' : generateGameId()
+      // Extremely unlikely collision; regenerate rather than clobber a live room.
+      while (!config.dev && this.games.has(gameId)) {
+        gameId = generateGameId()
+      }
       this.games.set(gameId, {
         gameId: gameId,
         bracket: null,
