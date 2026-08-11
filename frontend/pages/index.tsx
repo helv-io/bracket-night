@@ -142,8 +142,8 @@ const Home = () => {
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
         {matchups.length === 0 && (
-          <div className="bn-card px-8 py-10 max-w-2xl">
-            <h1 className="bn-display text-4xl md:text-5xl text-[var(--gold-bright)] mb-3">
+          <div className="max-w-2xl px-6 -translate-y-8">
+            <h1 className="bn-display text-4xl md:text-5xl text-[var(--gold-bright)] mb-3 drop-shadow-lg">
               Welcome to Bracket Night
             </h1>
             <p className="text-lg md:text-xl text-[var(--text-muted)]">
