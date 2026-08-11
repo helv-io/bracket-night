@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useRef, useEffect } from 'react'
+import { apiHeaders } from '../lib/api'
 
 const NewBracket = () => {
   const [title, setTitle] = useState('')
@@ -95,7 +96,9 @@ const NewBracket = () => {
   // Propose images for a contestant
   const proposeImages = async (index: number, name: string) => {
     const newImages = [...images]
-    const urls = await (await fetch(`/api/image/${name}`)).json() as string[]
+    const urls = await (await fetch(`/api/image/${encodeURIComponent(name)}`, {
+      headers: apiHeaders()
+    })).json() as string[]
     if (urls.length) {
       newImages[index].urls = urls
       setImages(newImages)
@@ -126,7 +129,9 @@ const NewBracket = () => {
     setIsAiHappening(true)
     
     // Get AI contestants
-    const aiContestants = await (await fetch(`/api/ai/${title}`)).json() as string[]
+    const aiContestants = await (await fetch(`/api/ai/${encodeURIComponent(title)}`, {
+      headers: apiHeaders()
+    })).json() as string[]
     
     // Clone existing contestants and images
     const newContestants = [...contestants]
