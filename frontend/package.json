@@ -10,7 +10,7 @@
   "dependencies": {
     "autoprefixer": "^10.4.21",
     "next": "^15.2.3",
-    "postcss": "^8.5.3",
+    "postcss": "^8.5.26",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-confetti": "^6.4.0",
