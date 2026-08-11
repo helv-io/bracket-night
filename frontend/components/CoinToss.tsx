@@ -14,8 +14,11 @@ export interface CoinTossProps {
   onComplete?: () => void
 }
 
-/** Edge segments for a chunky extruded metal rim during rotateY */
-const EDGE_SEGMENTS = 40
+/**
+ * Stacked circular slices along Z create a chunky reeded rim that reads
+ * when the coin is edge-on during rotateY.
+ */
+const EDGE_SLICES = 28
 
 const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   id: i,
@@ -115,11 +118,11 @@ export default function CoinToss({
 
   const edgeNodes = useMemo(
     () =>
-      Array.from({ length: EDGE_SEGMENTS }, (_, i) => (
+      Array.from({ length: EDGE_SLICES }, (_, i) => (
         <span
           key={i}
-          className="coin-edge-seg"
-          style={{ ['--i' as string]: i } as React.CSSProperties}
+          className={`coin-edge-slice ${i % 2 === 0 ? 'is-ridge' : 'is-valley'}`}
+          style={{ ['--slice' as string]: i } as React.CSSProperties}
         />
       )),
     []
@@ -158,7 +161,7 @@ export default function CoinToss({
             </div>
 
             {!showResult && (
-              <div className="coin-matchup" aria-hidden={false}>
+              <div className="coin-matchup">
                 <div className="coin-matchup-side">
                   <img
                     className="coin-matchup-photo"
