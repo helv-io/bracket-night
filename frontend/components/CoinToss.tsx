@@ -5,7 +5,7 @@ import { Contestant } from '../../backend/src/types'
 
 export interface CoinTossProps {
   contestants: [Contestant, Contestant]
-  /** 0 = left/heads, 1 = right/tails */
+  /** 0 = left/heads (Face A), 1 = right/tails (Face B) */
   winner: 0 | 1
   /** Auto-start the cinematic toss when mounted / when key changes */
   autoStart?: boolean
@@ -13,6 +13,9 @@ export interface CoinTossProps {
   showTrigger?: boolean
   onComplete?: () => void
 }
+
+/** Edge segments for a chunky extruded metal rim during rotateY */
+const EDGE_SEGMENTS = 40
 
 const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   id: i,
@@ -110,6 +113,18 @@ export default function CoinToss({
     []
   )
 
+  const edgeNodes = useMemo(
+    () =>
+      Array.from({ length: EDGE_SEGMENTS }, (_, i) => (
+        <span
+          key={i}
+          className="coin-edge-seg"
+          style={{ ['--i' as string]: i } as React.CSSProperties}
+        />
+      )),
+    []
+  )
+
   if (!contestants[0] || !contestants[1]) return null
 
   return (
@@ -142,6 +157,34 @@ export default function CoinToss({
               {showResult ? 'Decided!' : 'Tiebreaker'}
             </div>
 
+            {!showResult && (
+              <div className="coin-matchup" aria-hidden={false}>
+                <div className="coin-matchup-side">
+                  <img
+                    className="coin-matchup-photo"
+                    src={contestants[0].image_url}
+                    alt=""
+                  />
+                  <div className="coin-matchup-meta">
+                    <span className="coin-matchup-face">Face A</span>
+                    <span className="coin-matchup-name">{contestants[0].name}</span>
+                  </div>
+                </div>
+                <div className="coin-matchup-vs">vs</div>
+                <div className="coin-matchup-side">
+                  <img
+                    className="coin-matchup-photo"
+                    src={contestants[1].image_url}
+                    alt=""
+                  />
+                  <div className="coin-matchup-meta">
+                    <span className="coin-matchup-face">Face B</span>
+                    <span className="coin-matchup-name">{contestants[1].name}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="coin-scene">
               <div className="coin-shadow" />
               <div
@@ -151,29 +194,23 @@ export default function CoinToss({
                 } ${showResult ? '' : 'is-spinning'}`}
                 onAnimationEnd={handleAnimationEnd}
               >
-                <div className="coin-rim" aria-hidden />
+                <div className="coin-edge" aria-hidden>
+                  {edgeNodes}
+                </div>
                 <div className="coin-side heads">
-                  <div className="coin-shell" />
-                  <div className="coin-photo-ring">
-                    <div
-                      className="coin-photo"
-                      style={{ backgroundImage: `url(${contestants[0].image_url})` }}
-                      role="img"
-                      aria-label={contestants[0].name}
-                    />
-                  </div>
+                  <div
+                    className="coin-face"
+                    role="img"
+                    aria-label={`Face A — ${contestants[0].name}`}
+                  />
                   <div className="coin-glint" />
                 </div>
                 <div className="coin-side tails">
-                  <div className="coin-shell" />
-                  <div className="coin-photo-ring">
-                    <div
-                      className="coin-photo"
-                      style={{ backgroundImage: `url(${contestants[1].image_url})` }}
-                      role="img"
-                      aria-label={contestants[1].name}
-                    />
-                  </div>
+                  <div
+                    className="coin-face"
+                    role="img"
+                    aria-label={`Face B — ${contestants[1].name}`}
+                  />
                   <div className="coin-glint" />
                 </div>
               </div>
@@ -190,6 +227,9 @@ export default function CoinToss({
                     alt={winnerContestant.name}
                   />
                   <div className="coin-status-line is-winner">{winnerContestant.name} wins!</div>
+                  <div className="coin-winner-face">
+                    Face {winner === 0 ? 'A' : 'B'}
+                  </div>
                 </>
               )}
             </div>
