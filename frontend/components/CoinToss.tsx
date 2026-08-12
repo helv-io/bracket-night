@@ -84,6 +84,8 @@ export default function CoinToss({
   const completedRef = useRef(false)
   const onCompleteRef = useRef(onComplete)
   const rafRef = useRef(0)
+  const holdTimerRef = useRef(0)
+  const spinGenRef = useRef(0)
 
   useEffect(() => {
     onCompleteRef.current = onComplete
@@ -96,14 +98,23 @@ export default function CoinToss({
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  const finishToss = () => {
-    if (completedRef.current) return
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      window.clearTimeout(holdTimerRef.current)
+    }
+  }, [])
+
+  const finishToss = (gen: number) => {
+    if (completedRef.current || gen !== spinGenRef.current) return
     completedRef.current = true
     setShowResult(true)
     setBurst(true)
 
     const holdMs = prefersReducedMotion() ? HOLD_MS_REDUCED : HOLD_MS
-    window.setTimeout(() => {
+    window.clearTimeout(holdTimerRef.current)
+    holdTimerRef.current = window.setTimeout(() => {
+      if (gen !== spinGenRef.current) return
       setIsTossing(false)
       setBurst(false)
       onCompleteRef.current?.()
@@ -111,7 +122,10 @@ export default function CoinToss({
   }
 
   const startToss = () => {
+    window.clearTimeout(holdTimerRef.current)
+    cancelAnimationFrame(rafRef.current)
     completedRef.current = false
+    spinGenRef.current += 1
     setShowResult(false)
     setBurst(false)
     setTossKey((prev) => prev + 1)
@@ -129,13 +143,16 @@ export default function CoinToss({
   useEffect(() => {
     if (!isTossing) return
 
+    const gen = spinGenRef.current
     const reduced = prefersReducedMotion()
     const duration = reduced ? 1200 : SPIN_MS
     // Full spins for TV energy; reduced still rotates enough to read both faces
     const finalY = winner === 0 ? (reduced ? 720 : 2880) : reduced ? 900 : 3060
     const start = performance.now()
+    let rafId = 0
 
     const tick = (now: number) => {
+      if (gen !== spinGenRef.current) return
       const raw = Math.min(1, (now - start) / duration)
       const p = spinEase(raw)
       const y = finalY * p
@@ -146,17 +163,21 @@ export default function CoinToss({
         transform: `translateY(${lift.toFixed(1)}px) rotateX(${tilt.toFixed(2)}deg) rotateY(${y.toFixed(2)}deg) scale(${scale.toFixed(3)})`,
       })
       if (raw < 1) {
-        rafRef.current = requestAnimationFrame(tick)
+        rafId = requestAnimationFrame(tick)
+        rafRef.current = rafId
       } else {
         setSpinStyle({
           transform: `translateY(0px) rotateX(0deg) rotateY(${finalY}deg) scale(1)`,
         })
-        finishToss()
+        finishToss(gen)
       }
     }
 
-    rafRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafRef.current)
+    rafId = requestAnimationFrame(tick)
+    rafRef.current = rafId
+    return () => {
+      cancelAnimationFrame(rafId)
+    }
   }, [isTossing, tossKey, winner])
 
   const winnerContestant = contestants[winner]
