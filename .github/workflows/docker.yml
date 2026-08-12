@@ -1,11 +1,19 @@
 # Build multi-arch images and publish to Docker Hub (helvio/*).
 #
-# Required:
-#   Variable DOCKERHUB_USERNAME (e.g. helvio)
-#   Secret DOCKERHUB_TOKEN
+# Required repository configuration:
+#
+#   Variables (Settings → Secrets and variables → Actions → Variables):
+#     DOCKERHUB_USERNAME   Docker Hub username (e.g. helvio)
+#     (falls back to Secret DOCKERHUB_USERNAME if Variable unset)
+#
+#   Secrets (Settings → Secrets and variables → Actions → Secrets):
+#     DOCKERHUB_TOKEN      Docker Hub access token (not password)
 #
 # Image: docker.io/<DOCKERHUB_USERNAME>/bracket-night
-# Sole user: always tag :latest on non-PR pushes.
+# Platforms: linux/amd64, linux/arm64
+#
+# Modeled on helv-io/reelgrab; also publishes from restore/thick-gold-coin
+# so a pre-merge test image is available (branch slug tag).
 
 name: Docker
 
@@ -58,15 +66,18 @@ jobs:
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
-            # always latest on any push/dispatch (sole user)
-            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+            # latest on default branch only
+            type=raw,value=latest,enable={{is_default_branch}}
+            # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            # branch slug (e.g. restore-thick-gold-coin)
             type=ref,event=branch
+            # PR number (build only; not pushed)
             type=ref,event=pr
+            # short SHA
             type=sha,prefix=sha-
-            type=raw,value=test,enable=${{ github.ref == 'refs/heads/restore/thick-gold-coin' }}
 
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
@@ -81,6 +92,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
+          # Push only outside PRs (PRs still multi-arch build as a check)
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
