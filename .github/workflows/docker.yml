@@ -1,0 +1,101 @@
+# Build multi-arch images and publish to Docker Hub (helvio/*).
+#
+# Required repository configuration:
+#
+#   Variables (Settings → Secrets and variables → Actions → Variables):
+#     DOCKERHUB_USERNAME   Docker Hub username (e.g. helvio)
+#     (falls back to Secret DOCKERHUB_USERNAME if Variable unset)
+#
+#   Secrets (Settings → Secrets and variables → Actions → Secrets):
+#     DOCKERHUB_TOKEN      Docker Hub access token (not password)
+#
+# Image: docker.io/<DOCKERHUB_USERNAME>/bracket-night
+# Platforms: linux/amd64, linux/arm64
+#
+# Modeled on helv-io/reelgrab; also publishes from restore/thick-gold-coin
+# so a pre-merge test image is available (branch slug tag).
+
+name: Docker
+
+on:
+  push:
+    branches: [main, master, restore/thick-gold-coin]
+    tags: ["v*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: bracket-night
+
+jobs:
+  docker:
+    name: Build & push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve Docker Hub username
+        id: hub
+        run: |
+          USERNAME="${{ vars.DOCKERHUB_USERNAME }}"
+          if [ -z "$USERNAME" ]; then
+            USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+          fi
+          if [ -z "$USERNAME" ]; then
+            echo "DOCKERHUB_USERNAME is not set (repo Variable or Secret)." >&2
+            exit 1
+          fi
+          echo "username=${USERNAME}" >> "$GITHUB_OUTPUT"
+          echo "image=docker.io/${USERNAME}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Docker meta (tags / labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.hub.outputs.image }}
+          tags: |
+            # latest on any non-PR push (sole-user test + main)
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+            # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # branch slug (e.g. restore-thick-gold-coin)
+            type=ref,event=branch
+            # PR number (build only; not pushed)
+            type=ref,event=pr
+            # short SHA
+            type=sha,prefix=sha-
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ steps.hub.outputs.username }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          # Push only outside PRs (PRs still multi-arch build as a check)
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
