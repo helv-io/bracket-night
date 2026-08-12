@@ -1,6 +1,8 @@
 # Build frontend (imports backend types + config)
 FROM node:lts-alpine AS frontend-build
 RUN apk add --no-cache python3 make g++
+# Root package.json supplies NEXT_PUBLIC_APP_VERSION (read by next.config.ts)
+COPY package.json /app/package.json
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install

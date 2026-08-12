@@ -5,6 +5,7 @@ import { isMobile } from 'react-device-detect'
 import { QRCodeSVG } from 'qrcode.react'
 import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
+import { APP_VERSION_LABEL } from '../lib/version'
 import Bracket from '../components/Bracket'
 import { Matchup, Player, Bracket as BracketType, Vote, Contestant } from '../../backend/src/types'
 import CoinToss from '@/components/CoinToss'
@@ -247,6 +248,11 @@ const Home = () => {
       )}
 
       {isGameOver && <Confetti />}
+
+      {/* Discreet build version — host TV only; stays visible over coin overlay corner */}
+      <div className="host-version" aria-hidden="true">
+        {APP_VERSION_LABEL}
+      </div>
     </div>
   )
 }
