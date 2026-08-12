@@ -202,10 +202,11 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background-position: center 40%;
-    background-size: cover;
+    /* Zoom into the letter face of the hero art — hide the photo's baked rim */
+    background-position: center 36%;
+    background-size: 175%;
     background-repeat: no-repeat;
-    filter: saturate(1.18) contrast(1.08) brightness(1.04);
+    filter: saturate(1.2) contrast(1.1) brightness(1.05);
   }
 
   .heads .coin-face {
@@ -240,18 +241,10 @@
     transform-origin: center center;
     margin: 0;
     translate: -50% -50%;
-    /* Gradient runs along thickness (local X after rotateY 90°) for a solid barrel */
-    background: linear-gradient(
-      90deg,
-      #5a3a0c 0%,
-      #a67c2e 18%,
-      #f0d27a 38%,
-      #fff1c2 50%,
-      #e8c46a 62%,
-      #8a5f18 82%,
-      #3d2808 100%
-    );
-    box-shadow: inset 0 0 0 1px rgba(255, 230, 160, 0.18);
+    /* Fill color set inline; keep a solid fallback */
+    background: #c8962e;
+    box-shadow: none;
+    border: none;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
