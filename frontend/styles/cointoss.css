@@ -620,6 +620,21 @@
   }
 }
 
+/* Win over prefers-reduced-motion !important shortcuts when demo-forcing full motion */
+html.bn-full-motion .animate-spinToHeads {
+  animation: spinToHeads 3.2s cubic-bezier(0.16, 0.84, 0.28, 1) forwards !important;
+}
+
+html.bn-full-motion .animate-spinToTails {
+  animation: spinToTails 3.2s cubic-bezier(0.16, 0.84, 0.28, 1) forwards !important;
+}
+
+html.bn-full-motion .coin-toss-spotlight,
+html.bn-full-motion .coin-spark,
+html.bn-full-motion .coin-glint {
+  animation-duration: inherit;
+}
+
 @media (max-width: 640px) {
   .coin-scene {
     --coin-size: min(68vw, 260px);
