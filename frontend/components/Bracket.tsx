@@ -24,9 +24,19 @@ const CONNECTIONS: Array<{ from: number; to: number; leftSide: boolean }> = [
   { from: 13, to: 14, leftSide: false },
 ]
 
+/** Column headers aligned with matchup columns (same left % as cards). */
+const ROUND_COLUMNS: Array<{ label: string; left: string }> = [
+  { label: 'Round of 16', left: '0%' },
+  { label: 'QF', left: '15%' },
+  { label: 'SF', left: '30%' },
+  { label: 'Finals', left: '45%' },
+  { label: 'SF', left: '60%' },
+  { label: 'QF', left: '75%' },
+  { label: 'Round of 16', left: '90%' },
+]
+
 function pathToCurrent(currentMatchupIndex: number): Set<string> {
   const active = new Set<string>()
-  // Emphasize inbound edges into the current matchup (and recent completed feeder)
   for (const c of CONNECTIONS) {
     if (c.to === currentMatchupIndex || c.from === currentMatchupIndex) {
       active.add(`${c.from}-${c.to}`)
@@ -174,7 +184,6 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         }
 
         if (isActive) {
-          // Bright neon gold — high contrast vs dark empty plate
           stroke('rgba(255, 220, 80, 0.55)', 18, 36)
           stroke('rgba(255, 236, 140, 1)', 8, 20)
           stroke('#fff8d0', 3.5, 10)
@@ -206,12 +215,10 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       <div
         key={matchup.id}
         data-matchup-id={matchup.id}
+        className="bracket-slot"
         style={{
-          position: 'absolute',
           left,
           top: topForIndex(index),
-          transform: 'translateY(-50%)',
-          zIndex: 1,
         }}
       >
         <MatchupComponent
@@ -225,35 +232,27 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     <div ref={containerRef} className="bracket-stage">
       <canvas ref={canvasRef} className="bracket-canvas" />
 
-      <div className="bracket-round-label" style={{ left: '1%', top: '2%' }}>
-        Round of 16
-      </div>
-      <div className="bracket-round-label" style={{ right: '1%', top: '2%' }}>
-        Round of 16
-      </div>
-      <div className="bracket-round-label" style={{ left: '16%', top: '8%' }}>
-        QF
-      </div>
-      <div className="bracket-round-label" style={{ right: '16%', top: '8%' }}>
-        QF
-      </div>
-      <div className="bracket-round-label" style={{ left: '31%', top: '18%' }}>
-        SF
-      </div>
-      <div className="bracket-round-label" style={{ right: '31%', top: '18%' }}>
-        SF
-      </div>
-      <div className="bracket-round-label" style={{ left: '46%', top: '22%' }}>
-        Finals
+      <div className="bracket-round-row" aria-hidden>
+        {ROUND_COLUMNS.map((col) => (
+          <div
+            key={`${col.label}-${col.left}`}
+            className="bracket-round-label"
+            style={{ left: col.left }}
+          >
+            {col.label}
+          </div>
+        ))}
       </div>
 
-      {place(matchups.slice(0, 4), '0%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
-      {place(matchups.slice(4, 8), '90%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
-      {place(matchups.slice(8, 10), '15%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
-      {place(matchups.slice(10, 12), '75%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
-      {place(matchups.slice(12, 13), '30%', () => '50%')}
-      {place(matchups.slice(13, 14), '60%', () => '50%')}
-      {place(matchups.slice(14, 15), '45%', () => '50%')}
+      <div className="bracket-field">
+        {place(matchups.slice(0, 4), '0%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
+        {place(matchups.slice(4, 8), '90%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
+        {place(matchups.slice(8, 10), '15%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
+        {place(matchups.slice(10, 12), '75%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
+        {place(matchups.slice(12, 13), '30%', () => '50%')}
+        {place(matchups.slice(13, 14), '60%', () => '50%')}
+        {place(matchups.slice(14, 15), '45%', () => '50%')}
+      </div>
     </div>
   )
 }

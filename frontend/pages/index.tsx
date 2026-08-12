@@ -15,6 +15,13 @@ type ActiveToss = {
   autoStart: boolean
 }
 
+declare global {
+  interface Window {
+    /** Recording / automation only — not exposed in the host UI */
+    __bnTriggerCoinToss?: (winner?: 0 | 1) => void
+  }
+}
+
 const Home = () => {
   const router = useRouter()
 
@@ -29,6 +36,8 @@ const Home = () => {
   const [activeToss, setActiveToss] = useState<ActiveToss | null>(null)
   const gameIdRef = useRef(gameId)
   const currentVotesRef = useRef(currentVotes)
+  const matchupsRef = useRef(matchups)
+  const currentMatchupIndexRef = useRef(currentMatchupIndex)
 
   useEffect(() => {
     gameIdRef.current = gameId
@@ -37,6 +46,14 @@ const Home = () => {
   useEffect(() => {
     currentVotesRef.current = currentVotes
   }, [currentVotes])
+
+  useEffect(() => {
+    matchupsRef.current = matchups
+  }, [matchups])
+
+  useEffect(() => {
+    currentMatchupIndexRef.current = currentMatchupIndex
+  }, [currentMatchupIndex])
 
   useEffect(() => {
     if (isMobile) {
@@ -104,45 +121,48 @@ const Home = () => {
 
   const clearToss = useCallback(() => setActiveToss(null), [])
 
-  const startManualToss = () => {
-    const current = matchups[currentMatchupIndex]
-    if (!current?.left || !current?.right) return
-    const winner = (Math.random() < 0.5 ? 0 : 1) as 0 | 1
-    setActiveToss({
-      contestants: [current.left, current.right],
-      winner,
-      autoStart: true,
-    })
-  }
+  // Automation hook for Demo recordings — no host UI control
+  useEffect(() => {
+    window.__bnTriggerCoinToss = (winner = 0) => {
+      const current = matchupsRef.current[currentMatchupIndexRef.current]
+      if (!current?.left || !current?.right) return
+      setActiveToss({
+        contestants: [current.left, current.right],
+        winner,
+        autoStart: true,
+      })
+    }
+    return () => {
+      delete window.__bnTriggerCoinToss
+    }
+  }, [])
 
   return (
-    <div className="bn-page bn-page--stadium min-h-screen text-[var(--text)] p-4 md:p-8 flex flex-col items-center justify-between">
+    <div className="bn-page bn-page--stadium bn-page--host">
       <audio src="/background.ogg" autoPlay loop />
 
-      <div className="logo-container">
-        <img
-          src="/bracket-night-gold.svg"
-          alt="Bracket Night"
-          className="logo border-40 border-transparent"
-        />
-        {bracket && (
-          <>
-            <h1 className="bn-display text-3xl md:text-4xl lg:text-5xl">
-              {bracket.title}
-            </h1>
-            <h2 className="text-xl md:text-2xl lg:text-3xl mt-1">
-              {bracket.subtitle}
-            </h2>
-          </>
-        )}
-      </div>
+      <header className="host-chrome host-chrome--top">
+        <div className="logo-container logo-container--inline">
+          <img
+            src="/bracket-night-gold.svg"
+            alt="Bracket Night"
+            className="logo logo--host"
+          />
+          {bracket && (
+            <>
+              <h1 className="bn-display host-title">{bracket.title}</h1>
+              <h2 className="host-subtitle">{bracket.subtitle}</h2>
+            </>
+          )}
+        </div>
+      </header>
 
-      <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
+      <main className="host-bracket-area">
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
         {matchups.length === 0 && (
-          <div className="max-w-2xl px-6 -translate-y-8">
+          <div className="host-welcome">
             <h1 className="bn-display text-4xl md:text-5xl text-[var(--gold-bright)] mb-3 drop-shadow-lg">
               Welcome to Bracket Night
             </h1>
@@ -151,7 +171,7 @@ const Home = () => {
             </p>
           </div>
         )}
-      </div>
+      </main>
 
       {!isGameStarted && gameId && (
         <div className="text-center qr-container">
@@ -196,16 +216,6 @@ const Home = () => {
         </div>
       )}
 
-      {isGameStarted &&
-        matchups[currentMatchupIndex]?.left &&
-        matchups[currentMatchupIndex]?.right && (
-          <div style={{ position: 'absolute', right: 16, bottom: 16, zIndex: 20 }}>
-            <button type="button" className="coin-toss-trigger" onClick={startManualToss}>
-              Demo Toss
-            </button>
-          </div>
-        )}
-
       {activeToss && (
         <CoinToss
           contestants={activeToss.contestants}
@@ -215,28 +225,26 @@ const Home = () => {
         />
       )}
 
-      <div className="w-full flex justify-center">
-        {isGameStarted && !isGameOver && (
-          <div className="mt-4">
-            <ul className="list-none flex flex-wrap gap-3 justify-center">
-              {players.map((player) => {
-                const hasVoted = currentVotes.some((vote) => vote.playerId === player.id)
-                return (
-                  <li
-                    key={player.id}
-                    className={`bn-chip ${hasVoted ? 'bn-chip--done' : ''}`}
-                  >
-                    <span>{player.name}</span>
-                    <span className="text-xs uppercase tracking-wide opacity-80">
-                      {hasVoted ? 'Voted' : 'Pending'}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
-      </div>
+      {isGameStarted && !isGameOver && (
+        <footer className="host-chrome host-chrome--bottom">
+          <ul className="list-none flex flex-wrap gap-2 justify-center">
+            {players.map((player) => {
+              const hasVoted = currentVotes.some((vote) => vote.playerId === player.id)
+              return (
+                <li
+                  key={player.id}
+                  className={`bn-chip ${hasVoted ? 'bn-chip--done' : ''}`}
+                >
+                  <span>{player.name}</span>
+                  <span className="text-xs uppercase tracking-wide opacity-80">
+                    {hasVoted ? 'Voted' : 'Pending'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </footer>
+      )}
 
       {isGameOver && <Confetti />}
     </div>

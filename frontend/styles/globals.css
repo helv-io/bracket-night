@@ -62,6 +62,83 @@ a {
   overflow-x: hidden;
 }
 
+/* Host / TV: lock to viewport — no vertical scrollbar */
+.bn-page--host {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0.75rem 0.5rem;
+}
+
+.host-chrome {
+  flex: 0 0 auto;
+  z-index: 10;
+}
+
+.host-chrome--top {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0.15rem;
+}
+
+.host-chrome--bottom {
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+  max-height: 3.25rem;
+  overflow: hidden;
+}
+
+.host-bracket-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.host-welcome {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 1.5rem;
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.logo-container--inline {
+  position: static;
+  transform: none;
+  left: auto;
+  top: auto;
+}
+
+.logo--host {
+  width: min(28vw, 320px);
+  max-width: 320px;
+}
+
+.host-title {
+  font-size: clamp(1.1rem, 2.2vw, 1.75rem);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.host-subtitle {
+  font-size: clamp(0.85rem, 1.4vw, 1.15rem);
+  margin: 0.1rem 0 0;
+  line-height: 1.15;
+  color: rgba(242, 239, 230, 0.88);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
 .bn-page--stadium::before {
   content: '';
   position: fixed;
@@ -246,9 +323,11 @@ a {
     scroll-behavior: auto !important;
   }
 
-  /* Host TV coin toss keeps its full cinematic spin */
-  .animate-spinToHeads,
-  .animate-spinToTails {
+  /* Host TV coin toss keeps its full cinematic 3-layer toss */
+  .animate-coinTossArc,
+  .animate-coinSpinHeads,
+  .animate-coinSpinTails,
+  .animate-coinShadowToss {
     animation-duration: 3s !important;
     animation-iteration-count: 1 !important;
   }

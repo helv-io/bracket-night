@@ -66,8 +66,8 @@ jobs:
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
-            # latest on default branch only
-            type=raw,value=latest,enable={{is_default_branch}}
+            # latest on any non-PR push (sole-user test + main)
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
             # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}

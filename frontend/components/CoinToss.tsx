@@ -9,15 +9,14 @@ export interface CoinTossProps {
   winner: 0 | 1
   /** Auto-start the cinematic toss when mounted / when key changes */
   autoStart?: boolean
-  /** Show the host manual trigger button */
-  showTrigger?: boolean
   onComplete?: () => void
 }
 
 /** Full spin duration (ms). Completion is wall-clock — not rAF/animationend. */
 const SPIN_MS = 3000
-const HOLD_MS = 2800
-const HOLD_MS_REDUCED = 1600
+/** Celebrate / confetti linger after land before overlay clears */
+const HOLD_MS = 3600
+const HOLD_MS_REDUCED = 2200
 
 /**
  * Continuous metallic cylinder rim: wall panels around the circumference.
@@ -42,7 +41,6 @@ export default function CoinToss({
   contestants,
   winner,
   autoStart = false,
-  showTrigger = false,
   onComplete,
 }: CoinTossProps) {
   const [isTossing, setIsTossing] = useState(false)
@@ -118,6 +116,8 @@ export default function CoinToss({
   }, [isTossing, tossKey])
 
   const winnerContestant = contestants[winner]
+  const faceA = contestants[0].image_url
+  const faceB = contestants[1].image_url
 
   const sparkNodes = useMemo(
     () =>
@@ -169,12 +169,6 @@ export default function CoinToss({
 
   return (
     <>
-      {showTrigger && !isTossing && (
-        <button type="button" className="coin-toss-trigger" onClick={startToss}>
-          Toss Coin
-        </button>
-      )}
-
       {isTossing && (
         <div className="coin-toss-overlay animate-coinFadeIn" role="dialog" aria-label="Coin toss">
           <div className="coin-toss-vignette" />
@@ -186,8 +180,10 @@ export default function CoinToss({
             <Confetti
               width={windowSize.width}
               height={windowSize.height}
-              numberOfPieces={160}
-              recycle={false}
+              numberOfPieces={220}
+              recycle={true}
+              gravity={0.18}
+              tweenDuration={4200}
               colors={['#e8c46a', '#ffe9a8', '#ff6f61', '#5dffa8', '#ffffff']}
             />
           )}
@@ -202,7 +198,7 @@ export default function CoinToss({
                 <div className="coin-matchup-side">
                   <img
                     className="coin-matchup-photo"
-                    src={contestants[0].image_url}
+                    src={faceA}
                     alt=""
                   />
                   <div className="coin-matchup-meta">
@@ -214,7 +210,7 @@ export default function CoinToss({
                 <div className="coin-matchup-side">
                   <img
                     className="coin-matchup-photo"
-                    src={contestants[1].image_url}
+                    src={faceB}
                     alt=""
                   />
                   <div className="coin-matchup-meta">
@@ -225,43 +221,65 @@ export default function CoinToss({
               </div>
             )}
 
+            {/* 3-layer toss: shadow | Y-arc flight | spin */}
             <div className="coin-scene">
-              <div className="coin-shadow" />
               <div
-                key={tossKey}
-                className={`coin-container ${
-                  winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
-                } ${showResult ? '' : 'is-spinning'}`}
+                key={`shadow-${tossKey}`}
+                className={`coin-shadow ${showResult ? '' : 'animate-coinShadowToss'}`}
                 style={
                   showResult
-                    ? {
-                        // Keep landed face after the animation class would otherwise reset
-                        transform:
-                          winner === 0
-                            ? 'translateY(0) rotateX(0deg) rotateY(2880deg) scale(1)'
-                            : 'translateY(0) rotateX(0deg) rotateY(3060deg) scale(1)',
-                      }
+                    ? { transform: 'translateX(-50%) scale(1)', opacity: 0.9 }
+                    : undefined
+                }
+              />
+              <div
+                key={`flight-${tossKey}`}
+                className={`coin-flight ${showResult ? '' : 'animate-coinTossArc'}`}
+                style={
+                  showResult
+                    ? { transform: 'translateY(0) scale(1)' }
                     : undefined
                 }
               >
-                <div className="coin-rim" aria-hidden>
-                  {rimNodes}
-                </div>
-                <div className="coin-side heads">
-                  <div
-                    className="coin-face"
-                    role="img"
-                    aria-label={`Face A — ${contestants[0].name}`}
-                  />
-                  <div className="coin-glint" />
-                </div>
-                <div className="coin-side tails">
-                  <div
-                    className="coin-face"
-                    role="img"
-                    aria-label={`Face B — ${contestants[1].name}`}
-                  />
-                  <div className="coin-glint" />
+                <div
+                  key={`spin-${tossKey}`}
+                  className={`coin-container ${
+                    winner === 0 ? 'animate-coinSpinHeads' : 'animate-coinSpinTails'
+                  } ${showResult ? '' : 'is-spinning'}`}
+                  style={
+                    showResult
+                      ? {
+                          transform:
+                            winner === 0
+                              ? 'rotateX(0deg) rotateY(2880deg)'
+                              : 'rotateX(0deg) rotateY(3060deg)',
+                        }
+                      : undefined
+                  }
+                >
+                  <div className="coin-rim" aria-hidden>
+                    {rimNodes}
+                  </div>
+                  <div className="coin-side heads">
+                    <div
+                      className="coin-face"
+                      role="img"
+                      aria-label={`Face A — ${contestants[0].name}`}
+                      style={{ backgroundImage: faceA ? `url(${faceA})` : undefined }}
+                    />
+                    <div className="coin-face-ring" aria-hidden />
+                    <div className="coin-glint" />
+                  </div>
+                  <div className="coin-side tails">
+                    <div
+                      className="coin-face"
+                      role="img"
+                      aria-label={`Face B — ${contestants[1].name}`}
+                      style={{ backgroundImage: faceB ? `url(${faceB})` : undefined }}
+                    />
+                    <div className="coin-face-ring" aria-hidden />
+                    <div className="coin-glint" />
+                  </div>
                 </div>
               </div>
             </div>
