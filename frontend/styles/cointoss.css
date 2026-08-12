@@ -524,19 +524,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Keep the coin spin (host TV moment); only quiet decorative noise */
   .coin-toss-spotlight,
   .coin-spark,
   .coin-glint {
     animation: none !important;
-  }
-
-  .animate-spinToHeads,
-  .animate-spinToTails {
-    animation: coinFadeIn 0.6s ease forwards !important;
-  }
-
-  .animate-spinToTails {
-    transform: rotateY(180deg);
   }
 }
 

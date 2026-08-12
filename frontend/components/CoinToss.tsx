@@ -14,7 +14,7 @@ export interface CoinTossProps {
   onComplete?: () => void
 }
 
-/** Full spin duration (ms). Ease-out bounce via rAF — not CSS animationend. */
+/** Full spin duration (ms). Completion is wall-clock — not rAF/animationend. */
 const SPIN_MS = 3000
 const HOLD_MS = 2800
 const HOLD_MS_REDUCED = 1600
@@ -38,34 +38,6 @@ function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-/** Ease-out with a soft landing bounce (matches prior CSS cubic feel). */
-function spinEase(t: number) {
-  // bounce-ish ease-out
-  const n1 = 7.5625
-  const d1 = 2.75
-  if (t < 1 / d1) return n1 * t * t
-  if (t < 2 / d1) {
-    const x = t - 1.5 / d1
-    return n1 * x * x + 0.75
-  }
-  if (t < 2.5 / d1) {
-    const x = t - 2.25 / d1
-    return n1 * x * x + 0.9375
-  }
-  const x = t - 2.625 / d1
-  return n1 * x * x + 0.984375
-}
-
-function liftForProgress(p: number) {
-  // Arc: up, settle, secondary hop, land
-  if (p < 0.18) return 40 - (p / 0.18) * 220
-  if (p < 0.42) return -180 + ((p - 0.18) / 0.24) * 140
-  if (p < 0.68) return -40 - ((p - 0.42) / 0.26) * 80
-  if (p < 0.84) return -120 + ((p - 0.68) / 0.16) * 132
-  if (p < 0.92) return 12 - ((p - 0.84) / 0.08) * 30
-  return -18 + ((p - 0.92) / 0.08) * 18
-}
-
 export default function CoinToss({
   contestants,
   winner,
@@ -78,12 +50,9 @@ export default function CoinToss({
   const [tossKey, setTossKey] = useState(0)
   const [burst, setBurst] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
-  const [spinStyle, setSpinStyle] = useState<React.CSSProperties>({
-    transform: 'translateY(40px) rotateX(12deg) rotateY(0deg) scale(0.9)',
-  })
   const completedRef = useRef(false)
   const onCompleteRef = useRef(onComplete)
-  const rafRef = useRef(0)
+  const spinTimerRef = useRef(0)
   const holdTimerRef = useRef(0)
   const spinGenRef = useRef(0)
 
@@ -100,7 +69,7 @@ export default function CoinToss({
 
   useEffect(() => {
     return () => {
-      cancelAnimationFrame(rafRef.current)
+      window.clearTimeout(spinTimerRef.current)
       window.clearTimeout(holdTimerRef.current)
     }
   }, [])
@@ -122,8 +91,8 @@ export default function CoinToss({
   }
 
   const startToss = () => {
+    window.clearTimeout(spinTimerRef.current)
     window.clearTimeout(holdTimerRef.current)
-    cancelAnimationFrame(rafRef.current)
     completedRef.current = false
     spinGenRef.current += 1
     setShowResult(false)
@@ -139,46 +108,14 @@ export default function CoinToss({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, contestants[0]?.id, contestants[1]?.id, winner])
 
-  // rAF-driven spin — full cinematic toss; reduced-motion uses a shorter but visible flip
+  // Wall-clock spin completion — survives background rAF throttling / sparse frames
   useEffect(() => {
     if (!isTossing) return
-
     const gen = spinGenRef.current
-    const reduced = prefersReducedMotion()
-    const duration = reduced ? 1200 : SPIN_MS
-    // Full spins for TV energy; reduced still rotates enough to read both faces
-    const finalY = winner === 0 ? (reduced ? 720 : 2880) : reduced ? 900 : 3060
-    const start = performance.now()
-    let rafId = 0
-
-    const tick = (now: number) => {
-      if (gen !== spinGenRef.current) return
-      const raw = Math.min(1, (now - start) / duration)
-      const p = spinEase(raw)
-      const y = finalY * p
-      const lift = reduced ? liftForProgress(raw) * 0.35 : liftForProgress(raw)
-      const tilt = (reduced ? 6 : 12) * Math.sin(raw * Math.PI) * (1 - raw)
-      const scale = 0.92 + 0.12 * Math.sin(raw * Math.PI) * (1 - raw * 0.35)
-      setSpinStyle({
-        transform: `translateY(${lift.toFixed(1)}px) rotateX(${tilt.toFixed(2)}deg) rotateY(${y.toFixed(2)}deg) scale(${scale.toFixed(3)})`,
-      })
-      if (raw < 1) {
-        rafId = requestAnimationFrame(tick)
-        rafRef.current = rafId
-      } else {
-        setSpinStyle({
-          transform: `translateY(0px) rotateX(0deg) rotateY(${finalY}deg) scale(1)`,
-        })
-        finishToss(gen)
-      }
-    }
-
-    rafId = requestAnimationFrame(tick)
-    rafRef.current = rafId
-    return () => {
-      cancelAnimationFrame(rafId)
-    }
-  }, [isTossing, tossKey, winner])
+    window.clearTimeout(spinTimerRef.current)
+    spinTimerRef.current = window.setTimeout(() => finishToss(gen), SPIN_MS)
+    return () => window.clearTimeout(spinTimerRef.current)
+  }, [isTossing, tossKey])
 
   const winnerContestant = contestants[winner]
 
@@ -213,14 +150,13 @@ export default function CoinToss({
           style={{
             width: 'var(--coin-thickness)',
             height: segmentHeight,
-            // Soft lighting only — same gold fill on every panel
             background: `linear-gradient(90deg,
               #4a3008 0%,
               #8a5f18 ${18 * light}%,
               #e8c46a ${40 + 8 * light}%,
               #fff4c4 50%,
               #e8c46a ${60 - 8 * light}%,
-              #8a5f18 ${82}%,
+              #8a5f18 82%,
               #3d2808 100%)`,
             transform: `rotateZ(${angle}deg) translateX(calc(var(--coin-size) / 2)) rotateY(90deg)`,
           }}
@@ -293,8 +229,13 @@ export default function CoinToss({
               <div className="coin-shadow" />
               <div
                 key={tossKey}
-                className={`coin-container ${showResult ? '' : 'is-spinning'}`}
-                style={spinStyle}
+                className={`coin-container ${
+                  showResult
+                    ? ''
+                    : winner === 0
+                      ? 'animate-spinToHeads'
+                      : 'animate-spinToTails'
+                } ${showResult ? '' : 'is-spinning'}`}
               >
                 <div className="coin-rim" aria-hidden>
                   {rimNodes}
