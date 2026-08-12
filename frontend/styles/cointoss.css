@@ -620,19 +620,72 @@
   }
 }
 
-/* Win over prefers-reduced-motion !important shortcuts when demo-forcing full motion */
+/*
+ * globals.css (Tailwind) forces `* { animation-duration: .01ms !important }` under
+ * prefers-reduced-motion. Demo/TV recordings set html.bn-full-motion and must win
+ * on both shorthand and longhand duration/iteration.
+ */
 html.bn-full-motion .animate-spinToHeads {
-  animation: spinToHeads 3.2s cubic-bezier(0.16, 0.84, 0.28, 1) forwards !important;
+  animation-name: spinToHeads !important;
+  animation-duration: 3.2s !important;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1) !important;
+  animation-fill-mode: forwards !important;
+  animation-iteration-count: 1 !important;
 }
 
 html.bn-full-motion .animate-spinToTails {
-  animation: spinToTails 3.2s cubic-bezier(0.16, 0.84, 0.28, 1) forwards !important;
+  animation-name: spinToTails !important;
+  animation-duration: 3.2s !important;
+  animation-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1) !important;
+  animation-fill-mode: forwards !important;
+  animation-iteration-count: 1 !important;
 }
 
-html.bn-full-motion .coin-toss-spotlight,
-html.bn-full-motion .coin-spark,
+html.bn-full-motion .animate-coinFadeIn {
+  animation-name: coinFadeIn !important;
+  animation-duration: 0.45s !important;
+  animation-timing-function: ease !important;
+  animation-fill-mode: both !important;
+  animation-iteration-count: 1 !important;
+}
+
+html.bn-full-motion .coin-toss-spotlight {
+  animation-name: coinSpotlightPulse !important;
+  animation-duration: 2.8s !important;
+  animation-timing-function: ease-in-out !important;
+  animation-iteration-count: infinite !important;
+}
+
+html.bn-full-motion .coin-spark {
+  animation-name: coinSparkle !important;
+  animation-duration: 2.4s !important;
+  animation-timing-function: ease-in-out !important;
+  animation-iteration-count: infinite !important;
+}
+
 html.bn-full-motion .coin-glint {
-  animation-duration: inherit;
+  animation-name: coinGlint !important;
+  animation-duration: 1.6s !important;
+  animation-timing-function: ease-in-out !important;
+  animation-iteration-count: infinite !important;
+}
+
+html.bn-full-motion .coin-status-line.is-winner,
+html.bn-full-motion .coin-winner-face,
+html.bn-full-motion .coin-winner-photo {
+  animation-name: coinWinnerPop !important;
+  animation-duration: 0.55s !important;
+  animation-timing-function: cubic-bezier(0.22, 1.4, 0.36, 1) !important;
+  animation-fill-mode: both !important;
+  animation-iteration-count: 1 !important;
+}
+
+html.bn-full-motion .coin-burst.is-on {
+  animation-name: coinBurstFlash !important;
+  animation-duration: 0.8s !important;
+  animation-timing-function: ease-out !important;
+  animation-fill-mode: both !important;
+  animation-iteration-count: 1 !important;
 }
 
 @media (max-width: 640px) {

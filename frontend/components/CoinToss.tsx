@@ -227,7 +227,13 @@ export default function CoinToss({
                 className={`coin-container ${
                   winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
                 } ${showResult ? '' : 'is-spinning'}`}
-                onAnimationEnd={handleAnimationEnd}
+                onAnimationEnd={(e) => {
+                  // Ignore bubbled ends from glints/sparks; only the spin keyframes count.
+                  if (e.target !== e.currentTarget) return
+                  const name = e.animationName || ''
+                  if (!name.includes('spinToHeads') && !name.includes('spinToTails')) return
+                  handleAnimationEnd()
+                }}
               >
                 <div className="coin-edge" aria-hidden>
                   {edgeNodes}
