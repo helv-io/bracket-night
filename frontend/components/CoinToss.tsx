@@ -100,7 +100,8 @@ export default function CoinToss({
     setShowResult(true)
     setBurst(true)
 
-    const holdMs = prefersReducedMotion() ? 1600 : 2800
+    // Cinematic hold for TV; reduced-motion only shortens decorative motion via CSS.
+    const holdMs = 2800
     window.setTimeout(() => {
       setIsTossing(false)
       setBurst(false)
@@ -108,12 +109,11 @@ export default function CoinToss({
     }, holdMs)
   }
 
-  // Drive reveal from a timer matched to the CSS spin (more reliable than
-  // animationend, which can fire early under prefers-reduced-motion clamps).
+  // Always run the full 3.2s spin timer (matched to CSS). Decorative reduced-motion
+  // is handled in CSS; the host TV toss must stay cinematic for recordings/demos.
   useEffect(() => {
     if (!isTossing) return
-    const ms = prefersReducedMotion() ? 650 : 3200
-    const t = window.setTimeout(handleAnimationEnd, ms)
+    const t = window.setTimeout(handleAnimationEnd, 3200)
     return () => window.clearTimeout(t)
   }, [isTossing, tossKey])
 

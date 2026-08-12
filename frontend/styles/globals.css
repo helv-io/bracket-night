@@ -221,9 +221,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  /* Skip the global clamp when Demo/TV full-motion is forced (html.bn-full-motion). */
+  html:not(.bn-full-motion) *,
+  html:not(.bn-full-motion) *::before,
+  html:not(.bn-full-motion) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
