@@ -36,14 +36,6 @@ function isFullMotionForced() {
   }
 }
 
-function prefersReducedMotion() {
-  if (typeof window === 'undefined' || !window.matchMedia) return false
-  // Demo/TV override: sessionStorage.bnFullMotion=1 forces the full cinematic spin
-  // (also toggles html.bn-full-motion so CSS @media reduce rules do not win)
-  if (isFullMotionForced()) return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
 export default function CoinToss({
   contestants,
   winner,
