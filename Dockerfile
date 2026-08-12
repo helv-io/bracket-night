@@ -1,5 +1,7 @@
 # Pin Node 20 LTS (matches .nvmrc). Floating node:lts can jump to Node 24 and
 # worsen Buildx/QEMU arm64 flakes (esbuild postinstall ETXTBSY).
+# linux/arm64 multi-arch is temporarily disabled in .github/workflows/docker.yml
+# due to QEMU SIGILL during npm install; retries below remain useful on amd64.
 FROM node:20-alpine AS frontend-build
 
 # better-sqlite3 (pulled for frontend typecheck/config imports) needs a toolchain

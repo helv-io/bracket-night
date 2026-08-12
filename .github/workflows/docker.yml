@@ -4,6 +4,11 @@
 # Secrets: DOCKERHUB_TOKEN
 #
 # Version with semver tags: git tag v0.1.0 && git push origin v0.1.0
+#
+# linux/arm64 multi-arch is temporarily disabled: under QEMU on ubuntu-latest,
+# frontend `npm install` hits `qemu: uncaught target signal 4 (Illegal instruction)`
+# (Node/esbuild incompatibility). Publish amd64-only so :latest stays reliable.
+# Re-enable arm64 with a native ubuntu-24.04-arm runner (or when QEMU is fixed).
 
 name: Docker
 
@@ -29,9 +34,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -74,7 +76,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          # amd64 only — arm64 via QEMU disabled (SIGILL during npm install)
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
