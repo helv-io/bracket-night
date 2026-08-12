@@ -34,6 +34,7 @@ jspm_packages/
 # dotenv environment variables file
 .env
 .env.*
+!.env.example
 
 # MacOS
 .DS_Store
@@ -83,3 +84,4 @@ backend/dist/
 backend/config/
 backend/data/
 backend/.env*
+!backend/.env.example
