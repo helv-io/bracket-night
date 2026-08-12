@@ -162,7 +162,7 @@
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
-    will-change: transform, filter;
+    will-change: transform;
   }
 
   /* Do not put filter/opacity on .coin-container — that flattens preserve-3d
