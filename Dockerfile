@@ -1,10 +1,13 @@
-# Build frontend
+# Build frontend (next.config imports backend/src/config, which needs dotenv)
 FROM node:lts-alpine AS frontend-build
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm install --omit=dev
+COPY backend ./
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend ./
-COPY backend/ ../backend
 # next.config only enables `output: 'export'` when NODE_ENV=production
 ENV NODE_ENV=production
 RUN npm run build
@@ -22,7 +25,6 @@ RUN npm run build \
 # Final image
 FROM node:lts-alpine AS backend
 WORKDIR /app/backend
-# better-sqlite3 native binding needs libstdc++ at runtime
 RUN apk add --no-cache libstdc++
 COPY --from=backend-build /app/backend/dist /app/backend
 COPY --from=backend-build /app/backend/node_modules /app/backend/node_modules
