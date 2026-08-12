@@ -8,17 +8,18 @@ FROM --platform=$BUILDPLATFORM node:20-alpine AS frontend-build
 # better-sqlite3 may be pulled via backend imports used by next.config.ts
 RUN apk add --no-cache python3 make g++
 
-# Serialize npm under constrained builders; disable workspace hoisting from
-# the root package.json we only copy for NEXT_PUBLIC_APP_VERSION.
+# Serialize npm under constrained builders
 ENV npm_config_maxsockets=1 \
     npm_config_fetch_retries=5 \
     npm_config_fetch_retry_mintimeout=20000 \
     npm_config_fetch_retry_maxtimeout=120000 \
     npm_config_audit=false \
-    npm_config_fund=false \
-    npm_config_workspaces=false
+    npm_config_fund=false
 
+# Root package.json supplies NEXT_PUBLIC_APP_VERSION (read by next.config.ts).
+# Strip workspaces so nested package installs are not treated as a monorepo.
 COPY package.json /app/package.json
+RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('/app/package.json','utf8')); delete p.workspaces; delete p.scripts; fs.writeFileSync('/app/package.json', JSON.stringify(p, null, 2));"
 
 WORKDIR /app/backend
 COPY backend/package*.json ./
@@ -54,8 +55,7 @@ ENV npm_config_maxsockets=1 \
     npm_config_fetch_retry_mintimeout=20000 \
     npm_config_fetch_retry_maxtimeout=120000 \
     npm_config_audit=false \
-    npm_config_fund=false \
-    npm_config_workspaces=false
+    npm_config_fund=false
 WORKDIR /app/backend
 COPY backend/package*.json ./
 # Retry: esbuild postinstall can still flake under qemu/arm64
