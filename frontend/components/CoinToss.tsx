@@ -230,12 +230,19 @@ export default function CoinToss({
               <div
                 key={tossKey}
                 className={`coin-container ${
-                  showResult
-                    ? ''
-                    : winner === 0
-                      ? 'animate-spinToHeads'
-                      : 'animate-spinToTails'
+                  winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
                 } ${showResult ? '' : 'is-spinning'}`}
+                style={
+                  showResult
+                    ? {
+                        // Keep landed face after the animation class would otherwise reset
+                        transform:
+                          winner === 0
+                            ? 'translateY(0) rotateX(0deg) rotateY(2880deg) scale(1)'
+                            : 'translateY(0) rotateX(0deg) rotateY(3060deg) scale(1)',
+                      }
+                    : undefined
+                }
               >
                 <div className="coin-rim" aria-hidden>
                   {rimNodes}
