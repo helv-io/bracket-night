@@ -188,7 +188,7 @@ const Home = () => {
             <p className="text-sm text-[var(--text-muted)] mb-2 tracking-wide uppercase">
               Scan to join
             </p>
-            <div className="w-24 md:w-32 lg:w-48 mx-auto bg-white rounded-lg p-2">
+            <div className="host-qr-pad w-24 md:w-32 lg:w-48 mx-auto bg-white p-2">
               <QRCodeSVG
                 value={`${window.location.origin}/join?game=${gameId}`}
                 imageSettings={{
@@ -198,7 +198,7 @@ const Home = () => {
                   excavate: true,
                 }}
                 size={256}
-                className="w-full h-auto"
+                className="host-qr-code w-full h-auto"
               />
             </div>
             <div className="mt-3">

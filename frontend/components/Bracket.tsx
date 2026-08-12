@@ -83,7 +83,9 @@ const MatchupComponent = ({
         ) : (
           <div className="matchup-avatar-placeholder">?</div>
         )}
-        <div className={nameClass}>{contestant?.name || 'TBD'}</div>
+        <div className={nameClass} title={contestant?.name || 'TBD'}>
+          {contestant?.name || 'TBD'}
+        </div>
       </div>
     )
   }
@@ -134,7 +136,10 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       const activePaths = pathToCurrent(currentMatchupIndex)
 
       const getPosition = (element: HTMLElement, side: 'left' | 'right' | 'center') => {
-        const rect = element.getBoundingClientRect()
+        // Prefer the fixed card box so wrappers/labels never skew elbows
+        const card =
+          (element.querySelector('.matchup-card') as HTMLElement | null) || element
+        const rect = card.getBoundingClientRect()
         const containerRect = container.getBoundingClientRect()
         let x
         if (side === 'left') {
@@ -148,7 +153,7 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         return { x, y }
       }
 
-      /** Orthogonal elbow: out → vertical spine → into target (square turns). */
+      /** Orthogonal elbow: horizontal stub → vertical spine (mid-gap) → stub into target. */
       const strokeElbow = (
         fromPos: { x: number; y: number },
         toPos: { x: number; y: number },
@@ -156,7 +161,8 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         widthPx: number,
         blur = 0
       ) => {
-        const midX = fromPos.x + (toPos.x - fromPos.x) * 0.55
+        // Center the vertical spine in the gap between facing card edges
+        const spineX = (fromPos.x + toPos.x) / 2
         ctx.save()
         ctx.strokeStyle = color
         ctx.lineWidth = widthPx
@@ -169,8 +175,8 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         }
         ctx.beginPath()
         ctx.moveTo(fromPos.x, fromPos.y)
-        ctx.lineTo(midX, fromPos.y)
-        ctx.lineTo(midX, toPos.y)
+        ctx.lineTo(spineX, fromPos.y)
+        ctx.lineTo(spineX, toPos.y)
         ctx.lineTo(toPos.x, toPos.y)
         ctx.stroke()
         ctx.restore()
@@ -253,30 +259,27 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     <div ref={containerRef} className="bracket-stage">
       <canvas ref={canvasRef} className="bracket-canvas" />
 
-      <div className="bracket-round-row" aria-hidden>
-        {ROUND_LABELS.map((label, i) => (
-          <div key={`${label}-${i}`} className="bracket-round-label">
-            {label}
-          </div>
-        ))}
-      </div>
-
       <div className="bracket-field">
         {columns.map((slots, colIndex) => (
           <div key={colIndex} className="bracket-column">
-            {slots.map(({ matchup, top }) => (
-              <div
-                key={matchup.id}
-                data-matchup-id={matchup.id}
-                className="bracket-slot"
-                style={{ top }}
-              >
-                <MatchupComponent
-                  matchup={matchup}
-                  isCurrent={matchup.id === currentMatchupIndex}
-                />
-              </div>
-            ))}
+            <div className="bracket-round-label" aria-hidden>
+              {ROUND_LABELS[colIndex]}
+            </div>
+            <div className="bracket-column-body">
+              {slots.map(({ matchup, top }) => (
+                <div
+                  key={matchup.id}
+                  data-matchup-id={matchup.id}
+                  className="bracket-slot"
+                  style={{ top }}
+                >
+                  <MatchupComponent
+                    matchup={matchup}
+                    isCurrent={matchup.id === currentMatchupIndex}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
