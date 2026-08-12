@@ -6,11 +6,20 @@ Bracket Night is a Jackbox-style party game. Players join by scanning a QR code 
 
 - **Bracket Setup**: Create a bracket with a title, subtitle, and 16 contestants, each with a picture.
 - **Voting System**: Players vote; winners advance through quarters, semis, and finals.
-- **Tie Resolution**: Ties pick a random winner.
+- **Tie Resolution**: Ties trigger a cinematic coin toss on the host TV.
 - **Player Management**: Up to `MAX_PLAYERS` (default 10) join via QR code.
 - **Bracket Templates**: First player can enter a bracket code to load contestants/images from SQLite.
 - **Mobile Friendly**: `/new` for creating brackets; mobiles hitting `/` redirect there.
-- **Docker Support**: See `Dockerfile`.
+- **Docker Support**: Multi-arch images on Docker Hub.
+
+## Releases
+
+Versioning is **semver via git tags** (`vX.Y.Z`) on `main` — see [CHANGELOG.md](CHANGELOG.md) and [Releases](https://github.com/helv-io/bracket-night/releases).
+
+```bash
+docker pull helvio/bracket-night:latest   # tip of main
+docker pull helvio/bracket-night:0.1.0    # pinned semver
+```
 
 ## Architecture notes
 
@@ -27,7 +36,7 @@ Join codes are 8-character hex strings (dev uses `DEV`). Short guessable codes w
 
 ### Prerequisites
 
-- Node.js 22+ (or current LTS)
+- Node.js 20+ (see `.nvmrc`)
 - Docker (optional)
 
 ### Install & run
@@ -49,21 +58,10 @@ npm run dev
 bracket-night/
 ├── backend/
 │   └── src/
-│       ├── ai.ts
-│       ├── config.ts
-│       ├── db.ts
-│       ├── game.ts          # in-memory live games
-│       ├── image.ts
-│       ├── security.ts      # topic limits, API secret, SSRF, CORS helpers
-│       ├── server.ts
-│       └── types.ts
 ├── frontend/
 │   ├── components/
-│   ├── lib/
-│   ├── pages/               # Next.js pages router
-│   ├── public/
-│   ├── styles/
-│   └── next.config.ts
+│   ├── pages/
+│   └── public/
 ├── .env.example
 ├── Dockerfile
 ├── package.json
@@ -72,16 +70,9 @@ bracket-night/
 
 ### Docker
 
-Published images (same `helvio/*` convention as other helv-io repos):
-
 ```bash
-# main → :latest
 docker pull helvio/bracket-night:latest
-
-# restore/thick-gold-coin → branch slug (pre-merge test)
-docker pull helvio/bracket-night:restore-thick-gold-coin
-
-docker run -p 3000:3000 --env-file backend/.env helvio/bracket-night:restore-thick-gold-coin
+docker run -p 3000:3000 --env-file backend/.env helvio/bracket-night:latest
 ```
 
 Local build:
@@ -91,7 +82,7 @@ docker build -t bracket-night .
 docker run -p 3000:3000 --env-file backend/.env bracket-night
 ```
 
-CI (`.github/workflows/docker.yml`, reelgrab pattern) publishes multi-arch (`linux/amd64`, `linux/arm64`) to Docker Hub on push to `main` / `restore/thick-gold-coin`, tags `v*`, and `workflow_dispatch`. PRs build without push. Tags: `:latest` (main only), branch slug, `sha-*`, semver. Requires Variable/Secret `DOCKERHUB_USERNAME` + Secret `DOCKERHUB_TOKEN`.
+CI (`.github/workflows/docker.yml`) publishes multi-arch (`linux/amd64`, `linux/arm64`) to Docker Hub on push to `main`, tags `v*`, and `workflow_dispatch`. PRs build without push. Tags: `:latest`, semver (`0.1.0`, `0.1`, `0`), `sha-*`. Requires Variable/Secret `DOCKERHUB_USERNAME` + Secret `DOCKERHUB_TOKEN`.
 
 ## Configuration
 
