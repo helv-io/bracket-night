@@ -125,29 +125,23 @@ export default function CoinToss({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, contestants[0]?.id, contestants[1]?.id, winner])
 
-  // rAF-driven spin: full ~3s even if CSS animations / reduced-motion interfere
+  // rAF-driven spin — full cinematic toss; reduced-motion uses a shorter but visible flip
   useEffect(() => {
     if (!isTossing) return
 
     const reduced = prefersReducedMotion()
-    const finalY = winner === 0 ? 2880 : 3060
+    const duration = reduced ? 1200 : SPIN_MS
+    // Full spins for TV energy; reduced still rotates enough to read both faces
+    const finalY = winner === 0 ? (reduced ? 720 : 2880) : reduced ? 900 : 3060
     const start = performance.now()
 
-    if (reduced) {
-      setSpinStyle({
-        transform: `translateY(0) rotateX(0deg) rotateY(${winner === 0 ? 0 : 180}deg) scale(1)`,
-      })
-      const t = window.setTimeout(finishToss, 650)
-      return () => window.clearTimeout(t)
-    }
-
     const tick = (now: number) => {
-      const raw = Math.min(1, (now - start) / SPIN_MS)
+      const raw = Math.min(1, (now - start) / duration)
       const p = spinEase(raw)
       const y = finalY * p
-      const lift = liftForProgress(raw)
-      const tilt = 12 * Math.sin(raw * Math.PI) * (1 - raw)
-      const scale = 0.9 + 0.14 * Math.sin(raw * Math.PI) * (1 - raw * 0.35)
+      const lift = reduced ? liftForProgress(raw) * 0.35 : liftForProgress(raw)
+      const tilt = (reduced ? 6 : 12) * Math.sin(raw * Math.PI) * (1 - raw)
+      const scale = 0.92 + 0.12 * Math.sin(raw * Math.PI) * (1 - raw * 0.35)
       setSpinStyle({
         transform: `translateY(${lift.toFixed(1)}px) rotateX(${tilt.toFixed(2)}deg) rotateY(${y.toFixed(2)}deg) scale(${scale.toFixed(3)})`,
       })
