@@ -27,8 +27,20 @@ const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   size: 3 + (i % 5),
 }))
 
+function isFullMotionForced() {
+  if (typeof window === 'undefined') return false
+  try {
+    return sessionStorage.getItem('bnFullMotion') === '1'
+  } catch {
+    return false
+  }
+}
+
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false
+  // Demo/TV override: sessionStorage.bnFullMotion=1 forces the full cinematic spin
+  // (also toggles html.bn-full-motion so CSS @media reduce rules do not win)
+  if (isFullMotionForced()) return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
@@ -50,6 +62,12 @@ export default function CoinToss({
   useEffect(() => {
     onCompleteRef.current = onComplete
   }, [onComplete])
+
+  useEffect(() => {
+    if (!isFullMotionForced()) return
+    document.documentElement.classList.add('bn-full-motion')
+    return () => document.documentElement.classList.remove('bn-full-motion')
+  }, [])
 
   useEffect(() => {
     const update = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight })

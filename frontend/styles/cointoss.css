@@ -601,19 +601,21 @@
   }
 }
 
+/* html.bn-full-motion (sessionStorage.bnFullMotion=1) keeps the cinematic spin
+   even when the OS/browser requests prefers-reduced-motion — used for Demo Toss TV recordings. */
 @media (prefers-reduced-motion: reduce) {
-  .coin-toss-spotlight,
-  .coin-spark,
-  .coin-glint {
+  html:not(.bn-full-motion) .coin-toss-spotlight,
+  html:not(.bn-full-motion) .coin-spark,
+  html:not(.bn-full-motion) .coin-glint {
     animation: none !important;
   }
 
-  .animate-spinToHeads,
-  .animate-spinToTails {
+  html:not(.bn-full-motion) .animate-spinToHeads,
+  html:not(.bn-full-motion) .animate-spinToTails {
     animation: coinFadeIn 0.6s ease forwards !important;
   }
 
-  .animate-spinToTails {
+  html:not(.bn-full-motion) .animate-spinToTails {
     transform: rotateY(180deg);
   }
 }
