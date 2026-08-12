@@ -127,7 +127,7 @@
     font-size: 0.92rem;
     font-weight: 600;
     line-height: 1.15;
-    color: var(--text-muted);
+    color: rgba(242, 239, 230, 0.82);
     text-align: left;
     overflow: hidden;
     display: -webkit-box;
@@ -136,7 +136,7 @@
   }
 
   .matchup-name.is-strong {
-    color: var(--text);
+    color: #fff;
     font-weight: 700;
   }
 

@@ -134,7 +134,7 @@
   .coin-scene {
     /* Chunky disk: two faces + continuous metallic cylinder rim */
     --coin-size: min(46vw, 340px);
-    --coin-thickness: 64px; /* full thickness — reads on TV when edge-on */
+    --coin-thickness: 72px; /* full thickness — reads on TV when edge-on */
     --coin-half: calc(var(--coin-thickness) / 2);
     position: relative;
     width: var(--coin-size);
@@ -535,7 +535,7 @@
 @media (max-width: 640px) {
   .coin-scene {
     --coin-size: min(68vw, 260px);
-    --coin-thickness: 48px;
+    --coin-thickness: 54px;
   }
 
   .coin-matchup {

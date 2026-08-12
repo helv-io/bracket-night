@@ -130,7 +130,7 @@ const Home = () => {
             <h1 className="bn-display text-3xl md:text-4xl lg:text-5xl">
               {bracket.title}
             </h1>
-            <h2 className="text-xl md:text-2xl lg:text-3xl mt-1 text-[var(--text-muted)]">
+            <h2 className="text-xl md:text-2xl lg:text-3xl mt-1">
               {bracket.subtitle}
             </h2>
           </>

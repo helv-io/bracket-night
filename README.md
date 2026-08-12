@@ -72,10 +72,26 @@ bracket-night/
 
 ### Docker
 
+Published images (same `helvio/*` convention as other helv-io repos):
+
+```bash
+# latest stable (main)
+docker pull helvio/bracket-night:latest
+
+# testable preview from restore/thick-gold-coin
+docker pull helvio/bracket-night:test
+
+docker run -p 3000:3000 --env-file backend/.env helvio/bracket-night:test
+```
+
+Local build:
+
 ```bash
 docker build -t bracket-night .
 docker run -p 3000:3000 --env-file backend/.env bracket-night
 ```
+
+CI publishes multi-arch (`linux/amd64`, `linux/arm64`) images to Docker Hub on push to `main`, push to `restore/thick-gold-coin` (`:test`), version tags, and `workflow_dispatch`. Requires repo secrets/vars `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` (see `.github/workflows/docker.yml`).
 
 ## Configuration
 
