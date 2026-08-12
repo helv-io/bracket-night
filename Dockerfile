@@ -12,14 +12,13 @@ COPY frontend ./
 ENV NODE_ENV=production
 RUN npm run build
 
-# Build backend (better-sqlite3 needs native toolchain — must compile on alpine)
+# Build backend (better-sqlite3 needs native toolchain)
 FROM node:lts-alpine AS backend-build
+# Install compile tools BEFORE npm install so better-sqlite3 can build on alpine
 RUN apk add --no-cache python3 make g++
-ENV PYTHON=/usr/bin/python3
 WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install \
-  && npm rebuild better-sqlite3 --build-from-source
+RUN npm install
 COPY backend ./
 RUN npm run build \
   && npm prune --omit=dev
