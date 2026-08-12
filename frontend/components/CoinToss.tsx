@@ -191,7 +191,7 @@ export default function CoinToss({
                 <div className="coin-matchup-side">
                   <img
                     className="coin-matchup-photo"
-                    src={contestants[0].image_url}
+                    src="/coin-a.jpg"
                     alt=""
                   />
                   <div className="coin-matchup-meta">
@@ -203,7 +203,7 @@ export default function CoinToss({
                 <div className="coin-matchup-side">
                   <img
                     className="coin-matchup-photo"
-                    src={contestants[1].image_url}
+                    src="/coin-b.jpg"
                     alt=""
                   />
                   <div className="coin-matchup-meta">
