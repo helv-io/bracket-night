@@ -1,16 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
-import { Bracket, Matchup, Player, PublicBracket } from '../../backend/src/types'
+import { Bracket, Matchup, Player, PublicBracket, Vote } from '../../backend/src/types'
 import VotingCard from '../components/VotingCard'
+import { CoinTossMobileNotice } from '../components/CoinToss'
 
 const Join = () => {
-  // Get game ID from URL
   const router = useRouter()
   const { game } = router.query
-  
-  // Declare state variables
+
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [bracket, setBracket] = useState<Bracket | null>(null)
@@ -18,84 +17,92 @@ const Join = () => {
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0)
   const [players, setPlayers] = useState<Player[]>([])
-  const [currentVotes, setCurrentVotes] = useState<{ playerId: string, vote: string }[]>([])
+  const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
   const [hasJoined, setHasJoined] = useState(false)
   const [gameId, setGameId] = useState('')
   const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
   const [publicBrackets, setPublicBrackets] = useState<PublicBracket[]>([])
+  const [tieNotice, setTieNotice] = useState<{ winnerName: string } | null>(null)
+  const currentVotesRef = useRef(currentVotes)
 
-  // Load stored name, bracket code and game ID
+  useEffect(() => {
+    currentVotesRef.current = currentVotes
+  }, [currentVotes])
+
   useEffect(() => {
     const storedName = localStorage.getItem('playerName')
-    if (storedName) {
-      setName(storedName)
-    }
-    
+    if (storedName) setName(storedName)
+
     const storedCode = localStorage.getItem('code')
-    if (storedCode) {
-      setCode(storedCode)
-    }
-    
-    if (game) {
-      setGameId(game as string)
-    }
+    if (storedCode) setCode(storedCode)
+
+    if (game) setGameId(game as string)
   }, [game])
 
-  // Set up socket listeners
   useEffect(() => {
-    // Check if game ID exists
     if (!game) return
 
-    // On player joined, update players
     socket.on('player_joined', ({ players }) => setPlayers(players))
-    
-    // First player gets set to game master
     socket.on('game_master', () => setIsGameMaster(true))
-    
-    // When bracket is set, update bracket, matchups and current matchup index
+
     socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
       setBracket(bracket as Bracket)
       setMatchups(matchups as Matchup[])
       setCurrentMatchupIndex(currentMatchupIndex as number)
     })
-    
-    // When vote is cast, update current votes and players
+
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
       setPlayers(players)
     })
-    
-    // When matchup advances, update matchups and current matchup index
+
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
+      const votes = currentVotesRef.current
+      const leftVotes = votes.filter((v) => v.choice === 0).length
+      const rightVotes = votes.filter((v) => v.choice === 1).length
+      const prevIndex = currentMatchupIndex - 1
+      const wasTie = votes.length > 0 && leftVotes === rightVotes
+
+      if (wasTie && prevIndex >= 0) {
+        const completed = matchups[prevIndex] as Matchup
+        setTieNotice({ winnerName: completed.winner?.name || 'Someone' })
+        window.setTimeout(() => setTieNotice(null), 4500)
+      }
+
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
-    
-    // When an error occurs, alert the user
-    socket.on('error', (msg) => alert(msg))
-    
-    // When players update, update players
-    socket.on('players_update', (updatedPlayers) => {
-      setPlayers(updatedPlayers)
-    })
-    
-    // When a full game state is received, update all state variables
-    socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, isGameStarted, isGameOver }) => {
-      setGameId(gameId)
-      setBracket(bracket)
-      setMatchups(matchups)
-      setCurrentMatchupIndex(currentMatchupIndex)
-      setPlayers(players)
-      setCurrentVotes(currentVotes)
-      setIsGameStarted(isGameStarted)
-      setIsGameOver(isGameOver)
-    })
 
-    // Clean up listeners
+    socket.on('error', (msg) => alert(msg))
+    socket.on('players_update', (updatedPlayers) => setPlayers(updatedPlayers))
+
+    socket.on(
+      'game_state',
+      ({
+        gameId,
+        bracket,
+        matchups,
+        currentMatchupIndex,
+        players,
+        currentVotes,
+        isGameStarted,
+        isGameOver,
+      }) => {
+        setGameId(gameId)
+        setBracket(bracket)
+        setMatchups(matchups)
+        setCurrentMatchupIndex(currentMatchupIndex)
+        setPlayers(players)
+        setCurrentVotes(currentVotes)
+        setIsGameStarted(isGameStarted)
+        setIsGameOver(isGameOver)
+      }
+    )
+
     return () => {
       socket.off('player_joined')
       socket.off('game_master')
@@ -108,12 +115,11 @@ const Join = () => {
     }
   }, [game, gameId])
 
-  // Request wake lock on mount, so the screen doesn't turn off
   useEffect(() => {
     const requestWakeLock = async () => {
       try {
-        const wakeLock = await navigator.wakeLock.request('screen')
-        setWakeLock(wakeLock)
+        const lock = await navigator.wakeLock.request('screen')
+        setWakeLock(lock)
       } catch (err) {
         console.error(err)
       }
@@ -127,24 +133,17 @@ const Join = () => {
       }
     }
   }, [wakeLock])
-  
-  // Initial list of public brackets, using async/await
+
   useEffect(() => {
     const fetchPublicBrackets = async () => {
-      // Fetch public brackets
       const response = await fetch('/api/public')
-      
-      // Parse response
       const data = await response.json()
-      
-      // Set public brackets
       setPublicBrackets(data)
     }
 
     fetchPublicBrackets()
   }, [])
 
-  // Handle join game from button click
   const handleJoin = () => {
     if (gameId && name) {
       socket.emit('join', { gameId, playerName: name })
@@ -153,7 +152,6 @@ const Join = () => {
     }
   }
 
-  // Handle set bracket from button click
   const handleSetBracket = () => {
     if (gameId && code) {
       socket.emit('set_bracket', { gameId, code: code.toLowerCase() })
@@ -161,159 +159,186 @@ const Join = () => {
     }
   }
 
-  // Handle start game from button click
   const handleStart = () => {
     socket.emit('start_game', { gameId })
   }
 
-  // Check if user has voted
-  const hasVoted = currentVotes.some(v => v.playerId === socket.id)
+  const hasVoted = currentVotes.some((v) => v.playerId === socket.id)
+  const currentMatchup = matchups[currentMatchupIndex]
+  const champion = matchups[currentMatchupIndex - 1]?.winner
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center p-4">
-      {/* Logo */}
+    <div className="bn-page bn-page--stadium min-h-screen flex flex-col items-center p-4 gap-4">
       {(!isGameStarted || isGameOver) && (
         <img
           src="/bracket-night-gold.svg"
-          alt="Bracket Night Logo"
-          className="w-full sm:w-1/3 object-cover mb-4 border-10 border-transparent"
+          alt="Bracket Night"
+          className="player-logo"
         />
       )}
-      {/* Join Form - Vertically Centered */}
+
       {!hasJoined && (
         <div className="flex-grow flex items-center justify-center w-full">
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Join Game</h1>
-  
+          <div className="bn-card player-shell p-6">
+            <h1 className="player-state-title">Join the night</h1>
+            <p className="player-state-copy mb-4">
+              Enter the room code from the TV and your display name.
+            </p>
+
             <input
               type="text"
               value={gameId}
-              onChange={e => setGameId(e.target.value)}
+              onChange={(e) => setGameId(e.target.value)}
               placeholder="Game ID"
-              className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="bn-input"
             />
-  
+
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Your Name"
-              className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              onKeyUp={e => { if (e.key === 'Enter') handleJoin() }}
+              className="bn-input"
+              onKeyUp={(e) => {
+                if (e.key === 'Enter') handleJoin()
+              }}
             />
-  
-            <button onClick={handleJoin} className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Join</button>
+
+            <button type="button" onClick={handleJoin} className="bn-btn bn-btn--gold">
+              Join Game
+            </button>
           </div>
         </div>
       )}
-  
-      {/* Waiting Section */}
+
       {hasJoined && !isGameStarted && (
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+        <div className="bn-card player-shell p-6">
           {isGameMaster && !bracket && (
             <div>
-              <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Bracket Code:</h1>
-  
+              <h1 className="player-state-title">Set the bracket</h1>
+              <p className="player-state-copy mb-4">
+                You&apos;re the Game Master. Drop in a bracket code to load the field.
+              </p>
+
               <input
                 type="text"
                 value={code}
-                onChange={e => setCode(e.target.value)}
+                onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter Bracket Code"
-                className="w-full p-2 mb-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                onKeyUp={e => { if (e.key === 'Enter') handleSetBracket() }}
+                className="bn-input"
+                onKeyUp={(e) => {
+                  if (e.key === 'Enter') handleSetBracket()
+                }}
               />
-  
-              <button onClick={handleSetBracket} className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Set Bracket</button>
+
+              <button type="button" onClick={handleSetBracket} className="bn-btn bn-btn--gold">
+                Load Bracket
+              </button>
             </div>
           )}
-  
+
           {isGameMaster && bracket && !isGameStarted && (
-            <button onClick={handleStart} className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 mt-4">Everyone ready, start!</button>
+            <button type="button" onClick={handleStart} className="bn-btn mt-2">
+              Everyone ready — start!
+            </button>
           )}
-  
-          {!bracket && !isGameMaster && <p className="text-center text-gray-500 dark:text-gray-400">Waiting for the bracket to be set... ⏳</p>}
-          {bracket && !isGameMaster && <p className="text-center text-gray-500 dark:text-gray-400">Waiting for the Game Master to begin... 🤔</p>}
-  
-          <h2 className="text-lg font-semibold mt-4 text-gray-900 dark:text-gray-100">Players in game:</h2>
-          <div className="flex flex-wrap gap-4 mt-2">
+
+          {!bracket && !isGameMaster && (
+            <p className="player-state-copy">Waiting for the bracket to be set…</p>
+          )}
+          {bracket && !isGameMaster && (
+            <p className="player-state-copy">Waiting for the Game Master to begin…</p>
+          )}
+
+          <h2 className="bn-display text-xl mt-5 mb-1 text-[var(--gold)] tracking-widest text-center">
+            Players in room
+          </h2>
+          <div className="player-list">
             {players.map((player, index) => (
-              <div key={index} className="text-blue-700 dark:text-blue-300 p-4 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-700 shadow">
+              <div key={index} className="player-pill">
                 {player.name}
               </div>
             ))}
           </div>
         </div>
       )}
-  
-      {/* Game Section */}
+
       {hasJoined && isGameStarted && (
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-2xl text-center">
-  
+        <div className="player-shell w-full">
           {bracket && (
-            <>
-              <h2 className="text-4xl font-extrabold mb-2 text-gray-900 dark:text-gray-100" style={{ textShadow: '2px 2px 4px var(--accent)' }}>{bracket.title}</h2>
-              <h3 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">{bracket.subtitle}</h3>
-            </>
-          )}
-  
-          {isGameStarted && !isGameOver && (
-            <div>
-              <VotingCard 
-                matchup={matchups[currentMatchupIndex]} 
-                gameId={gameId} 
-                playerName={name} 
-                hasVoted={hasVoted} 
-              />
+            <div className="text-center mb-3">
+              <h2 className="bn-display text-4xl text-[var(--gold-bright)]">{bracket.title}</h2>
+              <h3 className="text-[var(--text-muted)] mt-1">{bracket.subtitle}</h3>
             </div>
           )}
-  
+
+          {tieNotice && <CoinTossMobileNotice winnerName={tieNotice.winnerName} />}
+
+          {isGameStarted && !isGameOver && currentMatchup && (
+            <VotingCard
+              matchup={currentMatchup}
+              gameId={gameId}
+              playerName={name}
+              hasVoted={hasVoted}
+            />
+          )}
+
           {isGameOver && (
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Game Over!</h2>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">🏆 {matchups[currentMatchupIndex - 1].winner?.name} 🏆</h3>
-              <img src={matchups[currentMatchupIndex - 1].winner?.image_url} alt="Winner" className="w-48 h-48 mx-auto rounded-full shadow-lg mb-4 border-4 border-[var(--winner-highlight)]" />
+            <div className="bn-card p-6 game-over-winner">
+              <h2 className="player-state-title">Champion</h2>
+              <h3 className="text-2xl font-bold text-[var(--winner-highlight)]">
+                {champion?.name}
+              </h3>
+              {champion?.image_url && (
+                <img src={champion.image_url} alt={champion.name || 'Winner'} />
+              )}
             </div>
           )}
         </div>
       )}
-      
-      {/* Public Brackets with Buttons to fill the Game ID */}
+
       {isGameMaster && !bracket && (
         <>
-          <br />
-          <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Public Games:</h1>
+          <h2 className="bn-display text-2xl text-[var(--gold)] tracking-widest mt-2">
+            Public brackets
+          </h2>
           {publicBrackets.map((publicBracket, index) => (
-            <div key={index} className="flex-grow flex items-center justify-center w-full border-b-10 border-transparent">
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                    {publicBracket.title}
-                  </h3>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    {publicBracket.subtitle}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setCode(publicBracket.code)
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
-                  className="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-semibold"
-                >
-                  Fill Code
-                </button>
+            <div key={index} className="bn-card public-bracket-row">
+              <div>
+                <h3 className="text-lg font-bold mb-1">{publicBracket.title}</h3>
+                <p className="text-sm text-[var(--text-muted)]">{publicBracket.subtitle}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCode(publicBracket.code)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="bn-btn bn-btn--ghost"
+                style={{ width: 'auto', paddingInline: '1rem' }}
+              >
+                Fill
+              </button>
             </div>
           ))}
         </>
       )}
-      
-      {/* Footer */}
-      <footer className="mt-auto w-full bg-gray-800 dark:bg-gray-800 text-white dark:text-gray-200 p-2 sm:p-4 text-center rounded-4xl">
-        <p className="text-xs sm:text-sm">
-          Bracket Night was lovingly crafted ❤️ by Helvio for the world.<br/> 
-          A heartfelt thank you to my amazing wife Jackie for her unwavering support and endless snacks 🍿 during development.<br/>
-          If you’d like to show some love, consider <a href="https://buymeacoffee.com/helvio" className="text-yellow-400 hover:underline" target="_blank" rel="noopener noreferrer">donating</a>—it’ll go towards something shiny for Jackie! 💎
+
+      <footer className="player-footer">
+        <p>
+          Bracket Night was lovingly crafted by Helvio for the world.
+          <br />
+          Thanks to Jackie for the support and snacks during development.
+          <br />
+          If you&apos;d like to show some love, consider{' '}
+          <a
+            href="https://buymeacoffee.com/helvio"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            donating
+          </a>
+          .
         </p>
       </footer>
     </div>

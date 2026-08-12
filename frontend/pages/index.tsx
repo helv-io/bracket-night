@@ -1,18 +1,31 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { isMobile } from 'react-device-detect'
 import { QRCodeSVG } from 'qrcode.react'
 import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
+import { APP_VERSION_LABEL } from '../lib/version'
 import Bracket from '../components/Bracket'
-import { Matchup, Player, Bracket as BracketType, Vote } from '../../backend/src/types'
+import { Matchup, Player, Bracket as BracketType, Vote, Contestant } from '../../backend/src/types'
 import CoinToss from '@/components/CoinToss'
 
+type ActiveToss = {
+  contestants: [Contestant, Contestant]
+  winner: 0 | 1
+  autoStart: boolean
+}
+
+declare global {
+  interface Window {
+    /** Recording / automation only — not exposed in the host UI */
+    __bnTriggerCoinToss?: (winner?: 0 | 1) => void
+  }
+}
+
 const Home = () => {
-  // Declare router for mobile navigation
   const router = useRouter()
-  
+
   const [gameId, setGameId] = useState<string | null>(null)
   const [bracket, setBracket] = useState<BracketType | null>(null)
   const [matchups, setMatchups] = useState<Matchup[]>([])
@@ -21,117 +34,171 @@ const Home = () => {
   const [isGameOver, setIsGameOver] = useState(false)
   const [isGameStarted, setIsGameStarted] = useState(false)
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
+  const [activeToss, setActiveToss] = useState<ActiveToss | null>(null)
   const gameIdRef = useRef(gameId)
-  
+  const currentVotesRef = useRef(currentVotes)
+  const matchupsRef = useRef(matchups)
+  const currentMatchupIndexRef = useRef(currentMatchupIndex)
+
   useEffect(() => {
     gameIdRef.current = gameId
   }, [gameId])
 
   useEffect(() => {
-    // Navigate to new game page if on mobile
+    currentVotesRef.current = currentVotes
+  }, [currentVotes])
+
+  useEffect(() => {
+    matchupsRef.current = matchups
+  }, [matchups])
+
+  useEffect(() => {
+    currentMatchupIndexRef.current = currentMatchupIndex
+  }, [currentMatchupIndex])
+
+  useEffect(() => {
     if (isMobile) {
       router.push('/new')
       return
     }
-  
-    // Create a new game on page load
+
     socket.emit('create_game')
-    
-    // When a matchup is advanced, update matchups and current matchup index
+
     socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
+      const votes = currentVotesRef.current
+      const leftVotes = votes.filter((v) => v.choice === 0).length
+      const rightVotes = votes.filter((v) => v.choice === 1).length
+      const prevIndex = currentMatchupIndex - 1
+      const wasTie = votes.length > 0 && leftVotes === rightVotes
+
+      if (wasTie && prevIndex >= 0) {
+        const completed = matchups[prevIndex] as Matchup
+        if (completed?.left && completed?.right && completed.winner) {
+          const winnerSide: 0 | 1 =
+            completed.winner.id === completed.left.id ? 0 : 1
+          setActiveToss({
+            contestants: [completed.left, completed.right],
+            winner: winnerSide,
+            autoStart: true,
+          })
+        }
+      }
+
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
-      
-      // Check if game is over, aka last matchup is complete
+
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
-    
-    socket.on('game_state', ({ gameId, bracket, matchups, currentMatchupIndex, players, currentVotes, isGameStarted, isGameOver }) => {
-      setGameId(gameId)
-      setBracket(bracket)
-      setMatchups(matchups)
-      setCurrentMatchupIndex(currentMatchupIndex)
-      setPlayers(players)
-      setCurrentVotes(currentVotes)
-      setIsGameStarted(isGameStarted)
-      setIsGameOver(isGameOver)
-    })
-  
+
+    socket.on(
+      'game_state',
+      ({
+        gameId,
+        bracket,
+        matchups,
+        currentMatchupIndex,
+        players,
+        currentVotes,
+        isGameStarted,
+        isGameOver,
+      }) => {
+        setGameId(gameId)
+        setBracket(bracket)
+        setMatchups(matchups)
+        setCurrentMatchupIndex(currentMatchupIndex)
+        setPlayers(players)
+        setCurrentVotes(currentVotes)
+        setIsGameStarted(isGameStarted)
+        setIsGameOver(isGameOver)
+      }
+    )
+
     return () => {
       socket.off('matchup_advanced')
+      socket.off('game_state')
     }
   }, [router])
 
+  const clearToss = useCallback(() => setActiveToss(null), [])
+
+  // Automation hook for Demo recordings — no host UI control
+  useEffect(() => {
+    window.__bnTriggerCoinToss = (winner = 0) => {
+      const current = matchupsRef.current[currentMatchupIndexRef.current]
+      if (!current?.left || !current?.right) return
+      setActiveToss({
+        contestants: [current.left, current.right],
+        winner,
+        autoStart: true,
+      })
+    }
+    return () => {
+      delete window.__bnTriggerCoinToss
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--text)] p-4 md:p-8 flex flex-col items-center justify-between">
-      {/* Background Music */}
+    <div className="bn-page bn-page--stadium bn-page--host">
       <audio src="/background.ogg" autoPlay loop />
-  
-      {/* Logo */}
-      <div className="logo-container">
-        <img src="/bracket-night-gold.svg" alt="Logo" className="logo border-40 border-transparent" />
-        {bracket && (
-          <>
-            <h1
-              className="text-3xl md:text-4xl lg:text-5xl font-bold"
-              style={{ textShadow: "2px 2px 4px var(--accent)" }}
-            >
-              {bracket.title}
-            </h1>
-            <h2
-              className="text-xl md:text-2xl lg:text-3xl mt-2"
-              style={{ textShadow: "1px 1px 2px var(--accent)" }}
-            >
-              {bracket.subtitle}
-            </h2>
-          </>
-        )}
-      </div>
-  
-      {/* Main Content */}
-      <div className="w-full flex-grow flex flex-col items-center justify-center text-center relative">
+
+      <header className="host-chrome host-chrome--top">
+        <div className="logo-container logo-container--inline">
+          <img
+            src="/bracket-night-gold.svg"
+            alt="Bracket Night"
+            className="logo logo--host"
+          />
+          {bracket && (
+            <>
+              <h1 className="bn-display host-title">{bracket.title}</h1>
+              <h2 className="host-subtitle">{bracket.subtitle}</h2>
+            </>
+          )}
+        </div>
+      </header>
+
+      <main className="host-bracket-area">
         {matchups.length > 0 && (
           <Bracket matchups={matchups} currentMatchupIndex={currentMatchupIndex} />
         )}
         {matchups.length === 0 && (
-          <div>
-            <h1
-              className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4"
-              style={{ textShadow: "2px 2px 4px var(--accent)" }}
-            >
-              🏆 Welcome to Bracket Night 🏆
+          <div className="host-welcome">
+            <h1 className="bn-display text-4xl md:text-5xl text-[var(--gold-bright)] mb-3 drop-shadow-lg">
+              Welcome to Bracket Night
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto">
-              ⚔️ The arena is almost set for an epic clash. ⚔️
-            </p>
-            <p className="text-lg md:text-xl lg:text-2xl max-w-2xl mx-auto">
-              ⚔️ Only one will rise victorious. ⚔️
+            <p className="text-lg md:text-xl text-[var(--text-muted)]">
+              The arena is almost set. Scan in, pick your fighter energy, and let the room decide.
             </p>
           </div>
         )}
-      </div>
-  
-      {/* QR Code */}
+      </main>
+
       {!isGameStarted && gameId && (
         <div className="text-center qr-container">
-          <div className="border-2 border-dashed border-[var(--accent)] p-4 bg-white rounded-lg shadow-lg inline-block">
-            <p className="text-sm text-gray-600 mb-1">
-              Scan this code to join
+          <div className="bn-card p-4 inline-block">
+            <p className="text-sm text-[var(--text-muted)] mb-2 tracking-wide uppercase">
+              Scan to join
             </p>
-            <div className="w-24 md:w-32 lg:w-48 mx-auto">
+            <div className="w-24 md:w-32 lg:w-48 mx-auto bg-white rounded-lg p-2">
               <QRCodeSVG
                 value={`${window.location.origin}/join?game=${gameId}`}
-                imageSettings={{ src: "/bn-logo-gold.svg", height: 48, width: 48, excavate: true }}
+                imageSettings={{
+                  src: '/bn-logo-gold.svg',
+                  height: 48,
+                  width: 48,
+                  excavate: true,
+                }}
                 size={256}
                 className="w-full h-auto"
               />
             </div>
-            <div className="mt-2">
+            <div className="mt-3">
               <a
                 href={`${window.location.origin}/join?game=${gameId}`}
                 target="_blank"
-                className="text-xl md:text-2xl font-bold text-[var(--accent)] bg-[var(--card-bg)] px-3 py-1 rounded-md shadow-md"
+                className="bn-display text-2xl md:text-3xl text-[var(--gold-bright)] tracking-widest"
+                rel="noreferrer"
               >
                 {gameId}
               </a>
@@ -139,71 +206,53 @@ const Home = () => {
           </div>
           <div className="flex flex-wrap gap-2 md:gap-4 justify-center mt-4">
             {players.length === 0 && (
-              <div className="px-3 py-1 border border-gray-300 rounded text-gray-500 bg-[var(--card-bg)]">
-                It’s empty around here... 👻
-              </div>
+              <div className="bn-chip">Waiting for players…</div>
             )}
             {players.length > 0 && (
-              <div className="px-3 py-1 border border-[var(--accent)] rounded text-[var(--text)] bg-[var(--card-bg)] shadow-sm hover:bg-[var(--accent)]/10 transition-colors duration-200">
-                {players.length} Player{players.length > 1 ? 's' : ''} joined!
+              <div className="bn-chip bn-chip--live">
+                {players.length} Player{players.length > 1 ? 's' : ''} joined
               </div>
             )}
           </div>
         </div>
       )}
-      
-      {/* Coin Toss */}
-      {isGameStarted && matchups && (
-        <div style={{ position: 'absolute', right: 0, bottom: 0 }} >
-          <CoinToss contestants={[matchups[0].left!, matchups[1].right!]} leftOrRight={Math.round(Math.random()) as 0|1} />
-        </div>
+
+      {activeToss && (
+        <CoinToss
+          contestants={activeToss.contestants}
+          winner={activeToss.winner}
+          autoStart={activeToss.autoStart}
+          onComplete={clearToss}
+        />
       )}
-  
-      {/* Player Voting Status (Centered) */}
-      <div className="w-full flex justify-center">
-        {isGameStarted && !isGameOver && (
-          <div className="mt-4">
-            <ul className="list-none flex flex-wrap gap-4 justify-center">
-              {players.map((player) => {
-                const hasVoted = currentVotes.some(
-                  (vote) => vote.playerId === player.id
-                )
-                return (
-                  <li
-                    key={player.id}
-                    className={`flex items-center gap-2 px-3 py-1 rounded ${
-                      hasVoted ? "bg-[var(--accent)]/20" : "bg-[var(--card-bg)]"
-                    } transition duration-200 hover:shadow-md`}
-                  >
-                    <span
-                      className={`${
-                        hasVoted
-                          ? "text-[var(--winner-highlight)] font-bold"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {player.name}
-                    </span>
-                    <span
-                      className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                        hasVoted
-                          ? "bg-[var(--winner-highlight)] text-white"
-                          : "bg-gray-700 text-gray-300"
-                      }`}
-                    >
-                      {hasVoted ? "Voted" : "Pending"}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
-      </div>
-  
-      
-      {/* Confetti */}
+
+      {isGameStarted && !isGameOver && (
+        <footer className="host-chrome host-chrome--bottom">
+          <ul className="list-none flex flex-wrap gap-2 justify-center">
+            {players.map((player) => {
+              const hasVoted = currentVotes.some((vote) => vote.playerId === player.id)
+              return (
+                <li
+                  key={player.id}
+                  className={`bn-chip ${hasVoted ? 'bn-chip--done' : ''}`}
+                >
+                  <span>{player.name}</span>
+                  <span className="text-xs uppercase tracking-wide opacity-80">
+                    {hasVoted ? 'Voted' : 'Pending'}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </footer>
+      )}
+
       {isGameOver && <Confetti />}
+
+      {/* Discreet build version — host TV only; stays visible over coin overlay corner */}
+      <div className="host-version" aria-hidden="true">
+        {APP_VERSION_LABEL}
+      </div>
     </div>
   )
 }
