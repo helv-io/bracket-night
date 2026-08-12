@@ -260,28 +260,42 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       <canvas ref={canvasRef} className="bracket-canvas" />
 
       <div className="bracket-field">
-        {columns.map((slots, colIndex) => (
-          <div key={colIndex} className="bracket-column">
-            <div className="bracket-round-label" aria-hidden>
-              {ROUND_LABELS[colIndex]}
+        {columns.map((slots, colIndex) => {
+          // Label hugs the topmost card in this column (not a screen-top band)
+          const topmostPct = Math.min(
+            ...slots.map((s) => Number.parseFloat(s.top))
+          )
+          return (
+            <div key={colIndex} className="bracket-column">
+              <div className="bracket-column-body">
+                {slots.length > 0 && (
+                  <div
+                    className="bracket-round-label"
+                    aria-hidden
+                    style={{
+                      top: `calc(${topmostPct}% - (var(--matchup-card-height) / 2))`,
+                    }}
+                  >
+                    {ROUND_LABELS[colIndex]}
+                  </div>
+                )}
+                {slots.map(({ matchup, top }) => (
+                  <div
+                    key={matchup.id}
+                    data-matchup-id={matchup.id}
+                    className="bracket-slot"
+                    style={{ top }}
+                  >
+                    <MatchupComponent
+                      matchup={matchup}
+                      isCurrent={matchup.id === currentMatchupIndex}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="bracket-column-body">
-              {slots.map(({ matchup, top }) => (
-                <div
-                  key={matchup.id}
-                  data-matchup-id={matchup.id}
-                  className="bracket-slot"
-                  style={{ top }}
-                >
-                  <MatchupComponent
-                    matchup={matchup}
-                    isCurrent={matchup.id === currentMatchupIndex}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

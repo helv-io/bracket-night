@@ -1,10 +1,10 @@
 @layer components {
   .bracket-stage {
-    /* Slightly larger fixed cards for 1080p — unused room exists; names must not grow these */
-    --matchup-card-width: clamp(132px, 9.5vw, 172px);
-    --matchup-card-height: clamp(112px, 15.5vh, 148px);
+    /* Fixed TV card box — slightly larger than prior; names must not grow these */
+    --matchup-card-width: clamp(140px, 9.8vw, 176px);
+    --matchup-card-height: clamp(118px, 15.8vh, 152px);
     --bracket-inline-pad: clamp(0.75rem, 2.2vw, 1.75rem);
-    --bracket-label-h: 1.7rem;
+    --bracket-label-gap: 0.45rem;
     position: absolute;
     inset: 0;
     width: 100%;
@@ -22,12 +22,12 @@
     pointer-events: none;
   }
 
-  /* 7 equal columns — each label lives at the top of its matchup column */
+  /* 7 equal columns — labels + matchups share tracks for true L/R centering */
   .bracket-field {
     position: absolute;
     left: var(--bracket-inline-pad);
     right: var(--bracket-inline-pad);
-    top: 0.15rem;
+    top: 0.1rem;
     bottom: 0.15rem;
     z-index: 1;
     display: grid;
@@ -39,19 +39,23 @@
     position: relative;
     min-width: 0;
     height: 100%;
-    display: flex;
-    flex-direction: column;
   }
 
+  .bracket-column-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Sits just above the topmost card in THIS column (not a screen-top band) */
   .bracket-round-label {
-    flex: 0 0 var(--bracket-label-h);
-    height: var(--bracket-label-h);
+    position: absolute;
+    left: 50%;
+    z-index: 2;
     width: 100%;
     max-width: 100%;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 2;
+    padding: 0 0.15rem;
+    transform: translate(-50%, calc(-100% - var(--bracket-label-gap)));
     font-family: var(--font-display);
     letter-spacing: 0.12em;
     font-size: clamp(0.68rem, 1.05vw, 0.92rem);
@@ -65,14 +69,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-bottom: 0.2rem;
-  }
-
-  .bracket-column-body {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
+    line-height: 1.1;
   }
 
   .bracket-slot {
@@ -88,12 +85,14 @@
     max-width: 100%;
     box-sizing: border-box;
     overflow: hidden;
-    padding: 0.5rem 0.55rem;
+    flex: 0 0 auto;
+    contain: layout size;
+    padding: 0.45rem 0.5rem;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 0.2rem;
+    gap: 0.15rem;
     text-align: center;
     background: linear-gradient(180deg, #1a2748 0%, #0e162c 100%);
     border: 2px solid rgba(255, 214, 102, 0.55);
@@ -132,9 +131,11 @@
     align-items: center;
     width: 100%;
     gap: 0.35rem;
-    min-height: 0;
-    flex: 1 1 auto;
+    height: 2.55rem;
+    max-height: 2.55rem;
+    flex: 0 0 2.55rem;
     overflow: hidden;
+    min-width: 0;
   }
 
   .matchup-row.is-right {
@@ -146,11 +147,11 @@
   }
 
   .matchup-avatar {
-    width: clamp(30px, 2.6vw, 38px);
-    height: clamp(30px, 2.6vw, 38px);
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
+    flex: 0 0 34px;
     border: 2px solid rgba(255, 214, 102, 0.55);
     background: rgba(0, 0, 0, 0.45);
   }
@@ -165,10 +166,10 @@
   }
 
   .matchup-avatar-placeholder {
-    width: clamp(28px, 2.4vw, 36px);
-    height: clamp(28px, 2.4vw, 36px);
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    flex-shrink: 0;
+    flex: 0 0 34px;
     display: grid;
     place-items: center;
     color: var(--text-muted);
@@ -179,10 +180,11 @@
   .matchup-name {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: clamp(0.68rem, 0.9vw, 0.84rem);
+    max-width: 100%;
+    font-size: clamp(0.66rem, 0.88vw, 0.8rem);
     font-weight: 600;
-    line-height: 1.15;
-    max-height: calc(1.15em * 2);
+    line-height: 1.12;
+    max-height: calc(1.12em * 2);
     color: rgba(242, 239, 230, 0.82);
     text-align: left;
     overflow: hidden;
@@ -206,9 +208,11 @@
 
   .matchup-vs {
     flex: 0 0 auto;
+    height: 1rem;
+    line-height: 1rem;
     font-family: var(--font-display);
     letter-spacing: 0.12em;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--gold-bright);
     opacity: 0.95;
     text-shadow: 0 0 10px rgba(255, 214, 102, 0.35);

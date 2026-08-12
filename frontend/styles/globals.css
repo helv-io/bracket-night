@@ -335,13 +335,14 @@ a {
 
 /* Soft QR bitmap corners — keep the outer bn-card frame untouched */
 .host-qr-pad {
-  border-radius: 4px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .host-qr-code {
   display: block;
-  border-radius: 3px;
-  overflow: hidden;
+  /* Gentle outer clip only — not aggressive module/finder rounding */
+  border-radius: 2px;
 }
 
 .logo {
