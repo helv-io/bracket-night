@@ -1,7 +1,10 @@
 {
   "name": "bracket-night",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "lint": "npm run lint -w frontend",
     "lint:fix": "npm run lint -w frontend -- --fix",

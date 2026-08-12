@@ -1,25 +1,15 @@
-# Build multi-arch images and publish to Docker Hub (helvio/*).
+# Multi-arch publish to Docker Hub (helvio/bracket-night).
 #
-# Required repository configuration:
+# Variables: DOCKERHUB_USERNAME
+# Secrets: DOCKERHUB_TOKEN
 #
-#   Variables (Settings → Secrets and variables → Actions → Variables):
-#     DOCKERHUB_USERNAME   Docker Hub username (e.g. helvio)
-#     (falls back to Secret DOCKERHUB_USERNAME if Variable unset)
-#
-#   Secrets (Settings → Secrets and variables → Actions → Secrets):
-#     DOCKERHUB_TOKEN      Docker Hub access token (not password)
-#
-# Image: docker.io/<DOCKERHUB_USERNAME>/bracket-night
-# Platforms: linux/amd64, linux/arm64
-#
-# Modeled on helv-io/reelgrab; also publishes from restore/thick-gold-coin
-# so a pre-merge test image is available (branch slug tag).
+# Version with semver tags: git tag v0.1.0 && git push origin v0.1.0
 
 name: Docker
 
 on:
   push:
-    branches: [main, master, restore/thick-gold-coin]
+    branches: [main, master]
     tags: ["v*"]
   pull_request:
     branches: [main, master]
@@ -54,7 +44,7 @@ jobs:
             USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
           fi
           if [ -z "$USERNAME" ]; then
-            echo "DOCKERHUB_USERNAME is not set (repo Variable or Secret)." >&2
+            echo "DOCKERHUB_USERNAME is not set." >&2
             exit 1
           fi
           echo "username=${USERNAME}" >> "$GITHUB_OUTPUT"
@@ -66,17 +56,10 @@ jobs:
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
-            # latest on any non-PR push (sole-user test + main)
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
-            # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            # branch slug (e.g. restore-thick-gold-coin)
-            type=ref,event=branch
-            # PR number (build only; not pushed)
-            type=ref,event=pr
-            # short SHA
             type=sha,prefix=sha-
 
       - name: Log in to Docker Hub
@@ -92,7 +75,6 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          # Push only outside PRs (PRs still multi-arch build as a check)
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
