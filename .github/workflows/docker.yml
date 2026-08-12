@@ -66,7 +66,7 @@ jobs:
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
-            # latest on default branch (reelgrab) + any non-PR push for sole-user testing
+            # sole user: always :latest on any non-PR push (main AND restore/thick-gold-coin)
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
             # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
@@ -78,7 +78,7 @@ jobs:
             type=ref,event=pr
             # short SHA
             type=sha,prefix=sha-
-            # explicit test tag from restore branch
+            # optional pre-merge test tag from restore branch
             type=raw,value=test,enable=${{ github.ref == 'refs/heads/restore/thick-gold-coin' }}
 
       - name: Log in to Docker Hub

@@ -12,15 +12,15 @@ export interface CoinTossProps {
   onComplete?: () => void
 }
 
-/** Full spin duration (ms). Completion is wall-clock — not rAF/animationend. */
-const SPIN_MS = 3000
+/** Toss duration (ms). Wall-clock completion — not rAF/animationend. */
+const SPIN_MS = 2400
 /** Celebrate / confetti linger after land before overlay clears */
 const HOLD_MS = 3600
 const HOLD_MS_REDUCED = 2200
 
 /**
  * Continuous metallic cylinder rim: wall panels around the circumference.
- * Single gold material; soft cosine lighting only (no ridge/valley stripes).
+ * Keeps the thick gold mass; contestant photos live on the faces only.
  */
 const RIM_SEGMENTS = 72
 
@@ -53,6 +53,7 @@ export default function CoinToss({
   const spinTimerRef = useRef(0)
   const holdTimerRef = useRef(0)
   const spinGenRef = useRef(0)
+  const sceneRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     onCompleteRef.current = onComplete
@@ -95,6 +96,19 @@ export default function CoinToss({
     spinGenRef.current += 1
     setShowResult(false)
     setBurst(false)
+
+    // Force reflow before restarting CSS animations (classic coin-flip pattern)
+    const el = sceneRef.current
+    if (el) {
+      el.querySelectorAll('.coin-wrapper, .coin, .coin-shadow').forEach((node) => {
+        const html = node as HTMLElement
+        html.style.animation = 'none'
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        html.offsetWidth
+        html.style.animation = ''
+      })
+    }
+
     setTossKey((prev) => prev + 1)
     setIsTossing(true)
   }
@@ -167,6 +181,12 @@ export default function CoinToss({
 
   if (!contestants[0] || !contestants[1]) return null
 
+  // Landed face: even half-turns = heads (0), odd = tails (1)
+  const landedSpin =
+    winner === 0
+      ? 'rotateY(2880deg)' // 8 full turns
+      : 'rotateY(3060deg)' // 8.5 turns → Face B
+
   return (
     <>
       {isTossing && (
@@ -196,11 +216,7 @@ export default function CoinToss({
             {!showResult && (
               <div className="coin-matchup">
                 <div className="coin-matchup-side">
-                  <img
-                    className="coin-matchup-photo"
-                    src={faceA}
-                    alt=""
-                  />
+                  <img className="coin-matchup-photo" src={faceA} alt="" />
                   <div className="coin-matchup-meta">
                     <span className="coin-matchup-face">Face A</span>
                     <span className="coin-matchup-name">{contestants[0].name}</span>
@@ -208,11 +224,7 @@ export default function CoinToss({
                 </div>
                 <div className="coin-matchup-vs">vs</div>
                 <div className="coin-matchup-side">
-                  <img
-                    className="coin-matchup-photo"
-                    src={faceB}
-                    alt=""
-                  />
+                  <img className="coin-matchup-photo" src={faceB} alt="" />
                   <div className="coin-matchup-meta">
                     <span className="coin-matchup-face">Face B</span>
                     <span className="coin-matchup-name">{contestants[1].name}</span>
@@ -221,58 +233,68 @@ export default function CoinToss({
               </div>
             )}
 
-            {/* 3-layer toss: shadow | Y-arc flight | spin */}
-            <div className="coin-scene">
+            {/*
+              Classic 3-layer toss (ToolKit / DEV Community pattern):
+              1) .coin-shadow  — ground shadow shrinks while airborne
+              2) .coin-wrapper — translateY parabolic arc (UP)
+              3) .coin         — 3D rotateY flip only (no translate)
+            */}
+            <div className="coin-scene" ref={sceneRef}>
               <div
                 key={`shadow-${tossKey}`}
-                className={`coin-shadow ${showResult ? '' : 'animate-coinShadowToss'}`}
+                className={`coin-shadow ${showResult ? '' : 'is-tossing'}`}
                 style={
                   showResult
-                    ? { transform: 'translateX(-50%) scale(1)', opacity: 0.9 }
+                    ? { transform: 'translateX(-50%) scaleX(1) scaleY(1)', opacity: 0.9 }
                     : undefined
                 }
               />
               <div
-                key={`flight-${tossKey}`}
-                className={`coin-flight ${showResult ? '' : 'animate-coinTossArc'}`}
-                style={
-                  showResult
-                    ? { transform: 'translateY(0) scale(1)' }
-                    : undefined
-                }
+                key={`wrapper-${tossKey}`}
+                className={`coin-wrapper ${showResult ? '' : 'is-tossing'}`}
+                style={showResult ? { transform: 'translateY(0)' } : undefined}
               >
                 <div
-                  key={`spin-${tossKey}`}
-                  className={`coin-container ${
-                    winner === 0 ? 'animate-coinSpinHeads' : 'animate-coinSpinTails'
-                  } ${showResult ? '' : 'is-spinning'}`}
-                  style={
-                    showResult
-                      ? {
-                          transform:
-                            winner === 0
-                              ? 'rotateX(0deg) rotateY(2880deg)'
-                              : 'rotateX(0deg) rotateY(3060deg)',
-                        }
-                      : undefined
-                  }
+                  key={`coin-${tossKey}`}
+                  className={`coin ${
+                    winner === 0 ? 'coin--heads' : 'coin--tails'
+                  } ${showResult ? '' : 'is-tossing'}`}
+                  style={showResult ? { transform: landedSpin } : undefined}
                 >
                   <div className="coin-rim" aria-hidden>
                     {rimNodes}
                   </div>
                   <div className="coin-side heads">
-                    <div className="coin-face" role="img" aria-label={`Face A — ${contestants[0].name}`}>
+                    <div
+                      className="coin-face"
+                      role="img"
+                      aria-label={`Face A — ${contestants[0].name}`}
+                    >
                       {faceA ? (
-                        <img className="coin-face-img" src={faceA} alt={contestants[0].name} draggable={false} />
+                        <img
+                          className="coin-face-img"
+                          src={faceA}
+                          alt={contestants[0].name}
+                          draggable={false}
+                        />
                       ) : null}
                     </div>
                     <div className="coin-face-ring" aria-hidden />
                     <div className="coin-glint" />
                   </div>
                   <div className="coin-side tails">
-                    <div className="coin-face" role="img" aria-label={`Face B — ${contestants[1].name}`}>
+                    <div
+                      className="coin-face"
+                      role="img"
+                      aria-label={`Face B — ${contestants[1].name}`}
+                    >
                       {faceB ? (
-                        <img className="coin-face-img" src={faceB} alt={contestants[1].name} draggable={false} />
+                        <img
+                          className="coin-face-img"
+                          src={faceB}
+                          alt={contestants[1].name}
+                          draggable={false}
+                        />
                       ) : null}
                     </div>
                     <div className="coin-face-ring" aria-hidden />

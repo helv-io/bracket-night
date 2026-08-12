@@ -324,11 +324,10 @@ a {
   }
 
   /* Host TV coin toss keeps its full cinematic 3-layer toss */
-  .animate-coinTossArc,
-  .animate-coinSpinHeads,
-  .animate-coinSpinTails,
-  .animate-coinShadowToss {
-    animation-duration: 3s !important;
+  .coin-wrapper.is-tossing,
+  .coin.is-tossing,
+  .coin-shadow.is-tossing {
+    animation-duration: 2.4s !important;
     animation-iteration-count: 1 !important;
   }
 }

@@ -133,36 +133,44 @@
   }
 
   .coin-scene {
-    /* Chunky disk: two contestant faces + continuous metallic cylinder rim */
+    /* Thick mass: contestant photo faces + continuous metallic cylinder rim */
     --coin-size: min(46vw, 340px);
     --coin-thickness: 72px;
     --coin-half: calc(var(--coin-thickness) / 2);
+    --toss-ms: 2.4s;
     position: relative;
     width: var(--coin-size);
     height: var(--coin-size);
     max-width: 340px;
     max-height: 340px;
+    margin-top: 2.5rem; /* room for the upward arc */
+    margin-bottom: 1.5rem;
     transform-style: preserve-3d;
     perspective: 1200px;
   }
 
-  /* Layer 1 — floor shadow (shrinks as coin rises) */
+  /* ——— Layer 1: ground shadow (shrinks while airborne) ——— */
   .coin-shadow {
     position: absolute;
     left: 50%;
-    bottom: -22%;
-    width: 78%;
-    height: 20%;
-    transform: translateX(-50%);
-    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.75), transparent 70%);
-    filter: blur(5px);
+    bottom: -18%;
+    width: 72%;
+    height: 18%;
+    transform: translateX(-50%) scaleX(1) scaleY(1);
+    transform-origin: center center;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.78), transparent 70%);
+    filter: blur(6px);
     opacity: 0.9;
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Layer 2 — parabolic Y arc */
-  .coin-flight {
+  .coin-shadow.is-tossing {
+    animation: coinShadowToss var(--toss-ms) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  /* ——— Layer 2: Y-only parabolic toss UP ——— */
+  .coin-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
@@ -171,8 +179,12 @@
     z-index: 1;
   }
 
-  /* Layer 3 — spin (rotateY / slight rotateX) */
-  .coin-container {
+  .coin-wrapper.is-tossing {
+    animation: coinTossArc var(--toss-ms) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  /* ——— Layer 3: spin only (rotateY) ——— */
+  .coin {
     position: relative;
     width: 100%;
     height: 100%;
@@ -180,9 +192,17 @@
     will-change: transform;
   }
 
-  /* Never put filter/opacity on .coin-container — flattens preserve-3d */
-  .coin-container.is-spinning .coin-face {
-    filter: saturate(1.15) contrast(1.08) brightness(1.04);
+  .coin.is-tossing.coin--heads {
+    animation: coinFlipHeads var(--toss-ms) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  .coin.is-tossing.coin--tails {
+    animation: coinFlipTails var(--toss-ms) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
+  /* Never put filter/opacity on .coin — flattens preserve-3d */
+  .coin.is-tossing .coin-face-img {
+    filter: saturate(1.12) contrast(1.06) brightness(1.03);
   }
 
   .coin-side {
@@ -194,8 +214,8 @@
     overflow: hidden;
     transform-style: preserve-3d;
     box-shadow:
-      0 0 0 2px rgba(255, 220, 140, 0.55),
-      0 0 0 5px rgba(90, 55, 10, 0.4),
+      0 0 0 2px rgba(255, 220, 140, 0.65),
+      0 0 0 6px rgba(90, 55, 10, 0.45),
       0 18px 40px rgba(0, 0, 0, 0.55),
       inset 0 0 36px rgba(255, 220, 140, 0.1);
   }
@@ -206,13 +226,13 @@
     inset: 0;
     border-radius: 50%;
     background:
-      radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.22), transparent 30%),
+      radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.2), transparent 30%),
       radial-gradient(circle at 72% 78%, rgba(0, 0, 0, 0.28), transparent 38%);
     pointer-events: none;
     z-index: 3;
   }
 
-  /* Contestant photo faces — cover-fit circles (NOT coin-a/b.jpg) */
+  /* Contestant photo faces — cover-fit circles inside gold rim (NOT coin-a/b.jpg) */
   .coin-face {
     position: absolute;
     inset: 0;
@@ -239,8 +259,9 @@
     pointer-events: none;
     z-index: 4;
     box-shadow:
-      inset 0 0 0 3px rgba(232, 196, 106, 0.75),
-      inset 0 0 18px rgba(90, 55, 10, 0.35);
+      inset 0 0 0 4px rgba(232, 196, 106, 0.85),
+      inset 0 0 0 7px rgba(90, 55, 10, 0.45),
+      inset 0 0 22px rgba(90, 55, 10, 0.35);
   }
 
   .heads {
@@ -391,104 +412,85 @@
 }
 
 @layer utilities {
-  /* Layer 2 — upward parabolic toss */
+  /*
+   * Layer 2 — upward parabolic toss (Y only):
+   * crouch → rise ~200px → apex hang → fall → micro-bounce
+   */
   @keyframes coinTossArc {
     0% {
-      transform: translateY(56px) scale(0.9);
+      transform: translateY(28px);
     }
-    18% {
-      transform: translateY(-210px) scale(1.06);
+    8% {
+      transform: translateY(40px); /* crouch */
     }
-    42% {
-      transform: translateY(-48px) scale(1);
+    35% {
+      transform: translateY(-200px); /* rise */
     }
-    68% {
-      transform: translateY(-150px) scale(1.04);
+    48% {
+      transform: translateY(-210px); /* apex hang */
     }
-    86% {
-      transform: translateY(10px) scale(0.98);
+    62% {
+      transform: translateY(-200px);
     }
-    93% {
-      transform: translateY(-16px) scale(1.02);
+    82% {
+      transform: translateY(8px); /* land */
+    }
+    90% {
+      transform: translateY(-18px); /* micro-bounce */
     }
     100% {
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
   }
 
-  /* Layer 3 — spin only (no translateY) */
-  @keyframes coinSpinHeads {
+  /* Layer 3 — rotateY flip only (even half-turns = heads) */
+  @keyframes coinFlipHeads {
     0% {
-      transform: rotateX(14deg) rotateY(0deg);
-    }
-    18% {
-      transform: rotateX(-8deg) rotateY(540deg);
-    }
-    42% {
-      transform: rotateX(10deg) rotateY(1260deg);
-    }
-    68% {
-      transform: rotateX(-6deg) rotateY(1980deg);
-    }
-    86% {
-      transform: rotateX(4deg) rotateY(2520deg);
-    }
-    93% {
-      transform: rotateX(-2deg) rotateY(2750deg);
+      transform: rotateY(0deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(2880deg);
+      transform: rotateY(2880deg); /* 8 turns */
     }
   }
 
-  @keyframes coinSpinTails {
+  /* Odd half-turn = tails */
+  @keyframes coinFlipTails {
     0% {
-      transform: rotateX(14deg) rotateY(0deg);
-    }
-    18% {
-      transform: rotateX(-8deg) rotateY(630deg);
-    }
-    42% {
-      transform: rotateX(10deg) rotateY(1350deg);
-    }
-    68% {
-      transform: rotateX(-6deg) rotateY(2070deg);
-    }
-    86% {
-      transform: rotateX(4deg) rotateY(2610deg);
-    }
-    93% {
-      transform: rotateX(-2deg) rotateY(2840deg);
+      transform: rotateY(0deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(3060deg);
+      transform: rotateY(3060deg); /* 8.5 turns */
     }
   }
 
   /* Layer 1 — shadow shrinks at apex, grows on land */
   @keyframes coinShadowToss {
     0% {
-      transform: translateX(-50%) scale(1.15);
+      transform: translateX(-50%) scaleX(1.05) scaleY(1);
       opacity: 0.88;
     }
-    18% {
-      transform: translateX(-50%) scale(0.42);
+    8% {
+      transform: translateX(-50%) scaleX(1.12) scaleY(1);
+      opacity: 0.9;
+    }
+    35% {
+      transform: translateX(-50%) scaleX(0.38) scaleY(0.7);
       opacity: 0.28;
     }
-    42% {
-      transform: translateX(-50%) scale(0.78);
-      opacity: 0.55;
+    48% {
+      transform: translateX(-50%) scaleX(0.34) scaleY(0.65);
+      opacity: 0.22;
     }
-    68% {
-      transform: translateX(-50%) scale(0.5);
-      opacity: 0.34;
+    82% {
+      transform: translateX(-50%) scaleX(1.08) scaleY(1);
+      opacity: 0.85;
     }
-    86% {
-      transform: translateX(-50%) scale(1.05);
-      opacity: 0.82;
+    90% {
+      transform: translateX(-50%) scaleX(0.92) scaleY(0.95);
+      opacity: 0.75;
     }
     100% {
-      transform: translateX(-50%) scale(1);
+      transform: translateX(-50%) scaleX(1) scaleY(1);
       opacity: 0.9;
     }
   }
@@ -566,33 +568,24 @@
     }
   }
 
-  .animate-coinTossArc {
-    animation: coinTossArc 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
-  }
-
-  .animate-coinSpinHeads {
-    animation: coinSpinHeads 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
-  }
-
-  .animate-coinSpinTails {
-    animation: coinSpinTails 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
-  }
-
-  .animate-coinShadowToss {
-    animation: coinShadowToss 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
-  }
-
   .animate-coinFadeIn {
     animation: coinFadeIn 0.45s ease both;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Keep the coin spin (host TV moment); only quiet decorative noise */
   .coin-toss-spotlight,
   .coin-spark,
   .coin-glint {
     animation: none !important;
+  }
+
+  /* Keep full toss duration on host TV */
+  .coin-wrapper.is-tossing,
+  .coin.is-tossing,
+  .coin-shadow.is-tossing {
+    animation-duration: 2.4s !important;
+    animation-iteration-count: 1 !important;
   }
 }
 
