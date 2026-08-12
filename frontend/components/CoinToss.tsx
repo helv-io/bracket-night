@@ -108,10 +108,12 @@ export default function CoinToss({
     }, holdMs)
   }
 
-  // Reduced-motion path: skip long spin, reveal quickly
+  // Drive reveal from a timer matched to the CSS spin (more reliable than
+  // animationend, which can fire early under prefers-reduced-motion clamps).
   useEffect(() => {
-    if (!isTossing || !prefersReducedMotion()) return
-    const t = window.setTimeout(handleAnimationEnd, 650)
+    if (!isTossing) return
+    const ms = prefersReducedMotion() ? 650 : 3200
+    const t = window.setTimeout(handleAnimationEnd, ms)
     return () => window.clearTimeout(t)
   }, [isTossing, tossKey])
 
@@ -227,13 +229,6 @@ export default function CoinToss({
                 className={`coin-container ${
                   winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
                 } ${showResult ? '' : 'is-spinning'}`}
-                onAnimationEnd={(e) => {
-                  // Ignore bubbled ends from glints/sparks; only the spin keyframes count.
-                  if (e.target !== e.currentTarget) return
-                  const name = e.animationName || ''
-                  if (!name.includes('spinToHeads') && !name.includes('spinToTails')) return
-                  handleAnimationEnd()
-                }}
               >
                 <div className="coin-edge" aria-hidden>
                   {edgeNodes}
