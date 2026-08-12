@@ -163,7 +163,6 @@ export default function CoinToss({
 
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTossing, tossKey, winner])
 
   const winnerContestant = contestants[winner]
