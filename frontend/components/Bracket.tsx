@@ -175,15 +175,15 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
 
         if (isActive) {
           // Bright neon gold — high contrast vs dark empty plate
-          stroke('rgba(255, 229, 102, 0.45)', 16, 32)
-          stroke('rgba(255, 236, 150, 0.95)', 7, 18)
-          stroke('rgba(255, 252, 220, 1)', 3, 8)
+          stroke('rgba(255, 220, 80, 0.55)', 18, 36)
+          stroke('rgba(255, 236, 140, 1)', 8, 20)
+          stroke('#fff8d0', 3.5, 10)
         } else if (completed) {
-          stroke('rgba(255, 214, 102, 0.4)', 8, 16)
-          stroke('rgba(255, 230, 140, 0.95)', 3.5, 10)
+          stroke('rgba(255, 214, 102, 0.5)', 9, 18)
+          stroke('rgba(255, 230, 140, 1)', 4, 12)
         } else {
-          stroke('rgba(255, 214, 102, 0.35)', 6, 14)
-          stroke('rgba(255, 228, 150, 0.88)', 2.75, 8)
+          stroke('rgba(255, 214, 102, 0.42)', 7, 16)
+          stroke('rgba(255, 232, 150, 0.95)', 3.25, 10)
         }
       }
 
