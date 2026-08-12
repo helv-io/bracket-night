@@ -371,7 +371,7 @@ a {
   .animate-coinSpinHeads,
   .animate-coinSpinTails,
   .animate-coinShadowToss {
-    animation-duration: 3s !important;
+    animation-duration: 3.2s !important;
     animation-iteration-count: 1 !important;
   }
 }
