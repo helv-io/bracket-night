@@ -24,16 +24,21 @@ const CONNECTIONS: Array<{ from: number; to: number; leftSide: boolean }> = [
   { from: 13, to: 14, leftSide: false },
 ]
 
-/** Column headers aligned with matchup columns (same left % as cards). */
-const ROUND_COLUMNS: Array<{ label: string; left: string }> = [
-  { label: 'Round of 16', left: '0%' },
-  { label: 'QF', left: '15%' },
-  { label: 'SF', left: '30%' },
-  { label: 'Finals', left: '45%' },
-  { label: 'SF', left: '60%' },
-  { label: 'QF', left: '75%' },
-  { label: 'Round of 16', left: '90%' },
+/**
+ * Seven column centers across a padded field (0%…100%).
+ * Slots/labels use translateX(-50%) so left/right gutters stay equal.
+ */
+const ROUND_COLUMNS: Array<{ label: string; x: string }> = [
+  { label: 'Round of 16', x: '0%' },
+  { label: 'QF', x: `${(1 / 6) * 100}%` },
+  { label: 'SF', x: `${(2 / 6) * 100}%` },
+  { label: 'Finals', x: '50%' },
+  { label: 'SF', x: `${(4 / 6) * 100}%` },
+  { label: 'QF', x: `${(5 / 6) * 100}%` },
+  { label: 'Round of 16', x: '100%' },
 ]
+
+const COLUMN_X = ROUND_COLUMNS.map((c) => c.x)
 
 function pathToCurrent(currentMatchupIndex: number): Set<string> {
   const active = new Set<string>()
@@ -146,6 +151,34 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         return { x, y }
       }
 
+      /** Orthogonal elbow path: out → vertical spine → into target. */
+      const strokeElbow = (
+        fromPos: { x: number; y: number },
+        toPos: { x: number; y: number },
+        color: string,
+        widthPx: number,
+        blur = 0
+      ) => {
+        const midX = fromPos.x + (toPos.x - fromPos.x) * 0.5
+        ctx.save()
+        ctx.strokeStyle = color
+        ctx.lineWidth = widthPx
+        ctx.lineCap = 'square'
+        ctx.lineJoin = 'miter'
+        ctx.miterLimit = 2
+        if (blur) {
+          ctx.shadowColor = color
+          ctx.shadowBlur = blur
+        }
+        ctx.beginPath()
+        ctx.moveTo(fromPos.x, fromPos.y)
+        ctx.lineTo(midX, fromPos.y)
+        ctx.lineTo(midX, toPos.y)
+        ctx.lineTo(toPos.x, toPos.y)
+        ctx.stroke()
+        ctx.restore()
+      }
+
       const drawConnection = (fromIndex: number, toIndex: number, isLeftSide: boolean) => {
         const fromSide = isLeftSide ? 'right' : 'left'
         const toSide = isLeftSide ? 'left' : 'right'
@@ -159,40 +192,20 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
 
         const fromPos = getPosition(fromElement, fromSide)
         const toPos = getPosition(toElement, toSide)
-        const dx = toPos.x - fromPos.x
-        const d = 0.2 * Math.abs(dx)
-        const cp1x = dx > 0 ? fromPos.x + d : fromPos.x - d
-        const cp2x = dx > 0 ? toPos.x - d : toPos.x + d
         const key = `${fromIndex}-${toIndex}`
         const completed = Boolean(matchups[fromIndex]?.winner)
         const isActive = activePaths.has(key)
 
-        const stroke = (color: string, widthPx: number, blur = 0) => {
-          ctx.save()
-          ctx.strokeStyle = color
-          ctx.lineWidth = widthPx
-          ctx.lineCap = 'round'
-          if (blur) {
-            ctx.shadowColor = color
-            ctx.shadowBlur = blur
-          }
-          ctx.beginPath()
-          ctx.moveTo(fromPos.x, fromPos.y)
-          ctx.bezierCurveTo(cp1x, fromPos.y, cp2x, toPos.y, toPos.x, toPos.y)
-          ctx.stroke()
-          ctx.restore()
-        }
-
         if (isActive) {
-          stroke('rgba(255, 220, 80, 0.55)', 18, 36)
-          stroke('rgba(255, 236, 140, 1)', 8, 20)
-          stroke('#fff8d0', 3.5, 10)
+          strokeElbow(fromPos, toPos, 'rgba(255, 220, 80, 0.55)', 18, 36)
+          strokeElbow(fromPos, toPos, 'rgba(255, 236, 140, 1)', 8, 20)
+          strokeElbow(fromPos, toPos, '#fff8d0', 3.5, 10)
         } else if (completed) {
-          stroke('rgba(255, 214, 102, 0.5)', 9, 18)
-          stroke('rgba(255, 230, 140, 1)', 4, 12)
+          strokeElbow(fromPos, toPos, 'rgba(255, 214, 102, 0.5)', 9, 18)
+          strokeElbow(fromPos, toPos, 'rgba(255, 230, 140, 1)', 4, 12)
         } else {
-          stroke('rgba(255, 214, 102, 0.42)', 7, 16)
-          stroke('rgba(255, 232, 150, 0.95)', 3.25, 10)
+          strokeElbow(fromPos, toPos, 'rgba(255, 214, 102, 0.42)', 7, 16)
+          strokeElbow(fromPos, toPos, 'rgba(255, 232, 150, 0.95)', 3.25, 10)
         }
       }
 
@@ -202,13 +215,18 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     }
 
     drawLines()
+    // Re-draw after fonts/layout settle so elbows hit card edges accurately
+    const raf = window.requestAnimationFrame(drawLines)
     window.addEventListener('resize', drawLines)
-    return () => window.removeEventListener('resize', drawLines)
+    return () => {
+      window.cancelAnimationFrame(raf)
+      window.removeEventListener('resize', drawLines)
+    }
   }, [matchups, currentMatchupIndex])
 
   const place = (
     items: Matchup[],
-    left: string,
+    columnIndex: number,
     topForIndex: (index: number) => string
   ) =>
     items.map((matchup, index) => (
@@ -217,7 +235,7 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         data-matchup-id={matchup.id}
         className="bracket-slot"
         style={{
-          left,
+          left: COLUMN_X[columnIndex],
           top: topForIndex(index),
         }}
       >
@@ -235,9 +253,9 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       <div className="bracket-round-row" aria-hidden>
         {ROUND_COLUMNS.map((col) => (
           <div
-            key={`${col.label}-${col.left}`}
+            key={`${col.label}-${col.x}`}
             className="bracket-round-label"
-            style={{ left: col.left }}
+            style={{ left: col.x }}
           >
             {col.label}
           </div>
@@ -245,13 +263,13 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       </div>
 
       <div className="bracket-field">
-        {place(matchups.slice(0, 4), '0%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
-        {place(matchups.slice(4, 8), '90%', (i) => `${((2 * i + 1) / 8) * 100}%`)}
-        {place(matchups.slice(8, 10), '15%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
-        {place(matchups.slice(10, 12), '75%', (i) => `${((4 * i + 2) / 8) * 100}%`)}
-        {place(matchups.slice(12, 13), '30%', () => '50%')}
-        {place(matchups.slice(13, 14), '60%', () => '50%')}
-        {place(matchups.slice(14, 15), '45%', () => '50%')}
+        {place(matchups.slice(0, 4), 0, (i) => `${((2 * i + 1) / 8) * 100}%`)}
+        {place(matchups.slice(4, 8), 6, (i) => `${((2 * i + 1) / 8) * 100}%`)}
+        {place(matchups.slice(8, 10), 1, (i) => `${((4 * i + 2) / 8) * 100}%`)}
+        {place(matchups.slice(10, 12), 5, (i) => `${((4 * i + 2) / 8) * 100}%`)}
+        {place(matchups.slice(12, 13), 2, () => '50%')}
+        {place(matchups.slice(13, 14), 4, () => '50%')}
+        {place(matchups.slice(14, 15), 3, () => '50%')}
       </div>
     </div>
   )

@@ -72,7 +72,9 @@ a {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 0.35rem 0.75rem 0.5rem;
+  /* Comfortable top air for logo; equal side padding (avoid scrollbar asymmetry) */
+  padding: 1.15rem 1.25rem 0.55rem;
+  scrollbar-gutter: auto;
 }
 
 .host-chrome {
@@ -83,7 +85,8 @@ a {
 .host-chrome--top {
   display: flex;
   justify-content: center;
-  padding-bottom: 0.15rem;
+  padding-top: 0.15rem;
+  padding-bottom: 0.45rem;
 }
 
 .host-chrome--bottom {

@@ -7,7 +7,7 @@
     "build": "npx esbuild ./src/server.ts --bundle --minify --platform=node --outfile=./dist/server.js --packages=external",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "test": "ts-node src/security.test.ts",
+    "test": "ts-node src/security.test.ts && ts-node src/game.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

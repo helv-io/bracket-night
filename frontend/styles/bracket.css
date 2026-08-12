@@ -1,5 +1,8 @@
 @layer components {
   .bracket-stage {
+    --matchup-card-width: clamp(118px, 9.2vw, 152px);
+    /* Half-card + gutter so center-anchored outer columns keep equal L/R air */
+    --bracket-inline-pad: calc(var(--matchup-card-width) / 2 + clamp(0.35rem, 1.2vw, 1rem));
     position: absolute;
     inset: 0;
     width: 100%;
@@ -17,21 +20,23 @@
     pointer-events: none;
   }
 
-  /* Single baseline for all round labels, aligned with column lefts */
+  /* Single baseline for all round labels, center-aligned with columns */
   .bracket-round-row {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 2.1rem;
+    left: var(--bracket-inline-pad);
+    right: var(--bracket-inline-pad);
+    top: 0.35rem;
+    height: 2.25rem;
     z-index: 2;
     pointer-events: none;
   }
 
   .bracket-round-label {
     position: absolute;
-    top: 0.15rem;
-    width: var(--matchup-card-width, 152px);
+    top: 0.2rem;
+    left: 0;
+    width: var(--matchup-card-width);
+    transform: translateX(-50%);
     z-index: 2;
     font-family: var(--font-display);
     letter-spacing: 0.14em;
@@ -48,24 +53,24 @@
     text-overflow: ellipsis;
   }
 
-  /* Matchup field sits below the label row so labels never overlap cards */
+  /* Matchup field sits below the label row; same horizontal pad as labels */
   .bracket-field {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 2.15rem;
+    left: var(--bracket-inline-pad);
+    right: var(--bracket-inline-pad);
+    top: 2.65rem;
     bottom: 0;
     z-index: 1;
   }
 
   .bracket-slot {
     position: absolute;
-    transform: translateY(-50%);
+    /* Center-anchored columns → symmetric left/right breathing room */
+    transform: translate(-50%, -50%);
     z-index: 1;
   }
 
   .matchup-card {
-    --matchup-card-width: clamp(118px, 9.2vw, 152px);
     width: var(--matchup-card-width);
     min-height: clamp(96px, 14vh, 124px);
     padding: 0.45rem 0.5rem;

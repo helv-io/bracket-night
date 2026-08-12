@@ -64,13 +64,10 @@ const Home = () => {
 
     socket.emit('create_game')
 
-    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
-      const votes = currentVotesRef.current
-      const leftVotes = votes.filter((v) => v.choice === 0).length
-      const rightVotes = votes.filter((v) => v.choice === 1).length
+    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex, wasTie }) => {
       const prevIndex = currentMatchupIndex - 1
-      const wasTie = votes.length > 0 && leftVotes === rightVotes
 
+      // Prefer server wasTie — client vote refs race with the preceding game_state.
       if (wasTie && prevIndex >= 0) {
         const completed = matchups[prevIndex] as Matchup
         if (completed?.left && completed?.right && completed.winner) {
@@ -85,8 +82,11 @@ const Home = () => {
       }
 
       setMatchups(matchups)
+      matchupsRef.current = matchups
       setCurrentMatchupIndex(currentMatchupIndex)
+      currentMatchupIndexRef.current = currentMatchupIndex
       setCurrentVotes([])
+      currentVotesRef.current = []
 
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
@@ -106,9 +106,12 @@ const Home = () => {
         setGameId(gameId)
         setBracket(bracket)
         setMatchups(matchups)
+        matchupsRef.current = matchups
         setCurrentMatchupIndex(currentMatchupIndex)
+        currentMatchupIndexRef.current = currentMatchupIndex
         setPlayers(players)
         setCurrentVotes(currentVotes)
+        currentVotesRef.current = currentVotes
         setIsGameStarted(isGameStarted)
         setIsGameOver(isGameOver)
       }

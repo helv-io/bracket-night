@@ -171,7 +171,10 @@ export class Game {
     const currentMatchup = game.matchups[game.currentMatchupIndex]
     const leftVotes = game.currentVotes.filter(v => v.choice === 0).length
     const rightVotes = game.currentVotes.filter(v => v.choice === 1).length
-    
+    // Authoritative tie flag — clients must not reconstruct this from vote refs
+    // (game_state + matchup_advanced race leaves React refs one vote behind).
+    const wasTie = leftVotes === rightVotes
+
     // Randomly select a winner if there's a tie
     const winner = leftVotes > rightVotes
       ? currentMatchup.left
@@ -197,7 +200,8 @@ export class Game {
     game.currentMatchupIndex++
     this.io.to(gameId).emit('matchup_advanced', {
       matchups: game.matchups,
-      currentMatchupIndex: game.currentMatchupIndex
+      currentMatchupIndex: game.currentMatchupIndex,
+      wasTie,
     })
   }
 }

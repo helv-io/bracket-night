@@ -55,15 +55,12 @@ const Join = () => {
 
     socket.on('vote_cast', ({ currentVotes, players }) => {
       setCurrentVotes(currentVotes)
+      currentVotesRef.current = currentVotes
       setPlayers(players)
     })
 
-    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex }) => {
-      const votes = currentVotesRef.current
-      const leftVotes = votes.filter((v) => v.choice === 0).length
-      const rightVotes = votes.filter((v) => v.choice === 1).length
+    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex, wasTie }) => {
       const prevIndex = currentMatchupIndex - 1
-      const wasTie = votes.length > 0 && leftVotes === rightVotes
 
       if (wasTie && prevIndex >= 0) {
         const completed = matchups[prevIndex] as Matchup
@@ -74,6 +71,7 @@ const Join = () => {
       setMatchups(matchups)
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
+      currentVotesRef.current = []
       if (currentMatchupIndex === 15) setIsGameOver(true)
     })
 
@@ -98,6 +96,7 @@ const Join = () => {
         setCurrentMatchupIndex(currentMatchupIndex)
         setPlayers(players)
         setCurrentVotes(currentVotes)
+        currentVotesRef.current = currentVotes
         setIsGameStarted(isGameStarted)
         setIsGameOver(isGameOver)
       }

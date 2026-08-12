@@ -20,5 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Production Socket.IO CORS; safer image URL fetching
+- Host TV: top breathing room for logo + round labels; true horizontal centering
+- Bracket connectors use square orthogonal elbows
+- Tie → coin toss: server emits `wasTie` so the host cinematic always fires (client vote-ref race)
 
 [0.1.0]: https://github.com/helv-io/bracket-night/releases/tag/v0.1.0
