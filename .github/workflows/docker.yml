@@ -1,15 +1,25 @@
-# Multi-arch publish to Docker Hub (helvio/bracket-night).
+# Build multi-arch images and publish to Docker Hub (helvio/*).
 #
-# Variables: DOCKERHUB_USERNAME
-# Secrets: DOCKERHUB_TOKEN
+# Required repository configuration:
 #
-# Version with semver tags: git tag v0.1.0 && git push origin v0.1.0
+#   Variables (Settings → Secrets and variables → Actions → Variables):
+#     DOCKERHUB_USERNAME   Docker Hub username (e.g. helvio)
+#     (falls back to Secret DOCKERHUB_USERNAME if Variable unset)
+#
+#   Secrets (Settings → Secrets and variables → Actions → Secrets):
+#     DOCKERHUB_TOKEN      Docker Hub access token (not password)
+#
+# Image: docker.io/<DOCKERHUB_USERNAME>/bracket-night
+# Platforms: linux/amd64, linux/arm64
+#
+# Modeled on helv-io/reelgrab. Also triggers on restore/thick-gold-coin so a
+# pre-merge / test image can publish as branch slug + :test.
 
 name: Docker
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, restore/thick-gold-coin]
     tags: ["v*"]
   pull_request:
     branches: [main, master]
@@ -44,7 +54,7 @@ jobs:
             USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
           fi
           if [ -z "$USERNAME" ]; then
-            echo "DOCKERHUB_USERNAME is not set." >&2
+            echo "DOCKERHUB_USERNAME is not set (repo Variable or Secret)." >&2
             exit 1
           fi
           echo "username=${USERNAME}" >> "$GITHUB_OUTPUT"
@@ -56,11 +66,20 @@ jobs:
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
+            # latest on default branch (reelgrab) + any non-PR push for sole-user testing
             type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+            # semver from git tags: v1.2.3 → 1.2.3, 1.2, 1
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            # branch slug (e.g. restore-thick-gold-coin)
+            type=ref,event=branch
+            # PR number (build only; not pushed)
+            type=ref,event=pr
+            # short SHA
             type=sha,prefix=sha-
+            # explicit test tag from restore branch
+            type=raw,value=test,enable=${{ github.ref == 'refs/heads/restore/thick-gold-coin' }}
 
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
@@ -75,6 +94,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
+          # Push only outside PRs (PRs still multi-arch build as a check)
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
