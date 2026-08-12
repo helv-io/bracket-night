@@ -13,20 +13,23 @@ import express from 'express'
 import http from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
+import rateLimit from 'express-rate-limit'
 
 // Local imports
 import { Game } from './game'
 import { getImageURLs } from './image'
 import { Bracket } from './types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
-import { getContestants } from './ai'
+import { AiUnavailableError, getContestants } from './ai'
+import { getCorsOrigins, requireApiSecret, sanitizeTopic } from './security'
 
 const app = express()
 const server = http.createServer(app)
+const corsOrigin = getCorsOrigins()
 const io = new Server(server,
   {
     cors: {
-      origin: config.dev ? '*' : '',
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
       credentials: true
     }
@@ -54,10 +57,34 @@ app.post('/api/create-bracket', async (req, res) => {
   res.json({ code })
 })
 
+// Strict rate limit for expensive AI + image-search routes
+const expensiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later' }
+})
+
 // API endpoint for AI
-app.get('/api/ai/:topic', async (req, res) => {
-  const contestants = await getContestants(req.params.topic)
-  res.json(contestants)
+app.get('/api/ai/:topic', expensiveLimiter, requireApiSecret, async (req, res) => {
+  const topic = sanitizeTopic(req.params.topic)
+  if (!topic) {
+    res.status(400).json({ error: 'Invalid topic: must be 1–100 characters after sanitization' })
+    return
+  }
+
+  try {
+    const contestants = await getContestants(topic)
+    res.json(contestants)
+  } catch (err) {
+    if (err instanceof AiUnavailableError) {
+      res.status(err.status).json({ error: err.message })
+      return
+    }
+    console.error('AI request failed:', err)
+    res.status(502).json({ error: 'AI request failed' })
+  }
 })
 
 // API endpoint to check if a bracket code is unique
@@ -74,17 +101,17 @@ app.get('/api/public', (_req, res) => {
 })
 
 // Get image URL from a search query
-app.get('/api/image/:topic', async (req, res) => {
-  
-  // Get image URL
-  const images = await getImageURLs(req.params.topic)
-  
-  // Return the image URL or 404 if not found
-  if(images.length) {
-    res.json(images)
-  } else {
-    res.json([ ])
+app.get('/api/image/:topic', expensiveLimiter, requireApiSecret, async (req, res) => {
+  const topic = sanitizeTopic(req.params.topic)
+  if (!topic) {
+    res.status(400).json({ error: 'Invalid topic: must be 1–100 characters after sanitization' })
+    return
   }
+
+  const images = await getImageURLs(topic)
+
+  // Return the image URL or empty list if not found
+  res.json(images.length ? images : [])
 })
 
 const port = config.dev ? 3001 : 3000

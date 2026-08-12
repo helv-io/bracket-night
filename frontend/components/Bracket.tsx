@@ -7,71 +7,108 @@ interface BracketProps {
   currentMatchupIndex: number
 }
 
-const MatchupComponent = ({ matchup, isCurrent }: { matchup: Matchup, isCurrent: boolean }) => {
+const CONNECTIONS: Array<{ from: number; to: number; leftSide: boolean }> = [
+  { from: 0, to: 8, leftSide: true },
+  { from: 1, to: 8, leftSide: true },
+  { from: 2, to: 9, leftSide: true },
+  { from: 3, to: 9, leftSide: true },
+  { from: 8, to: 12, leftSide: true },
+  { from: 9, to: 12, leftSide: true },
+  { from: 12, to: 14, leftSide: true },
+  { from: 4, to: 10, leftSide: false },
+  { from: 5, to: 10, leftSide: false },
+  { from: 6, to: 11, leftSide: false },
+  { from: 7, to: 11, leftSide: false },
+  { from: 10, to: 13, leftSide: false },
+  { from: 11, to: 13, leftSide: false },
+  { from: 13, to: 14, leftSide: false },
+]
+
+/** Seven equal columns: R16 · QF · SF · Finals · SF · QF · R16 */
+const ROUND_LABELS = [
+  'Round of 16',
+  'QF',
+  'SF',
+  'Finals',
+  'SF',
+  'QF',
+  'Round of 16',
+] as const
+
+function pathToCurrent(currentMatchupIndex: number): Set<string> {
+  const active = new Set<string>()
+  for (const c of CONNECTIONS) {
+    if (c.to === currentMatchupIndex || c.from === currentMatchupIndex) {
+      active.add(`${c.from}-${c.to}`)
+    }
+  }
+  return active
+}
+
+const MatchupComponent = ({
+  matchup,
+  isCurrent,
+}: {
+  matchup: Matchup
+  isCurrent: boolean
+}) => {
+  const isComplete = Boolean(matchup.winner)
+  const isPending = !matchup.left && !matchup.right
+
+  const renderSide = (side: 'left' | 'right') => {
+    const contestant = side === 'left' ? matchup.left : matchup.right
+    const isWinner = Boolean(contestant && matchup.winner?.id === contestant.id)
+    const nameClass = [
+      'matchup-name',
+      isCurrent || isWinner ? 'is-strong' : '',
+      isWinner ? 'is-winner' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    return (
+      <div className={`matchup-row ${side === 'right' ? 'is-right' : ''}`}>
+        {contestant?.image_url ? (
+          <img
+            src={contestant.image_url}
+            alt={contestant.name}
+            className={[
+              'matchup-avatar',
+              isCurrent ? 'is-current' : '',
+              isWinner ? 'is-winner' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          />
+        ) : (
+          <div className="matchup-avatar-placeholder">?</div>
+        )}
+        <div className={nameClass} title={contestant?.name || 'TBD'}>
+          {contestant?.name || 'TBD'}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
-      className={`p-2 rounded-lg text-center w-[180px] flex flex-col items-center justify-between h-[140px] shadow-md transition-all duration-300 bg-[var(--card-bg)]
-        ${isCurrent ? 'ring-4 ring-[var(--active)]' : ''}`
-      }
+      className={[
+        'matchup-card',
+        isCurrent ? 'is-current' : '',
+        isComplete ? 'is-complete' : '',
+        isPending ? 'is-pending' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <div className="flex items-center w-full">
-        {matchup.left?.image_url ? (
-          <img
-            src={matchup.left.image_url}
-            alt={matchup.left.name}
-            className={`w-10 h-10 rounded-full mr-2 transition-opacity duration-300
-              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
-              ${matchup.winner?.id === matchup.left?.id
-                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
-                : 'opacity-100'
-              }`
-            }
-          />
-        ) : (
-          <div className="w-8 h-8 mr-2 text-2xl text-[var(--text)] opacity-100">❓</div>
-        )}
-        <div
-          className={`flex-1 text-left transition-colors duration-300 
-            ${isCurrent ? 'font-bold' : ''}
-            ${matchup.winner?.id === matchup.left?.id
-              ? 'text-[var(--winner-highlight)] font-bold'
-              : 'text-gray-400'}`
-          }
-        >
-          {matchup.left?.name || ''}
-        </div>
-      </div>
-      <div className="text-[var(--accent)] font-bold text-lg">🆚</div>
-      <div className="flex items-center w-full">
-        <div
-          className={`flex-1 text-right transition-colors duration-300
-            ${isCurrent ? 'font-bold' : ''}
-            ${matchup.winner?.id === matchup.right?.id
-              ? 'text-[var(--winner-highlight)] font-bold'
-              : 'text-gray-400'
-            }`
-          }
-        >
-          {matchup.right?.name || ''}
-        </div>
-        {matchup.right?.image_url ? (
-          <img
-            src={matchup.right.image_url}
-            alt={matchup.right.name}
-            className={`w-10 h-10 rounded-full ml-2 transition-opacity duration-300
-              ${isCurrent ? 'border-2 border-[var(--active)]' : ''}
-              ${matchup.winner?.id === matchup.right?.id
-                ? 'opacity-100 border-4 border-[var(--winner-highlight)]'
-                : 'opacity-100'
-            }`}
-          />
-        ) : (
-          <div className="w-8 h-8 ml-2 text-2xl text-[var(--text)] opacity-100">❔</div>
-        )}
-      </div>
+      {renderSide('left')}
+      <div className="matchup-vs">VS</div>
+      {renderSide('right')}
     </div>
   )
 }
+
+type Slot = { matchup: Matchup; top: string }
 
 const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -86,17 +123,23 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
       const ctx = canvas.getContext('2d')
       if (!ctx) return
 
-      canvas.width = container.clientWidth
-      canvas.height = container.clientHeight
+      const dpr = window.devicePixelRatio || 1
+      const width = container.clientWidth
+      const height = container.clientHeight
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, width, height)
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Same as --active from css
-      ctx.strokeStyle = '#dbfd1c'
-      ctx.lineWidth = 5
+      const activePaths = pathToCurrent(currentMatchupIndex)
 
       const getPosition = (element: HTMLElement, side: 'left' | 'right' | 'center') => {
-        const rect = element.getBoundingClientRect()
+        // Prefer the fixed card box so wrappers/labels never skew elbows
+        const card =
+          (element.querySelector('.matchup-card') as HTMLElement | null) || element
+        const rect = card.getBoundingClientRect()
         const containerRect = container.getBoundingClientRect()
         let x
         if (side === 'left') {
@@ -110,177 +153,150 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         return { x, y }
       }
 
+      /** Orthogonal elbow: horizontal stub → vertical spine (mid-gap) → stub into target. */
+      const strokeElbow = (
+        fromPos: { x: number; y: number },
+        toPos: { x: number; y: number },
+        color: string,
+        widthPx: number,
+        blur = 0
+      ) => {
+        // Center the vertical spine in the gap between facing card edges
+        const spineX = (fromPos.x + toPos.x) / 2
+        ctx.save()
+        ctx.strokeStyle = color
+        ctx.lineWidth = widthPx
+        ctx.lineCap = 'square'
+        ctx.lineJoin = 'miter'
+        ctx.miterLimit = 2.5
+        if (blur) {
+          ctx.shadowColor = color
+          ctx.shadowBlur = blur
+        }
+        ctx.beginPath()
+        ctx.moveTo(fromPos.x, fromPos.y)
+        ctx.lineTo(spineX, fromPos.y)
+        ctx.lineTo(spineX, toPos.y)
+        ctx.lineTo(toPos.x, toPos.y)
+        ctx.stroke()
+        ctx.restore()
+      }
+
       const drawConnection = (fromIndex: number, toIndex: number, isLeftSide: boolean) => {
         const fromSide = isLeftSide ? 'right' : 'left'
         const toSide = isLeftSide ? 'left' : 'right'
-        const fromElement = container.querySelector(`[data-matchup-id="${matchups[fromIndex].id}"]`) as HTMLElement
-        const toElement = container.querySelector(`[data-matchup-id="${matchups[toIndex].id}"]`) as HTMLElement
+        const fromElement = container.querySelector(
+          `[data-matchup-id="${matchups[fromIndex].id}"]`
+        ) as HTMLElement
+        const toElement = container.querySelector(
+          `[data-matchup-id="${matchups[toIndex].id}"]`
+        ) as HTMLElement
         if (!fromElement || !toElement) return
 
         const fromPos = getPosition(fromElement, fromSide)
         const toPos = getPosition(toElement, toSide)
+        const key = `${fromIndex}-${toIndex}`
+        const completed = Boolean(matchups[fromIndex]?.winner)
+        const isActive = activePaths.has(key)
 
-        const dx = toPos.x - fromPos.x
-        const d = 0.2 * Math.abs(dx)
-        let cp1x, cp1y, cp2x, cp2y
-
-        if (dx > 0) { // Left to right
-          cp1x = fromPos.x + d
-          cp1y = fromPos.y
-          cp2x = toPos.x - d
-          cp2y = toPos.y
-        } else { // Right to left
-          cp1x = fromPos.x - d
-          cp1y = fromPos.y
-          cp2x = toPos.x + d
-          cp2y = toPos.y
+        if (isActive) {
+          strokeElbow(fromPos, toPos, 'rgba(255, 220, 80, 0.55)', 18, 36)
+          strokeElbow(fromPos, toPos, 'rgba(255, 236, 140, 1)', 8, 20)
+          strokeElbow(fromPos, toPos, '#fff8d0', 3.5, 10)
+        } else if (completed) {
+          strokeElbow(fromPos, toPos, 'rgba(255, 214, 102, 0.5)', 9, 18)
+          strokeElbow(fromPos, toPos, 'rgba(255, 230, 140, 1)', 4, 12)
+        } else {
+          strokeElbow(fromPos, toPos, 'rgba(255, 214, 102, 0.42)', 7, 16)
+          strokeElbow(fromPos, toPos, 'rgba(255, 232, 150, 0.95)', 3.25, 10)
         }
-
-        ctx.beginPath()
-        ctx.moveTo(fromPos.x, fromPos.y)
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, toPos.x, toPos.y)
-        ctx.stroke()
       }
 
-      // Left-side connections
-      drawConnection(0, 8, true)
-      drawConnection(1, 8, true)
-      drawConnection(2, 9, true)
-      drawConnection(3, 9, true)
-      drawConnection(8, 12, true)
-      drawConnection(9, 12, true)
-      drawConnection(12, 14, true)
-
-      // Right-side connections
-      drawConnection(4, 10, false)
-      drawConnection(5, 10, false)
-      drawConnection(6, 11, false)
-      drawConnection(7, 11, false)
-      drawConnection(10, 13, false)
-      drawConnection(11, 13, false)
-      drawConnection(13, 14, false)
+      for (const c of CONNECTIONS) {
+        drawConnection(c.from, c.to, c.leftSide)
+      }
     }
 
     drawLines()
+    const raf = window.requestAnimationFrame(drawLines)
     window.addEventListener('resize', drawLines)
-    return () => window.removeEventListener('resize', drawLines)
+    return () => {
+      window.cancelAnimationFrame(raf)
+      window.removeEventListener('resize', drawLines)
+    }
   }, [matchups, currentMatchupIndex])
 
+  const columns: Slot[][] = [
+    // 0 — Round of 16 left
+    matchups.slice(0, 4).map((matchup, i) => ({
+      matchup,
+      top: `${((2 * i + 1) / 8) * 100}%`,
+    })),
+    // 1 — QF left
+    matchups.slice(8, 10).map((matchup, i) => ({
+      matchup,
+      top: `${((4 * i + 2) / 8) * 100}%`,
+    })),
+    // 2 — SF left
+    matchups.slice(12, 13).map((matchup) => ({ matchup, top: '50%' })),
+    // 3 — Finals
+    matchups.slice(14, 15).map((matchup) => ({ matchup, top: '50%' })),
+    // 4 — SF right
+    matchups.slice(13, 14).map((matchup) => ({ matchup, top: '50%' })),
+    // 5 — QF right
+    matchups.slice(10, 12).map((matchup, i) => ({
+      matchup,
+      top: `${((4 * i + 2) / 8) * 100}%`,
+    })),
+    // 6 — Round of 16 right
+    matchups.slice(4, 8).map((matchup, i) => ({
+      matchup,
+      top: `${((2 * i + 1) / 8) * 100}%`,
+    })),
+  ]
+
   return (
-    <div ref={containerRef} style={{ position: 'absolute', height: '100vh', width: '100%', margin: '0 auto', transform: 'translateX(-5px)' }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }} />
-      {/* Round 1 Left */}
-      {matchups.slice(0, 4).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '0%',
-            top: `${(2 * index + 1) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Round 1 Right */}
-      {matchups.slice(4, 8).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '90%',
-            top: `${(2 * index + 1) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Quarter-Finals Left */}
-      {matchups.slice(8, 10).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '15%',
-            top: `${(4 * index + 2) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Quarter-Finals Right */}
-      {matchups.slice(10, 12).map((matchup, index) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '75%',
-            top: `${(4 * index + 2) / 8 * 100}%`,
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Semi-Finals Left */}
-      {matchups.slice(12, 13).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '30%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Semi-Finals Right */}
-      {matchups.slice(13, 14).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '60%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
-      {/* Final */}
-      {matchups.slice(14, 15).map((matchup) => (
-        <div
-          key={matchup.id}
-          data-matchup-id={matchup.id}
-          style={{
-            position: 'absolute',
-            left: '45%',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}
-        >
-          <MatchupComponent matchup={matchup} isCurrent={matchup.id === currentMatchupIndex} />
-        </div>
-      ))}
+    <div ref={containerRef} className="bracket-stage">
+      <canvas ref={canvasRef} className="bracket-canvas" />
+
+      <div className="bracket-field">
+        {columns.map((slots, colIndex) => {
+          // Label hugs the topmost card in this column (not a screen-top band)
+          const topmostPct = Math.min(
+            ...slots.map((s) => Number.parseFloat(s.top))
+          )
+          return (
+            <div key={colIndex} className="bracket-column">
+              <div className="bracket-column-body">
+                {slots.length > 0 && (
+                  <div
+                    className="bracket-round-label"
+                    aria-hidden
+                    style={{
+                      top: `calc(${topmostPct}% - (var(--matchup-card-height) / 2))`,
+                    }}
+                  >
+                    {ROUND_LABELS[colIndex]}
+                  </div>
+                )}
+                {slots.map(({ matchup, top }) => (
+                  <div
+                    key={matchup.id}
+                    data-matchup-id={matchup.id}
+                    className="bracket-slot"
+                    style={{ top }}
+                  >
+                    <MatchupComponent
+                      matchup={matchup}
+                      isCurrent={matchup.id === currentMatchupIndex}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

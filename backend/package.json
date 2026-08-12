@@ -6,18 +6,21 @@
   "scripts": {
     "build": "npx esbuild ./src/server.ts --bundle --minify --platform=node --outfile=./dist/server.js --packages=external",
     "start": "npm run build && node dist/server.js",
-    "dev": "nodemon --exec ts-node src/server.ts"
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "test": "ts-node src/security.test.ts && ts-node src/game.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^11.9.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.6.2",
     "imgproxy": "^1.3.0",
     "openai": "^4.89.0",
-    "socket.io": "^4.8.1",
+    "socket.io": "^4.8.3",
     "unique-names-generator": "^4.7.1",
     "zod": "^3.24.2"
   },
@@ -25,7 +28,7 @@
     "@types/better-sqlite3": "^7.6.12",
     "@types/express": "^5.0.1",
     "esbuild": "^0.25.1",
-    "nodemon": "^3.1.9",
+    "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }
