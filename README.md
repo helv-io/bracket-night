@@ -75,13 +75,13 @@ bracket-night/
 Published images (same `helvio/*` convention as other helv-io repos):
 
 ```bash
-# latest stable (main)
+# current tip (any non-PR push tags :latest)
 docker pull helvio/bracket-night:latest
 
-# testable preview from restore/thick-gold-coin
+# also tagged from restore/thick-gold-coin
 docker pull helvio/bracket-night:test
 
-docker run -p 3000:3000 --env-file backend/.env helvio/bracket-night:test
+docker run -p 3000:3000 --env-file backend/.env helvio/bracket-night:latest
 ```
 
 Local build:
@@ -91,7 +91,7 @@ docker build -t bracket-night .
 docker run -p 3000:3000 --env-file backend/.env bracket-night
 ```
 
-CI publishes multi-arch (`linux/amd64`, `linux/arm64`) images to Docker Hub on push to `main`, push to `restore/thick-gold-coin` (`:test`), version tags, and `workflow_dispatch`. Requires repo secrets/vars `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN` (see `.github/workflows/docker.yml`).
+CI (`.github/workflows/docker.yml`) publishes multi-arch (`linux/amd64`, `linux/arm64`) images to Docker Hub on push to `main` / `restore/thick-gold-coin`, version tags, and `workflow_dispatch`. Requires repo Variable `DOCKERHUB_USERNAME` + Secret `DOCKERHUB_TOKEN`.
 
 ## Configuration
 
