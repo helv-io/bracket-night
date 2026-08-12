@@ -333,16 +333,20 @@ a {
   z-index: 10;
 }
 
-/* Soft QR bitmap corners — keep the outer bn-card frame untouched */
+/*
+ * QR quiet-zone pad + bitmap: keep outer bn-card frame untouched.
+ * Modules from qrcode.react are already square; only soften the outer
+ * silhouette very slightly so corners are not aggressively rounded.
+ */
 .host-qr-pad {
-  border-radius: 6px;
-  overflow: hidden;
+  border-radius: 2px;
 }
 
 .host-qr-code {
   display: block;
-  /* Gentle outer clip only — not aggressive module/finder rounding */
-  border-radius: 2px;
+  border-radius: 0;
+  /* Crisp module edges when scaled on TV */
+  shape-rendering: crispEdges;
 }
 
 .logo {
