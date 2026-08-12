@@ -261,22 +261,20 @@ export default function CoinToss({
                     {rimNodes}
                   </div>
                   <div className="coin-side heads">
-                    <div
-                      className="coin-face"
-                      role="img"
-                      aria-label={`Face A — ${contestants[0].name}`}
-                      style={{ backgroundImage: faceA ? `url(${faceA})` : undefined }}
-                    />
+                    <div className="coin-face" role="img" aria-label={`Face A — ${contestants[0].name}`}>
+                      {faceA ? (
+                        <img className="coin-face-img" src={faceA} alt={contestants[0].name} draggable={false} />
+                      ) : null}
+                    </div>
                     <div className="coin-face-ring" aria-hidden />
                     <div className="coin-glint" />
                   </div>
                   <div className="coin-side tails">
-                    <div
-                      className="coin-face"
-                      role="img"
-                      aria-label={`Face B — ${contestants[1].name}`}
-                      style={{ backgroundImage: faceB ? `url(${faceB})` : undefined }}
-                    />
+                    <div className="coin-face" role="img" aria-label={`Face B — ${contestants[1].name}`}>
+                      {faceB ? (
+                        <img className="coin-face-img" src={faceB} alt={contestants[1].name} draggable={false} />
+                      ) : null}
+                    </div>
                     <div className="coin-face-ring" aria-hidden />
                     <div className="coin-glint" />
                   </div>
