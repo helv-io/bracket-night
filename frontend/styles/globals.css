@@ -37,6 +37,14 @@ body {
   min-height: 100%;
 }
 
+/* Host TV: kill root scrollbars so the bracket isn't shifted by gutter/scrollbar width */
+html.bn-host-tv,
+html.bn-host-tv body {
+  height: 100%;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+
 body {
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(90, 140, 255, 0.16), transparent 55%),
@@ -73,7 +81,7 @@ a {
   display: flex;
   flex-direction: column;
   /* Comfortable top air for logo; equal side padding (avoid scrollbar asymmetry) */
-  padding: 1.15rem 1.25rem 0.55rem;
+  padding: 2.35rem 1.75rem 0.55rem;
   scrollbar-gutter: auto;
 }
 
@@ -85,8 +93,8 @@ a {
 .host-chrome--top {
   display: flex;
   justify-content: center;
-  padding-top: 0.15rem;
-  padding-bottom: 0.45rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.55rem;
 }
 
 .host-chrome--bottom {
@@ -134,16 +142,19 @@ a {
   margin: 0 auto;
 }
 
-.logo-container--inline {
-  position: static;
-  transform: none;
-  left: auto;
-  top: auto;
+/* Higher specificity + later win vs .logo-container { position:absolute } (Tailwind may reorder) */
+.logo-container.logo-container--inline,
+.host-chrome--top .logo-container {
+  position: static !important;
+  transform: none !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
 }
 
 .logo--host {
-  width: min(28vw, 320px);
-  max-width: 320px;
+  width: min(22vw, 260px);
+  max-width: 260px;
 }
 
 .host-title {

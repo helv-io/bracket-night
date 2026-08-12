@@ -1,8 +1,7 @@
 @layer components {
   .bracket-stage {
-    --matchup-card-width: clamp(118px, 9.2vw, 152px);
-    /* Half-card + gutter so center-anchored outer columns keep equal L/R air */
-    --bracket-inline-pad: calc(var(--matchup-card-width) / 2 + clamp(0.35rem, 1.2vw, 1rem));
+    --matchup-card-width: clamp(112px, 8.6vw, 148px);
+    --bracket-inline-pad: clamp(0.75rem, 2.2vw, 1.75rem);
     position: absolute;
     inset: 0;
     width: 100%;
@@ -20,27 +19,29 @@
     pointer-events: none;
   }
 
-  /* Single baseline for all round labels, center-aligned with columns */
+  /* 7 equal columns — labels + matchups share the same track for true centering */
   .bracket-round-row {
     position: absolute;
     left: var(--bracket-inline-pad);
     right: var(--bracket-inline-pad);
-    top: 0.35rem;
-    height: 2.25rem;
+    top: 0.55rem;
+    height: 2.35rem;
     z-index: 2;
     pointer-events: none;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    align-items: center;
+    column-gap: 0.35rem;
   }
 
   .bracket-round-label {
-    position: absolute;
-    top: 0.2rem;
-    left: 0;
-    width: var(--matchup-card-width);
-    transform: translateX(-50%);
+    width: 100%;
+    max-width: 100%;
+    justify-self: center;
     z-index: 2;
     font-family: var(--font-display);
-    letter-spacing: 0.14em;
-    font-size: clamp(0.72rem, 1.15vw, 0.95rem);
+    letter-spacing: 0.12em;
+    font-size: clamp(0.68rem, 1.05vw, 0.92rem);
     color: rgba(255, 236, 170, 0.95);
     text-align: center;
     text-shadow:
@@ -53,25 +54,33 @@
     text-overflow: ellipsis;
   }
 
-  /* Matchup field sits below the label row; same horizontal pad as labels */
   .bracket-field {
     position: absolute;
     left: var(--bracket-inline-pad);
     right: var(--bracket-inline-pad);
-    top: 2.65rem;
-    bottom: 0;
+    top: 3rem;
+    bottom: 0.15rem;
     z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    column-gap: 0.35rem;
+  }
+
+  .bracket-column {
+    position: relative;
+    min-width: 0;
+    height: 100%;
   }
 
   .bracket-slot {
     position: absolute;
-    /* Center-anchored columns → symmetric left/right breathing room */
+    left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1;
   }
 
   .matchup-card {
-    width: var(--matchup-card-width);
+    width: min(var(--matchup-card-width), 100%);
     min-height: clamp(96px, 14vh, 124px);
     padding: 0.45rem 0.5rem;
     border-radius: 12px;

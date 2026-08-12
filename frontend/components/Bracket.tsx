@@ -24,21 +24,16 @@ const CONNECTIONS: Array<{ from: number; to: number; leftSide: boolean }> = [
   { from: 13, to: 14, leftSide: false },
 ]
 
-/**
- * Seven column centers across a padded field (0%…100%).
- * Slots/labels use translateX(-50%) so left/right gutters stay equal.
- */
-const ROUND_COLUMNS: Array<{ label: string; x: string }> = [
-  { label: 'Round of 16', x: '0%' },
-  { label: 'QF', x: `${(1 / 6) * 100}%` },
-  { label: 'SF', x: `${(2 / 6) * 100}%` },
-  { label: 'Finals', x: '50%' },
-  { label: 'SF', x: `${(4 / 6) * 100}%` },
-  { label: 'QF', x: `${(5 / 6) * 100}%` },
-  { label: 'Round of 16', x: '100%' },
-]
-
-const COLUMN_X = ROUND_COLUMNS.map((c) => c.x)
+/** Seven equal columns: R16 · QF · SF · Finals · SF · QF · R16 */
+const ROUND_LABELS = [
+  'Round of 16',
+  'QF',
+  'SF',
+  'Finals',
+  'SF',
+  'QF',
+  'Round of 16',
+] as const
 
 function pathToCurrent(currentMatchupIndex: number): Set<string> {
   const active = new Set<string>()
@@ -111,6 +106,8 @@ const MatchupComponent = ({
   )
 }
 
+type Slot = { matchup: Matchup; top: string }
+
 const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -151,7 +148,7 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         return { x, y }
       }
 
-      /** Orthogonal elbow path: out → vertical spine → into target. */
+      /** Orthogonal elbow: out → vertical spine → into target (square turns). */
       const strokeElbow = (
         fromPos: { x: number; y: number },
         toPos: { x: number; y: number },
@@ -159,13 +156,13 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
         widthPx: number,
         blur = 0
       ) => {
-        const midX = fromPos.x + (toPos.x - fromPos.x) * 0.5
+        const midX = fromPos.x + (toPos.x - fromPos.x) * 0.55
         ctx.save()
         ctx.strokeStyle = color
         ctx.lineWidth = widthPx
         ctx.lineCap = 'square'
         ctx.lineJoin = 'miter'
-        ctx.miterLimit = 2
+        ctx.miterLimit = 2.5
         if (blur) {
           ctx.shadowColor = color
           ctx.shadowBlur = blur
@@ -215,7 +212,6 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     }
 
     drawLines()
-    // Re-draw after fonts/layout settle so elbows hit card edges accurately
     const raf = window.requestAnimationFrame(drawLines)
     window.addEventListener('resize', drawLines)
     return () => {
@@ -224,52 +220,65 @@ const Bracket = ({ matchups, currentMatchupIndex }: BracketProps) => {
     }
   }, [matchups, currentMatchupIndex])
 
-  const place = (
-    items: Matchup[],
-    columnIndex: number,
-    topForIndex: (index: number) => string
-  ) =>
-    items.map((matchup, index) => (
-      <div
-        key={matchup.id}
-        data-matchup-id={matchup.id}
-        className="bracket-slot"
-        style={{
-          left: COLUMN_X[columnIndex],
-          top: topForIndex(index),
-        }}
-      >
-        <MatchupComponent
-          matchup={matchup}
-          isCurrent={matchup.id === currentMatchupIndex}
-        />
-      </div>
-    ))
+  const columns: Slot[][] = [
+    // 0 — Round of 16 left
+    matchups.slice(0, 4).map((matchup, i) => ({
+      matchup,
+      top: `${((2 * i + 1) / 8) * 100}%`,
+    })),
+    // 1 — QF left
+    matchups.slice(8, 10).map((matchup, i) => ({
+      matchup,
+      top: `${((4 * i + 2) / 8) * 100}%`,
+    })),
+    // 2 — SF left
+    matchups.slice(12, 13).map((matchup) => ({ matchup, top: '50%' })),
+    // 3 — Finals
+    matchups.slice(14, 15).map((matchup) => ({ matchup, top: '50%' })),
+    // 4 — SF right
+    matchups.slice(13, 14).map((matchup) => ({ matchup, top: '50%' })),
+    // 5 — QF right
+    matchups.slice(10, 12).map((matchup, i) => ({
+      matchup,
+      top: `${((4 * i + 2) / 8) * 100}%`,
+    })),
+    // 6 — Round of 16 right
+    matchups.slice(4, 8).map((matchup, i) => ({
+      matchup,
+      top: `${((2 * i + 1) / 8) * 100}%`,
+    })),
+  ]
 
   return (
     <div ref={containerRef} className="bracket-stage">
       <canvas ref={canvasRef} className="bracket-canvas" />
 
       <div className="bracket-round-row" aria-hidden>
-        {ROUND_COLUMNS.map((col) => (
-          <div
-            key={`${col.label}-${col.x}`}
-            className="bracket-round-label"
-            style={{ left: col.x }}
-          >
-            {col.label}
+        {ROUND_LABELS.map((label, i) => (
+          <div key={`${label}-${i}`} className="bracket-round-label">
+            {label}
           </div>
         ))}
       </div>
 
       <div className="bracket-field">
-        {place(matchups.slice(0, 4), 0, (i) => `${((2 * i + 1) / 8) * 100}%`)}
-        {place(matchups.slice(4, 8), 6, (i) => `${((2 * i + 1) / 8) * 100}%`)}
-        {place(matchups.slice(8, 10), 1, (i) => `${((4 * i + 2) / 8) * 100}%`)}
-        {place(matchups.slice(10, 12), 5, (i) => `${((4 * i + 2) / 8) * 100}%`)}
-        {place(matchups.slice(12, 13), 2, () => '50%')}
-        {place(matchups.slice(13, 14), 4, () => '50%')}
-        {place(matchups.slice(14, 15), 3, () => '50%')}
+        {columns.map((slots, colIndex) => (
+          <div key={colIndex} className="bracket-column">
+            {slots.map(({ matchup, top }) => (
+              <div
+                key={matchup.id}
+                data-matchup-id={matchup.id}
+                className="bracket-slot"
+                style={{ top }}
+              >
+                <MatchupComponent
+                  matchup={matchup}
+                  isCurrent={matchup.id === currentMatchupIndex}
+                />
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   )

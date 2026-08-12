@@ -57,6 +57,11 @@ const Home = () => {
   }, [currentMatchupIndex])
 
   useEffect(() => {
+    document.documentElement.classList.add('bn-host-tv')
+    return () => document.documentElement.classList.remove('bn-host-tv')
+  }, [])
+
+  useEffect(() => {
     if (isMobile) {
       router.push('/new')
       return
