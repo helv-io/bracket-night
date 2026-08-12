@@ -15,11 +15,11 @@ export interface CoinTossProps {
 }
 
 /**
- * Continuous metallic cylinder rim: thin wall panels around the
- * circumference (rotateZ + rotateY(90°) + translateZ(radius)).
- * NOT stacked discs along Z.
+ * Continuous metallic cylinder rim via wall panels around the circumference.
+ * All panels share one gold material (no ridge/valley banding that reads as
+ * stacked discs). Geometry: rotateZ → translateX(radius) → rotateY(90°).
  */
-const RIM_SEGMENTS = 48
+const RIM_SEGMENTS = 64
 
 const SPARKS = Array.from({ length: 18 }, (_, i) => ({
   id: i,
@@ -78,7 +78,7 @@ export default function CoinToss({
 
   const winnerContestant = contestants[winner]
 
-  const handleAnimationEnd = () => {
+  const finishToss = () => {
     if (completedRef.current) return
     completedRef.current = true
     setShowResult(true)
@@ -92,10 +92,19 @@ export default function CoinToss({
     }, holdMs)
   }
 
-  // Reduced-motion path: skip long spin, reveal quickly
+  const handleSpinAnimationEnd = (event: React.AnimationEvent<HTMLDivElement>) => {
+    // Ignore bubbled ends from glint/sparkle/child animations
+    if (event.target !== event.currentTarget) return
+    const name = event.animationName || ''
+    if (!name.includes('spinToHeads') && !name.includes('spinToTails')) return
+    finishToss()
+  }
+
+  // Reduced-motion: quick reveal. Otherwise safety timeout if animationend misses.
   useEffect(() => {
-    if (!isTossing || !prefersReducedMotion()) return
-    const t = window.setTimeout(handleAnimationEnd, 650)
+    if (!isTossing) return
+    const ms = prefersReducedMotion() ? 650 : 3200
+    const t = window.setTimeout(finishToss, ms)
     return () => window.clearTimeout(t)
   }, [isTossing, tossKey])
 
@@ -119,19 +128,22 @@ export default function CoinToss({
 
   const rimNodes = useMemo(() => {
     const step = 360 / RIM_SEGMENTS
-    // Chord width with slight overlap so the cylinder reads solid edge-on
-    const segmentWidth = `calc((3.14159 * var(--coin-size) / ${RIM_SEGMENTS}) + 1.5px)`
+    // Slight overlap so the cylinder reads as one solid wall
+    const segmentHeight = `calc((3.14159 * var(--coin-size) / ${RIM_SEGMENTS}) + 2px)`
     return Array.from({ length: RIM_SEGMENTS }, (_, i) => {
       const angle = i * step
-      const ridge = i % 2 === 0
+      // Soft lighting around the barrel — NOT alternating ridge/valley bands
+      const light = 0.42 + 0.58 * Math.abs(Math.cos((angle * Math.PI) / 180))
       return (
         <span
           key={i}
-          className={`coin-rim-segment ${ridge ? 'is-ridge' : 'is-valley'}`}
+          className="coin-rim-segment"
           style={{
-            width: segmentWidth,
-            height: 'var(--coin-thickness)',
-            transform: `rotateZ(${angle}deg) rotateY(90deg) translateZ(calc(var(--coin-size) / 2 - 0.5px))`,
+            width: 'var(--coin-thickness)',
+            height: segmentHeight,
+            opacity: 0.88 + light * 0.12,
+            filter: `brightness(${0.78 + light * 0.45})`,
+            transform: `rotateZ(${angle}deg) translateX(calc(var(--coin-size) / 2 - 0.5px)) rotateY(90deg)`,
           }}
         />
       )
@@ -205,7 +217,7 @@ export default function CoinToss({
                 className={`coin-container ${
                   winner === 0 ? 'animate-spinToHeads' : 'animate-spinToTails'
                 } ${showResult ? '' : 'is-spinning'}`}
-                onAnimationEnd={handleAnimationEnd}
+                onAnimationEnd={handleSpinAnimationEnd}
               >
                 <div className="coin-rim" aria-hidden>
                   {rimNodes}
