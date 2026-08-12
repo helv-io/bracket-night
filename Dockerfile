@@ -1,14 +1,16 @@
-# Build frontend (next.config imports backend/src/config, which needs dotenv)
+# Build frontend
+# next.config imports ../backend/src/config (needs dotenv only — avoid better-sqlite3 here)
 FROM node:lts-alpine AS frontend-build
 WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install --omit=dev
-COPY backend ./
+RUN npm init -y >/dev/null 2>&1 \
+  && npm install dotenv \
+  && mkdir -p src
+COPY backend/src/config.ts ./src/config.ts
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend ./
-# next.config only enables `output: 'export'` when NODE_ENV=production
+# next.config enables `output: 'export'` when NODE_ENV=production
 ENV NODE_ENV=production
 RUN npm run build
 
