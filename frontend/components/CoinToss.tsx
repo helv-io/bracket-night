@@ -12,10 +12,10 @@ export interface CoinTossProps {
   onComplete?: () => void
 }
 
-/** Full spin duration (ms). Completion is wall-clock — not rAF/animationend. */
-const SPIN_MS = 3000
+/** Full spin / flight duration (ms). Completion is wall-clock — not rAF/animationend. */
+const SPIN_MS = 3200
 /** Celebrate / confetti linger after land before overlay clears */
-const HOLD_MS = 3600
+const HOLD_MS = 3800
 const HOLD_MS_REDUCED = 2200
 
 /**
@@ -167,6 +167,9 @@ export default function CoinToss({
 
   if (!contestants[0] || !contestants[1]) return null
 
+  const spinClass =
+    winner === 0 ? 'animate-coinSpinHeads' : 'animate-coinSpinTails'
+
   return (
     <>
       {isTossing && (
@@ -180,10 +183,10 @@ export default function CoinToss({
             <Confetti
               width={windowSize.width}
               height={windowSize.height}
-              numberOfPieces={220}
+              numberOfPieces={260}
               recycle={true}
-              gravity={0.18}
-              tweenDuration={4200}
+              gravity={0.16}
+              tweenDuration={4800}
               colors={['#e8c46a', '#ffe9a8', '#ff6f61', '#5dffa8', '#ffffff']}
             />
           )}
@@ -221,41 +224,19 @@ export default function CoinToss({
               </div>
             )}
 
-            {/* 3-layer toss: shadow | Y-arc flight | spin */}
-            <div className="coin-scene">
+            {/* 3-layer toss: shadow | Y-arc flight | spin — keep classes through reveal (forwards) */}
+            <div className={`coin-scene ${showResult ? 'is-landed' : ''}`}>
               <div
                 key={`shadow-${tossKey}`}
-                className={`coin-shadow ${showResult ? '' : 'animate-coinShadowToss'}`}
-                style={
-                  showResult
-                    ? { transform: 'translateX(-50%) scale(1)', opacity: 0.9 }
-                    : undefined
-                }
+                className="coin-shadow animate-coinShadowToss"
               />
               <div
                 key={`flight-${tossKey}`}
-                className={`coin-flight ${showResult ? '' : 'animate-coinTossArc'}`}
-                style={
-                  showResult
-                    ? { transform: 'translateY(0) scale(1)' }
-                    : undefined
-                }
+                className="coin-flight animate-coinTossArc"
               >
                 <div
                   key={`spin-${tossKey}`}
-                  className={`coin-container ${
-                    winner === 0 ? 'animate-coinSpinHeads' : 'animate-coinSpinTails'
-                  } ${showResult ? '' : 'is-spinning'}`}
-                  style={
-                    showResult
-                      ? {
-                          transform:
-                            winner === 0
-                              ? 'rotateX(0deg) rotateY(2880deg)'
-                              : 'rotateX(0deg) rotateY(3060deg)',
-                        }
-                      : undefined
-                  }
+                  className={`coin-container ${spinClass} ${showResult ? '' : 'is-spinning'}`}
                 >
                   <div className="coin-rim" aria-hidden>
                     {rimNodes}

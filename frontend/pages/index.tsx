@@ -16,6 +16,12 @@ type ActiveToss = {
   autoStart: boolean
 }
 
+/** Server advance held until the coin cinematic fully completes */
+type PendingAdvance = {
+  matchups: Matchup[]
+  currentMatchupIndex: number
+}
+
 declare global {
   interface Window {
     /** Recording / automation only — not exposed in the host UI */
@@ -39,6 +45,8 @@ const Home = () => {
   const currentVotesRef = useRef(currentVotes)
   const matchupsRef = useRef(matchups)
   const currentMatchupIndexRef = useRef(currentMatchupIndex)
+  const pendingAdvanceRef = useRef<PendingAdvance | null>(null)
+  const tossActiveRef = useRef(false)
 
   useEffect(() => {
     gameIdRef.current = gameId
@@ -61,6 +69,14 @@ const Home = () => {
     return () => document.documentElement.classList.remove('bn-host-tv')
   }, [])
 
+  const applyAdvance = useCallback((next: PendingAdvance) => {
+    setMatchups(next.matchups)
+    matchupsRef.current = next.matchups
+    setCurrentMatchupIndex(next.currentMatchupIndex)
+    currentMatchupIndexRef.current = next.currentMatchupIndex
+    if (next.currentMatchupIndex === 15) setIsGameOver(true)
+  }, [])
+
   useEffect(() => {
     if (isMobile) {
       router.push('/new')
@@ -78,11 +94,19 @@ const Home = () => {
         if (completed?.left && completed?.right && completed.winner) {
           const winnerSide: 0 | 1 =
             completed.winner.id === completed.left.id ? 0 : 1
+
+          // Cliffhanger: keep the pre-advance bracket on screen (no winner yet).
+          // Apply matchups only when CoinToss calls onComplete.
+          pendingAdvanceRef.current = { matchups, currentMatchupIndex }
+          tossActiveRef.current = true
           setActiveToss({
             contestants: [completed.left, completed.right],
             winner: winnerSide,
             autoStart: true,
           })
+          setCurrentVotes([])
+          currentVotesRef.current = []
+          return
         }
       }
 
@@ -110,14 +134,20 @@ const Home = () => {
       }) => {
         setGameId(gameId)
         setBracket(bracket)
-        setMatchups(matchups)
-        matchupsRef.current = matchups
-        setCurrentMatchupIndex(currentMatchupIndex)
-        currentMatchupIndexRef.current = currentMatchupIndex
         setPlayers(players)
         setCurrentVotes(currentVotes)
         currentVotesRef.current = currentVotes
         setIsGameStarted(isGameStarted)
+
+        // Don't spoil the cliffhanger if a game_state arrives mid-toss
+        if (tossActiveRef.current || pendingAdvanceRef.current) {
+          return
+        }
+
+        setMatchups(matchups)
+        matchupsRef.current = matchups
+        setCurrentMatchupIndex(currentMatchupIndex)
+        currentMatchupIndexRef.current = currentMatchupIndex
         setIsGameOver(isGameOver)
       }
     )
@@ -128,13 +158,21 @@ const Home = () => {
     }
   }, [router])
 
-  const clearToss = useCallback(() => setActiveToss(null), [])
+  const clearToss = useCallback(() => {
+    const pending = pendingAdvanceRef.current
+    pendingAdvanceRef.current = null
+    tossActiveRef.current = false
+    setActiveToss(null)
+    // Reveal bracket winners only after the full cinematic (spin + celebrate hold)
+    if (pending) applyAdvance(pending)
+  }, [applyAdvance])
 
   // Automation hook for Demo recordings — no host UI control
   useEffect(() => {
     window.__bnTriggerCoinToss = (winner = 0) => {
       const current = matchupsRef.current[currentMatchupIndexRef.current]
       if (!current?.left || !current?.right) return
+      tossActiveRef.current = true
       setActiveToss({
         contestants: [current.left, current.right],
         winner,
@@ -234,7 +272,7 @@ const Home = () => {
         />
       )}
 
-      {isGameStarted && !isGameOver && (
+      {isGameStarted && !isGameOver && !activeToss && (
         <footer className="host-chrome host-chrome--bottom">
           <ul className="list-none flex flex-wrap gap-2 justify-center">
             {players.map((player) => {

@@ -391,101 +391,105 @@
 }
 
 @layer utilities {
-  /* Layer 2 — upward parabolic toss */
+  /*
+   * Layer 2 — single upward parabola + small landing bounce.
+   * (Previous double mid-air hop felt unphysical / ugly.)
+   */
   @keyframes coinTossArc {
     0% {
-      transform: translateY(56px) scale(0.9);
+      transform: translateY(48px) scale(0.88);
     }
-    18% {
-      transform: translateY(-210px) scale(1.06);
+    12% {
+      transform: translateY(-90px) scale(1.02);
     }
-    42% {
-      transform: translateY(-48px) scale(1);
+    38% {
+      transform: translateY(-250px) scale(1.1);
     }
-    68% {
-      transform: translateY(-150px) scale(1.04);
+    62% {
+      transform: translateY(-70px) scale(1.02);
     }
-    86% {
-      transform: translateY(10px) scale(0.98);
+    78% {
+      transform: translateY(6px) scale(0.96);
     }
-    93% {
-      transform: translateY(-16px) scale(1.02);
+    88% {
+      transform: translateY(-28px) scale(1.03);
     }
     100% {
       transform: translateY(0) scale(1);
     }
   }
 
-  /* Layer 3 — spin only (no translateY) */
+  /*
+   * Layer 3 — constant-speed flip (linear). Slight tilt for mass.
+   * Heads: 10 full turns (3600°). Tails: 10.5 turns (3780°) so Face B lands up.
+   */
   @keyframes coinSpinHeads {
     0% {
-      transform: rotateX(14deg) rotateY(0deg);
+      transform: rotateX(22deg) rotateY(0deg);
     }
-    18% {
-      transform: rotateX(-8deg) rotateY(540deg);
+    20% {
+      transform: rotateX(-10deg) rotateY(720deg);
     }
-    42% {
-      transform: rotateX(10deg) rotateY(1260deg);
+    45% {
+      transform: rotateX(8deg) rotateY(1620deg);
     }
-    68% {
-      transform: rotateX(-6deg) rotateY(1980deg);
+    70% {
+      transform: rotateX(-5deg) rotateY(2520deg);
     }
-    86% {
-      transform: rotateX(4deg) rotateY(2520deg);
-    }
-    93% {
-      transform: rotateX(-2deg) rotateY(2750deg);
+    88% {
+      transform: rotateX(3deg) rotateY(3240deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(2880deg);
+      transform: rotateX(0deg) rotateY(3600deg);
     }
   }
 
   @keyframes coinSpinTails {
     0% {
-      transform: rotateX(14deg) rotateY(0deg);
+      transform: rotateX(22deg) rotateY(0deg);
     }
-    18% {
-      transform: rotateX(-8deg) rotateY(630deg);
+    20% {
+      transform: rotateX(-10deg) rotateY(720deg);
     }
-    42% {
-      transform: rotateX(10deg) rotateY(1350deg);
+    45% {
+      transform: rotateX(8deg) rotateY(1620deg);
     }
-    68% {
-      transform: rotateX(-6deg) rotateY(2070deg);
+    70% {
+      transform: rotateX(-5deg) rotateY(2520deg);
     }
-    86% {
-      transform: rotateX(4deg) rotateY(2610deg);
-    }
-    93% {
-      transform: rotateX(-2deg) rotateY(2840deg);
+    88% {
+      transform: rotateX(3deg) rotateY(3420deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(3060deg);
+      transform: rotateX(0deg) rotateY(3780deg);
     }
   }
 
-  /* Layer 1 — shadow shrinks at apex, grows on land */
+  /* Layer 1 — shadow shrinks at apex, grows on land (synced to single arc) */
   @keyframes coinShadowToss {
     0% {
-      transform: translateX(-50%) scale(1.15);
+      transform: translateX(-50%) scale(1.2);
+      opacity: 0.9;
+    }
+    12% {
+      transform: translateX(-50%) scale(0.72);
+      opacity: 0.5;
+    }
+    38% {
+      transform: translateX(-50%) scale(0.36);
+      opacity: 0.22;
+    }
+    62% {
+      transform: translateX(-50%) scale(0.7);
+      opacity: 0.48;
+    }
+    78% {
+      transform: translateX(-50%) scale(1.12);
       opacity: 0.88;
     }
-    18% {
-      transform: translateX(-50%) scale(0.42);
-      opacity: 0.28;
-    }
-    42% {
-      transform: translateX(-50%) scale(0.78);
-      opacity: 0.55;
-    }
-    68% {
-      transform: translateX(-50%) scale(0.5);
-      opacity: 0.34;
-    }
-    86% {
-      transform: translateX(-50%) scale(1.05);
-      opacity: 0.82;
+    88% {
+      transform: translateX(-50%) scale(0.85);
+      opacity: 0.62;
     }
     100% {
       transform: translateX(-50%) scale(1);
@@ -566,24 +570,25 @@
     }
   }
 
+  /* Arc eases like a throw; spin stays near-linear so faces read as a real flip */
   .animate-coinTossArc {
-    animation: coinTossArc 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
+    animation: coinTossArc 3.2s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
   }
 
   .animate-coinSpinHeads {
-    animation: coinSpinHeads 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
+    animation: coinSpinHeads 3.2s linear forwards;
   }
 
   .animate-coinSpinTails {
-    animation: coinSpinTails 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
+    animation: coinSpinTails 3.2s linear forwards;
   }
 
   .animate-coinShadowToss {
-    animation: coinShadowToss 3s cubic-bezier(0.16, 0.84, 0.28, 1) forwards;
+    animation: coinShadowToss 3.2s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
   }
 
   .animate-coinFadeIn {
-    animation: coinFadeIn 0.45s ease both;
+    animation: coinFadeIn 0.4s ease both;
   }
 }
 
