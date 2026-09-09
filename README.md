@@ -6,11 +6,12 @@ This tree is a **from-scratch rebuild** (v0.2.0). It is not a polish of the old 
 
 ## What you can demo
 
-1. Open `/` on a desktop. The host TV is a full-viewport three.js night: lobby (join code + QR plane + player orbs), matchup cards, vote meters, tally, cinematic coin, champion.
+1. Open `/` on a desktop. The host TV is a full-viewport three.js night: lobby (join code + QR plane + player orbs + house photos), matchup cards, vote meters, tally, cinematic coin, full bracket board, champion.
 2. Phones open `/join?game=DEV` in development (or the code on the TV).
-3. On the TV, load **showcase** (house field, 8 contestants, no SQLite) and start.
-4. Vote through the night. A tie plays a gold three.js coin, then the winner advances.
-5. One champion.
+3. On the TV, load **showcase** (house field, 8 contestants with committed photos, no SQLite) and start. The tree opens first, then the fight.
+4. Vote through the night. A tie tosses a gold three.js coin end-over-end and lands on the winner face.
+5. Use **Full bracket** on the TV to dolly onto the tournament tree (rounds, connectors, winners filling in). The night closes on that board.
+6. One champion.
 
 `/new` is the template studio. It still writes SQLite fields. Live rooms never touch that store.
 

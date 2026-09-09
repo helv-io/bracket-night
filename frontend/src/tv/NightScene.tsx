@@ -4,16 +4,29 @@ import { RoundedBox, Sparkles, Text } from '@react-three/drei'
 import { Group, SRGBColorSpace, Texture, Vector3 } from 'three'
 import QRCode from 'qrcode'
 import { NightState } from '../lib/types'
+import { BracketSet } from './BracketTree'
+import { coinTossPose } from '../../../engine/src/coinToss'
 import { useNightTexture } from './textures'
 
 const GOLD = '#e8c46a'
 const NAVY = '#0b1020'
 
-export function ArenaRig({ state, joinUrl }: { state: NightState | null, joinUrl: string }) {
+export type TvView = 'arena' | 'bracket'
+
+export function ArenaRig({
+  state,
+  joinUrl,
+  tvView,
+}: {
+  state: NightState | null
+  joinUrl: string
+  tvView: TvView
+}) {
+  const focusBracket = tvView === 'bracket'
   return (
     <>
       <color attach="background" args={[NAVY]} />
-      <fog attach="fog" args={['#070b16', 18, 48]} />
+      <fog attach="fog" args={['#070b16', 18, 52]} />
       <ambientLight intensity={0.35} />
       <spotLight position={[0, 16, 8]} angle={0.55} penumbra={0.5} intensity={3.2} color="#fff1c8" castShadow />
       <spotLight position={[-10, 8, -6]} angle={0.4} intensity={1.4} color="#6ecbff" />
@@ -24,11 +37,12 @@ export function ArenaRig({ state, joinUrl }: { state: NightState | null, joinUrl
       <Ring />
       <Sparkles count={80} scale={[24, 8, 24]} size={3} speed={0.3} color={GOLD} opacity={0.45} />
 
-      <CameraDirector state={state} />
+      <CameraDirector state={state} tvView={tvView} />
       <LobbySet state={state} joinUrl={joinUrl} />
-      <MatchupSet state={state} />
+      {!focusBracket && <MatchupSet state={state} />}
       <CoinSet state={state} />
-      <ChampionSet state={state} />
+      {!focusBracket && <ChampionSet state={state} />}
+      <BracketSet state={state} focus={focusBracket} />
     </>
   )
 }
@@ -51,13 +65,19 @@ function Ring() {
   )
 }
 
-function CameraDirector({ state }: { state: NightState | null }) {
+function CameraDirector({ state, tvView }: { state: NightState | null, tvView: TvView }) {
   const { camera } = useThree()
   const target = useRef(new Vector3(0, 2.2, 0))
   const goal = useRef(new Vector3(0, 5.4, 12))
 
   useEffect(() => {
     const phase = state?.phase || 'lobby'
+    if (tvView === 'bracket' && phase !== 'coin') {
+      const n = state?.matchups.length || 7
+      goal.current.set(0, 3.5, n > 8 ? 16.2 : 12.4)
+      target.current.set(0, 2.15, 0)
+      return
+    }
     if (phase === 'lobby') {
       goal.current.set(0, 5.4, 12)
       target.current.set(0, 2.2, 0)
@@ -65,13 +85,13 @@ function CameraDirector({ state }: { state: NightState | null }) {
       goal.current.set(0, 3.2, 7.2)
       target.current.set(0, 2.4, 0)
     } else if (phase === 'coin') {
-      goal.current.set(0, 3.6, 8.5)
-      target.current.set(0, 2.6, 0)
+      goal.current.set(0, 3.4, 7.6)
+      target.current.set(0, 2.4, 0)
     } else {
       goal.current.set(0, 3.4, 9.2)
       target.current.set(0, 1.8, 0)
     }
-  }, [state?.phase])
+  }, [state?.phase, state?.matchups.length, tvView])
 
   useFrame((_, dt) => {
     camera.position.lerp(goal.current, 1 - Math.pow(0.08, dt * 60))
@@ -122,6 +142,49 @@ function LobbySet({ state, joinUrl }: { state: NightState | null, joinUrl: strin
           </group>
         )
       })}
+      <FieldPreview state={state} />
+    </group>
+  )
+}
+
+function FieldPreview({ state }: { state: NightState | null }) {
+  const contestants = state?.field?.contestants || []
+  if (!contestants.length || state?.phase !== 'lobby') return null
+  return (
+    <group>
+      {contestants.map((contestant, i) => {
+        const angle = (i / contestants.length) * Math.PI * 2 - Math.PI / 2
+        const r = 6.6
+        return (
+          <group
+            key={contestant.id}
+            position={[Math.cos(angle) * r, 1.55, Math.sin(angle) * r]}
+            rotation={[0, -angle, 0]}
+          >
+            <LobbyPhoto contestant={contestant} />
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
+function LobbyPhoto({ contestant }: { contestant: { name: string, imageUrl: string } }) {
+  const texture = useNightTexture(contestant.imageUrl, contestant.name)
+  return (
+    <group>
+      <RoundedBox args={[1.18, 1.38, 0.07]} radius={0.05} smoothness={3}>
+        <meshStandardMaterial color="#151b2e" metalness={0.3} roughness={0.4} />
+      </RoundedBox>
+      {texture && (
+        <mesh position={[0, 0.1, 0.045]}>
+          <planeGeometry args={[1.02, 1.02]} />
+          <meshStandardMaterial map={texture} />
+        </mesh>
+      )}
+      <Text position={[0, -0.54, 0.05]} fontSize={0.1} color="#ffe9a8" anchorX="center" maxWidth={1.1}>
+        {contestant.name}
+      </Text>
     </group>
   )
 }
@@ -201,14 +264,30 @@ function CoinSet({ state }: { state: NightState | null }) {
   const leftTex = useNightTexture(left?.imageUrl, left?.name || 'A')
   const rightTex = useNightTexture(right?.imageUrl, right?.name || 'B')
   const coin = useRef<Group>(null)
+  const startedAt = useRef<number | null>(null)
+  const [landed, setLanded] = useState(false)
   const active = state?.phase === 'coin' && Boolean(result && left && right)
+  const tossKey = `${result?.matchupId}:${result?.winnerSide}`
 
-  useFrame((_, dt) => {
-    if (!coin.current || !active) return
-    coin.current.rotation.y += dt * 8
-    const t = (performance.now() / 1000) % 2.6
-    const flight = t < 1.4 ? Math.sin((t / 1.4) * Math.PI) * 2.4 : 0.08
-    coin.current.position.y = 1.6 + flight
+  useEffect(() => {
+    if (!active) {
+      startedAt.current = null
+      setLanded(false)
+      return
+    }
+    startedAt.current = performance.now()
+    setLanded(false)
+  }, [active, tossKey])
+
+  useFrame(() => {
+    if (!coin.current || !active || !result) return
+    if (startedAt.current == null) startedAt.current = performance.now()
+    const pose = coinTossPose(performance.now() - startedAt.current, result.winnerSide)
+    coin.current.position.y = pose.y
+    coin.current.rotation.x = pose.rotX
+    coin.current.rotation.z = pose.wobble
+    coin.current.rotation.y = 0
+    if (pose.done && !landed) setLanded(true)
   })
 
   if (!active || !result || !left || !right) return null
@@ -218,32 +297,34 @@ function CoinSet({ state }: { state: NightState | null }) {
       <Text position={[0, 4.2, 0]} fontSize={0.36} color={GOLD} anchorX="center">
         TIE. THE COIN DECIDES.
       </Text>
-      <group ref={coin} position={[0, 1.6, 0]}>
-        <mesh castShadow>
-          <cylinderGeometry args={[1.15, 1.15, 0.16, 48]} />
-          <meshStandardMaterial
-            color={GOLD}
-            metalness={0.85}
-            roughness={0.18}
-            emissive="#5a3d10"
-            emissiveIntensity={0.35}
-          />
-        </mesh>
-        {leftTex && (
-          <mesh position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.92, 40]} />
-            <meshStandardMaterial map={leftTex} />
+      <group position={[0, 1.6, 0.25]} rotation={[-0.42, 0, 0]}>
+        <group ref={coin}>
+          <mesh castShadow>
+            <cylinderGeometry args={[1.15, 1.15, 0.16, 48]} />
+            <meshStandardMaterial
+              color={GOLD}
+              metalness={0.85}
+              roughness={0.18}
+              emissive="#5a3d10"
+              emissiveIntensity={0.35}
+            />
           </mesh>
-        )}
-        {rightTex && (
-          <mesh position={[0, -0.09, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[0.92, 40]} />
-            <meshStandardMaterial map={rightTex} />
-          </mesh>
-        )}
+          {leftTex && (
+            <mesh position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.92, 40]} />
+              <meshStandardMaterial map={leftTex} />
+            </mesh>
+          )}
+          {rightTex && (
+            <mesh position={[0, -0.09, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.92, 40]} />
+              <meshStandardMaterial map={rightTex} />
+            </mesh>
+          )}
+        </group>
       </group>
-      <Text position={[0, 0.35, 0]} fontSize={0.22} color="#fff" anchorX="center">
-        {result.winner.name}
+      <Text position={[0, 0.32, 0]} fontSize={0.22} color="#fff" anchorX="center">
+        {landed ? result.winner.name : 'In the air'}
       </Text>
     </group>
   )

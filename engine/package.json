@@ -5,7 +5,7 @@
   "description": "Pure Bracket Night tournament engine. No I/O.",
   "main": "src/index.ts",
   "scripts": {
-    "test": "ts-node src/bracket.test.ts && ts-node src/room.test.ts",
+    "test": "ts-node src/bracket.test.ts && ts-node src/room.test.ts && ts-node src/tv-math.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

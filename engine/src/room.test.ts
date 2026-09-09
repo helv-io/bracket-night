@@ -183,4 +183,10 @@ function playAll(r: Room, pick: 0 | 1 | 'split' = 0) {
   assert.strictEqual(back.player.id, id)
 }
 
+{
+  const house = showcaseField()
+  assert.strictEqual(house.contestants.length, 8)
+  assert.ok(house.contestants.every(c => /\.jpg$/.test(c.imageUrl)), 'house photos are real jpg assets')
+}
+
 console.log('engine/room.test.ts: ok')

@@ -12,7 +12,7 @@ const NAMES = [
   'Neon Narwhal',
 ]
 
-/** Built-in 8-contestant house field. No SQLite required. */
+/** Built-in 8-contestant house field. Photos live in frontend/public/showcase. */
 export const showcaseField = (): Field => ({
   title: 'House Showcase',
   subtitle: 'The house field. Eight fighters, one champion.',
@@ -21,7 +21,7 @@ export const showcaseField = (): Field => ({
   contestants: NAMES.map((name, i) => ({
     id: createContestantId(i + 1),
     name,
-    imageUrl: `/showcase/${String(i + 1).padStart(2, '0')}.svg`,
+    imageUrl: `/showcase/${String(i + 1).padStart(2, '0')}.jpg`,
   })),
 })
 

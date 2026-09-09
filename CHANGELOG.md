@@ -11,7 +11,8 @@ Rebuild from scratch. New product surface, not a wrap of the 0.1.0 Next.js TV.
 
 ### Added
 - Pure `engine/` room + tournament rules: 2-16 contestants, byes to the next power of two, stable player ids, disconnect/reconnect by name, late-join reject, host resolve
-- three.js host TV (Vite + R3F): lobby, matchup, vote meters, tally, cinematic coin, champion
+- three.js host TV (Vite + R3F): lobby, matchup, vote meters, tally, cinematic coin, full tournament tree, champion
+- House showcase photos (`frontend/public/showcase/01.jpg` to `08.jpg`) on lobby cards, matchup cards, coin faces, and the bracket board
 - New player join/vote UI and `/new` studio on the same Vite app
 - House `showcase` field (8 contestants) so a night can start without SQLite
 - Scripted harness (`npm run sim`) with engine cases and live Socket.IO bots; writes `SIM-REPORT.md`
@@ -27,6 +28,9 @@ Rebuild from scratch. New product surface, not a wrap of the 0.1.0 Next.js TV.
 ### Removed
 - `backend/src/game.ts` as the product core (tangled, 16-only, no byes)
 - Old host/player/studio Next pages and CSS bracket DOM
+
+### Fixed
+- Coin toss spins around X (cap-to-cap) with a parabolic flight that settles on the winner. A Y-spin on a Y-aligned cylinder never flipped the faces.
 
 ### Cutover
 - Live rooms stay in-memory. Restart or deploy drops in-progress nights.

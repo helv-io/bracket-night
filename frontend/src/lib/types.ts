@@ -13,6 +13,8 @@ export interface Matchup {
   right: Contestant | null
   winner: Contestant | null
   bye: boolean
+  feedsTo: number | null
+  feedsSlot: 0 | 1 | null
 }
 
 export interface Player {

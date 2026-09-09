@@ -57,6 +57,11 @@ button, input {
 .tv-top { top: 0; }
 .tv-bottom { bottom: 0; align-items: flex-end; }
 
+.tv-bottom .tv-actions {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
 .tv-brand img {
   height: 52px;
   filter: drop-shadow(0 0 12px rgba(232, 196, 106, 0.45));

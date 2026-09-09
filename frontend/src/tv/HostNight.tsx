@@ -3,12 +3,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { socket } from '../lib/socket'
 import { APP_VERSION_LABEL } from '../lib/version'
 import { NightError, NightState } from '../lib/types'
-import { ArenaRig } from './NightScene'
+import { COIN_ACK_MS } from '../../../engine/src/coinToss'
+import { ArenaRig, TvView } from './NightScene'
 
 export function HostNight() {
   const [state, setState] = useState<NightState | null>(null)
   const [error, setError] = useState('')
   const [code, setCode] = useState('showcase')
+  const [tvView, setTvView] = useState<TvView>('arena')
   const roomId = state?.roomId || ''
   const ackFor = useRef<string>('')
   const beat = useRef(0)
@@ -63,7 +65,7 @@ export function HostNight() {
     const key = `${state.phase}:${state.lastResult?.matchupId}:${state.currentMatchupIndex}`
     if (ackFor.current === key) return
     ackFor.current = key
-    const delay = state.phase === 'coin' ? 3200 : 1600
+    const delay = state.phase === 'coin' ? COIN_ACK_MS : 1600
     const timer = window.setTimeout(() => {
       socket.emit('ack_cinematic', { roomId: state.roomId })
     }, delay)
@@ -90,11 +92,32 @@ export function HostNight() {
     socket.emit('resolve_now', { roomId })
   }
 
+  useEffect(() => {
+    if (state?.phase === 'coin') setTvView('arena')
+  }, [state?.phase])
+
+  const openedTree = useRef(false)
+  useEffect(() => {
+    if (!state?.started || !state.matchups.length || openedTree.current) return
+    openedTree.current = true
+    setTvView('bracket')
+    const timer = window.setTimeout(() => setTvView('arena'), 2800)
+    return () => window.clearTimeout(timer)
+  }, [state?.started, state?.matchups.length])
+
+  useEffect(() => {
+    if (state?.phase !== 'champion') return
+    const timer = window.setTimeout(() => setTvView('bracket'), 2000)
+    return () => window.clearTimeout(timer)
+  }, [state?.phase])
+
+  const canShowBracket = Boolean(state?.started && state.matchups.length > 0)
+
   return (
     <div className="tv-root">
       <audio src="/background.ogg" autoPlay loop />
       <Canvas camera={{ position: [0, 5.4, 12], fov: 42 }} shadows>
-        <ArenaRig state={state} joinUrl={joinUrl} />
+        <ArenaRig state={state} joinUrl={joinUrl} tvView={tvView} />
       </Canvas>
       <div className="tv-hud">
         <header className="tv-top">
@@ -147,11 +170,22 @@ export function HostNight() {
               )
             })}
           </div>
-          {state?.started && state.phase === 'matchup' && state.waitingOn.length > 0 && (
-            <button type="button" className="bn-btn" onClick={resolveNow}>
-              Resolve now
-            </button>
-          )}
+          <div className="tv-actions">
+            {canShowBracket && (
+              <button
+                type="button"
+                className={`bn-btn ${tvView === 'bracket' ? 'bn-btn--solid' : ''}`}
+                onClick={() => setTvView(v => (v === 'bracket' ? 'arena' : 'bracket'))}
+              >
+                {tvView === 'bracket' ? 'Back to fight' : 'Full bracket'}
+              </button>
+            )}
+            {state?.started && state.phase === 'matchup' && state.waitingOn.length > 0 && (
+              <button type="button" className="bn-btn" onClick={resolveNow}>
+                Resolve now
+              </button>
+            )}
+          </div>
         </footer>
         <div className="tv-version">{APP_VERSION_LABEL}</div>
       </div>
