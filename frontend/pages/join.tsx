@@ -25,6 +25,8 @@ const Join = () => {
   const [isGameOver, setIsGameOver] = useState(false)
   const [publicBrackets, setPublicBrackets] = useState<PublicBracket[]>([])
   const [tieNotice, setTieNotice] = useState<{ winnerName: string } | null>(null)
+  const [playerId, setPlayerId] = useState('')
+  const [joinError, setJoinError] = useState('')
   const currentVotesRef = useRef(currentVotes)
 
   useEffect(() => {
@@ -46,6 +48,11 @@ const Join = () => {
 
     socket.on('player_joined', ({ players }) => setPlayers(players))
     socket.on('game_master', () => setIsGameMaster(true))
+    socket.on('joined', ({ playerId }) => {
+      setPlayerId(playerId)
+      setHasJoined(true)
+      setJoinError('')
+    })
 
     socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
       setBracket(bracket as Bracket)
@@ -72,10 +79,10 @@ const Join = () => {
       setCurrentMatchupIndex(currentMatchupIndex)
       setCurrentVotes([])
       currentVotesRef.current = []
-      if (currentMatchupIndex === 15) setIsGameOver(true)
+      if (currentMatchupIndex >= matchups.length) setIsGameOver(true)
     })
 
-    socket.on('error', (msg) => alert(msg))
+    socket.on('error', (msg) => setJoinError(String(msg || 'Something went wrong')))
     socket.on('players_update', (updatedPlayers) => setPlayers(updatedPlayers))
 
     socket.on(
@@ -105,6 +112,7 @@ const Join = () => {
     return () => {
       socket.off('player_joined')
       socket.off('game_master')
+      socket.off('joined')
       socket.off('bracket_set')
       socket.off('vote_cast')
       socket.off('matchup_advanced')
@@ -145,9 +153,9 @@ const Join = () => {
 
   const handleJoin = () => {
     if (gameId && name) {
+      setJoinError('')
       socket.emit('join', { gameId, playerName: name })
       localStorage.setItem('playerName', name)
-      setHasJoined(true)
     }
   }
 
@@ -162,9 +170,11 @@ const Join = () => {
     socket.emit('start_game', { gameId })
   }
 
-  const hasVoted = currentVotes.some((v) => v.playerId === socket.id)
+  const hasVoted = currentVotes.some((v) => v.playerId === playerId)
   const currentMatchup = matchups[currentMatchupIndex]
-  const champion = matchups[currentMatchupIndex - 1]?.winner
+  const champion = isGameOver
+    ? matchups[matchups.length - 1]?.winner
+    : matchups[currentMatchupIndex - 1]?.winner
 
   return (
     <div className="bn-page bn-page--stadium min-h-screen flex flex-col items-center p-4 gap-4">
@@ -183,6 +193,11 @@ const Join = () => {
             <p className="player-state-copy mb-4">
               Enter the room code from the TV and your display name.
             </p>
+            {joinError && (
+              <p className="player-state-copy mb-3" role="alert" style={{ color: 'var(--danger)' }}>
+                {joinError}
+              </p>
+            )}
 
             <input
               type="text"

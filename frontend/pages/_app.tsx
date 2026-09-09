@@ -2,6 +2,7 @@ import '../styles/globals.css'
 import '../styles/cointoss.css'
 import '../styles/bracket.css'
 import '../styles/player.css'
+import '../styles/host3d.css'
 import type { AppProps } from 'next/app'
 import Head from 'next/head'
 

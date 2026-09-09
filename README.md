@@ -1,25 +1,30 @@
 # Bracket Night
 
-Bracket Night is a Jackbox-style party game. Players join by scanning a QR code and vote on contestants in a classic tournament bracket. Stack: TypeScript, Express + Socket.IO backend, Next.js (pages router) frontend.
+Bracket Night is a Jackbox-class party game. The host TV is a three.js night (React Three Fiber). Phones join by QR, lock a name, and vote. Stack: TypeScript, Express + Socket.IO, Next.js pages router, three.js on the host.
 
 ## Features
 
-- **Bracket Setup**: Create a bracket with a title, subtitle, and 16 contestants, each with a picture.
-- **Voting System**: Players vote; winners advance through quarters, semis, and finals.
-- **Tie Resolution**: Ties pick a random winner.
-- **Player Management**: Up to `MAX_PLAYERS` (default 10) join via QR code.
-- **Bracket Templates**: First player can enter a bracket code to load contestants/images from SQLite.
-- **Mobile Friendly**: `/new` for creating brackets; mobiles hitting `/` redirect there.
-- **Docker Support**: See `Dockerfile`.
+- **Host TV (three.js)**: Full-viewport lobby (join code + QR plane), matchup plaques, vote tally drama, cinematic gold coin on ties, champion.
+- **Join flow**: Scan or type the 8-char hex code, pick a name, sit in lobby, vote on the phone.
+- **Voting + bracket**: Winners advance through the field. Server sets `isGameOver` when one champion remains.
+- **Tie resolution**: Server assigns a winner and emits `wasTie` + `tallies`. The TV plays tally bars, then the three.js coin (CSS coin is prior art; host path is WebGL).
+- **Byes**: Fields that are not a power of two pad to the next power of two. Real-vs-real pairs first, then real-vs-empty byes. Byes auto-advance when they become current. Template create UI still ships 16 contestants. The engine accepts 2-16 (house `showcase` is 8).
+- **Players**: Up to `MAX_PLAYERS` (default 16). Late join after start is rejected with a clear error. Reconnect by the same name keeps the stable player id and any locked vote. Disconnect marks the seat; the night still waits for that vote.
+- **House showcase**: Game master can load code `showcase` (also listed under public brackets). No SQLite required.
+- **Templates**: `/new` still writes 16-contestant brackets to SQLite.
+- **Docker**: See `Dockerfile`.
 
 ## Architecture notes
 
 | Concern | Storage |
 | --- | --- |
 | Bracket templates (codes, contestants, images) | SQLite (`DB_PATH`) |
-| Live game rooms / votes / players | **In-process `Map` in `backend/src/game.ts`** |
+| Live game rooms / votes / players | **In-process `Map` in `backend/src/game.ts`** (logic in `backend/src/engine.ts`) |
+| House showcase field | In-memory (`showcase` code) |
 
-Live games are **not** persisted. Restarting the server wipes active rooms. Multi-instance / Redis is intentionally out of scope for now — run a single process.
+Live games are **not** persisted. Restarting the server wipes active rooms. Multi-instance / Redis is intentionally out of scope. Run a single process.
+
+**Cutover (0.2.0):** rooms are still in-memory, so a deploy drops in-progress nights. Protocol adds `phase`, `joined`, stable `player.id`, `connected`, `socketId`, `matchup_advanced.wasTie/bye/tallies`. Votes key off the stable player id, not the Socket.IO id. Start a new room after upgrade. Do not expect a live night to survive the bounce.
 
 Join codes are 8-character hex strings (dev uses `DEV`). Short guessable codes were replaced without changing the QR/`?game=` URL contract.
 
@@ -52,13 +57,16 @@ bracket-night/
 │       ├── ai.ts
 │       ├── config.ts
 │       ├── db.ts
-│       ├── game.ts          # in-memory live games
+│       ├── engine.ts        # pure night logic (votes, byes, ties)
+│       ├── game.ts          # Socket.IO adapter + in-memory rooms
 │       ├── image.ts
 │       ├── security.ts      # topic limits, API secret, SSRF, CORS helpers
 │       ├── server.ts
+│       ├── showcase.ts      # house field, no SQLite
+│       ├── sim/run.ts       # scripted path coverage
 │       └── types.ts
 ├── frontend/
-│   ├── components/
+│   ├── components/          # host/ is the three.js TV
 │   ├── lib/
 │   ├── pages/               # Next.js pages router
 │   ├── public/
@@ -116,9 +124,16 @@ See [`.env.example`](.env.example) for the full list. Important knobs:
 ## Development
 
 - TypeScript: 2-space indentation, no semicolons.
-- `npm test` — backend security unit tests.
-- `npm run build` — build frontend (static export) + backend bundle.
-- `npm run lint` — Next.js ESLint.
+- `npm test`: security + engine unit tests + simulation harness.
+- `npm run sim`: simulation only (writes `SIM-REPORT.md`).
+- `npm run build`: build frontend (static export) + backend bundle.
+- `npm run lint`: Next.js ESLint.
+
+Host TV needs WebGL. Phones stay DOM (vote + lobby). The old 2D bracket canvas is not the host path anymore.
+
+### Simulation
+
+`npm run sim` drives the engine with scripted players. It does not open Socket.IO or a browser. Covered paths: 4 and 16 player full nights, 6- and 12-contestant byes, ties (`wasTie`), disconnect/reconnect, late join reject, room full, host start gates, house showcase, single champion. Visual three.js and phone chrome are not in the harness. See `SIM-REPORT.md` after a run.
 
 ## License
 

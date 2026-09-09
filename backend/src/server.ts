@@ -20,6 +20,7 @@ import { Game } from './game'
 import { getImageURLs } from './image'
 import { Bracket } from './types'
 import { createBracket, isCodeUnique, getPublicBrackets } from './db'
+import { SHOWCASE_CODE, getShowcaseBracket } from './showcase'
 import { AiUnavailableError, getContestants } from './ai'
 import { getCorsOrigins, requireApiSecret, sanitizeTopic } from './security'
 
@@ -96,8 +97,12 @@ app.get('/api/unique/:code', (req, res) => {
 
 // API endpoint to get all public brackets
 app.get('/api/public', (_req, res) => {
-  const publicBrackets = getPublicBrackets()
-  res.json(publicBrackets)
+  const house = getShowcaseBracket()
+  const publicBrackets = getPublicBrackets().filter((b) => b.code !== SHOWCASE_CODE)
+  res.json([
+    { code: house.code, title: house.title, subtitle: house.subtitle },
+    ...publicBrackets,
+  ])
 })
 
 // Get image URL from a search query

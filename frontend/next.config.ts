@@ -27,10 +27,12 @@ const sharedEnv = {
 const nextConfig: NextConfig = {
   output: 'export',
   env: sharedEnv,
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
 }
 
 const devConfig: NextConfig = {
   env: sharedEnv,
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
   rewrites: async () => {
     return [
       {

@@ -1,6 +1,6 @@
 {
   "name": "bracket-night",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -9,6 +9,7 @@
     "lint": "npm run lint -w frontend",
     "lint:fix": "npm run lint -w frontend -- --fix",
     "test": "npm run test -w backend",
+    "sim": "npm run sim -w backend",
     "typecheck": "npm run typecheck -w backend",
     "clean": "rimraf dist",
     "build:frontend": "npm run build -w frontend",

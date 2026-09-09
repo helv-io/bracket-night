@@ -21,9 +21,42 @@ export interface Matchup {
   winner: Contestant | null
 }
 
+/** Host TV / engine phase. Additive on game_state (old clients ignore it). */
+export type NightPhase = 'lobby' | 'matchup' | 'tally' | 'coin' | 'champion'
+
 export interface Player {
+  /** Stable id for the night (votes + reconnect). Not the Socket.IO id. */
   id: string
   name: string
+  /** Current connection id. Empty string when disconnected. */
+  socketId: string
+  connected: boolean
+}
+
+export interface VoteTallies {
+  left: number
+  right: number
+}
+
+export interface MatchupAdvance {
+  matchups: Matchup[]
+  currentMatchupIndex: number
+  wasTie: boolean
+  bye: boolean
+  tallies: VoteTallies
+}
+
+export interface GameState {
+  gameId: string
+  bracket: Bracket | null
+  players: Player[]
+  currentMatchupIndex: number
+  matchups: Matchup[]
+  currentVotes: Vote[]
+  isGameStarted: boolean
+  isGameOver: boolean
+  phase: NightPhase
+  lastAdvance: MatchupAdvance | null
 }
 
 export interface Vote {

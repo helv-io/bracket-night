@@ -1,8 +1,19 @@
 import { randomBytes } from 'crypto'
 import { Server, Socket } from 'socket.io'
 import { getBracketByCode } from './db'
-import { Bracket, Contestant, Matchup, Player, Vote } from './types'
 import { config } from './config'
+import { GameState, MatchupAdvance } from './types'
+import {
+  applyBracket,
+  castVote,
+  createEmptyGame,
+  disconnectBySocket,
+  findGameForSocket,
+  joinGame,
+  playerBySocket,
+  startGame,
+} from './engine'
+import { SHOWCASE_CODE, getShowcaseBracket } from './showcase'
 
 /** 8-char hex join codes (QR/URL accept any length; avoids short guessable IDs). */
 const generateGameId = () => randomBytes(4).toString('hex').toUpperCase()
@@ -24,195 +35,130 @@ export class Game {
       while (!config.dev && this.games.has(gameId)) {
         gameId = generateGameId()
       }
-      this.games.set(gameId, {
-        gameId: gameId,
-        bracket: null,
-        players: [],
-        currentMatchupIndex: 0,
-        matchups: [],
-        currentVotes: [],
-        isGameStarted: false,
-        isGameOver: false
-      })
+      this.games.set(gameId, createEmptyGame(gameId))
       socket.emit('game_created', { gameId })
       socket.join(gameId)
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
     })
 
     socket.on('join', ({ gameId, playerName }) => {
       const game = this.games.get(gameId)
-      if (!game || game.players.length >= config.maxPlayers) {
-        socket.emit('error', 'Game is full')
+      if (!game) {
+        socket.emit('error', 'No room with that code. Check the TV and try again.')
         return
       }
-      let player = game.players.find(p => p.name === playerName)
-      if (player) {
-        player.id = socket.id // Update player ID to the new socket ID
-      } else {
-        if (game.isGameStarted) {
-          socket.emit('error', 'Game has already started')
-          return
-        }
-        player = { id: socket.id, name: playerName }
-        game.players.push(player)
+      const result = joinGame(game, String(playerName || ''), socket.id, config.maxPlayers)
+      if (!result.ok) {
+        socket.emit('error', result.error)
+        return
       }
       socket.join(gameId)
-      const hasVoted = game.currentVotes.some(v => v.playerId === socket.id)
-      socket.emit('vote_status', { hasVoted })
+      socket.emit('joined', {
+        playerId: result.player.id,
+        playerName: result.player.name,
+        isReconnect: result.isReconnect,
+      })
+      socket.emit('vote_status', { hasVoted: result.hasVoted, playerId: result.player.id })
       this.io.to(gameId).emit('player_joined', { players: game.players })
-
-      // Send the current game state to the newly joined player
       socket.emit('game_state', game)
-
-      // First player becomes game master
-      if (game.players.length === 1) {
+      if (result.isGameMaster) {
         socket.emit('game_master')
       } else if (game.bracket) {
-        // Send the current game state to the newly joined player
         socket.emit('bracket_set', {
           bracket: game.bracket,
           matchups: game.matchups,
-          currentMatchupIndex: game.currentMatchupIndex
+          currentMatchupIndex: game.currentMatchupIndex,
         })
       }
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
     })
 
     socket.on('set_bracket', ({ gameId, code }) => {
       const game = this.games.get(gameId)
-      // Prevent setting bracket if the game has already started or if the bracket has already been set
-      if (!game || game.bracket) return
-      
-      // Find the bracket by code and set it
-      const bracket = getBracketByCode(code)
+      if (!game) {
+        socket.emit('error', 'No room with that code. Check the TV and try again.')
+        return
+      }
+      const normalized = String(code || '').trim().toLowerCase()
+      const bracket = normalized === SHOWCASE_CODE
+        ? getShowcaseBracket()
+        : getBracketByCode(normalized)
       if (!bracket) {
         socket.emit('error', 'Invalid bracket code')
         return
       }
-      game.bracket = bracket
-      game.matchups = this.createMatchups(bracket.contestants)
+      const result = applyBracket(game, bracket)
+      if (!result.ok) {
+        socket.emit('error', result.error)
+        return
+      }
       this.io.to(gameId).emit('bracket_set', {
         bracket: game.bracket,
         matchups: game.matchups,
-        currentMatchupIndex: game.currentMatchupIndex
+        currentMatchupIndex: game.currentMatchupIndex,
       })
-      this.emitGameState(gameId) // Emit game state
+      this.emitGameState(gameId)
     })
 
-    // Handle vote event
     socket.on('vote', ({ gameId, choice }) => {
-      // Retrieve the game game
       const game = this.games.get(gameId)
-      
-      // Check if game exists, bracket is set, and current matchup is valid
-      if (!game || !game.bracket || game.currentMatchupIndex >= game.matchups.length) return
-      
-      // Prevent duplicate votes from the same player
-      if (game.currentVotes.find(v => v.playerId === socket.id)) return
-      
-      // Record the vote
-      game.currentVotes.push({ playerId: socket.id, choice })
-      
-      // Notify all clients in the game about the vote
+      if (!game) return
+      const player = playerBySocket(game, socket.id)
+      if (!player) return
+      const result = castVote(game, player.id, Number(choice))
+      if (!result.ok) return
+
       this.io.to(gameId).emit('vote_cast', {
         currentVotes: game.currentVotes,
-        players: game.players
+        players: game.players,
       })
-      this.emitGameState(gameId) // Emit game state
-      
-      // If all players have voted, advance to the next matchup
-      if (game.currentVotes.length === game.players.length) {
-        this.advanceMatchup(gameId)
+      this.emitGameState(gameId)
+
+      if (result.allIn) {
+        this.emitAdvances(gameId, result.advances)
       }
     })
 
     socket.on('start_game', ({ gameId }) => {
       const game = this.games.get(gameId)
       if (!game) return
-      game.isGameStarted = true
-      this.emitGameState(gameId) // Emit game state
+      const result = startGame(game)
+      if (!result.ok) {
+        socket.emit('error', result.error)
+        return
+      }
+      this.emitGameState(gameId)
+      if (result.advances.length > 0) {
+        this.emitAdvances(gameId, result.advances)
+      }
     })
+
+    socket.on('disconnect', () => {
+      const game = findGameForSocket(this.games, socket.id)
+      if (!game) return
+      disconnectBySocket(game, socket.id)
+      this.io.to(game.gameId).emit('players_update', game.players)
+      this.emitGameState(game.gameId)
+    })
+  }
+
+  private emitAdvances(gameId: string, advances: MatchupAdvance[]) {
+    const game = this.games.get(gameId)
+    if (!game) return
+    for (const advance of advances) {
+      this.io.to(gameId).emit('matchup_advanced', {
+        matchups: advance.matchups,
+        currentMatchupIndex: advance.currentMatchupIndex,
+        wasTie: advance.wasTie,
+        bye: advance.bye,
+        tallies: advance.tallies,
+      })
+    }
+    this.emitGameState(gameId)
   }
 
   private emitGameState(gameId: string) {
     const game = this.games.get(gameId)
     game && this.io.to(gameId).emit('game_state', game)
   }
-
-  private createMatchups(contestants: Contestant[]): Matchup[] {
-    const shuffledContestants = contestants.sort(() => Math.random() - 0.5)
-    const matchups: Matchup[] = []
-    // First round: 8 matchups with 16 contestants
-    for (let i = 0; i < 8; i++) {
-      matchups.push({
-        id: i,
-        left: shuffledContestants[i * 2],
-        right: shuffledContestants[i * 2 + 1],
-        winner: null
-      })
-    }
-    // Subsequent rounds: quarter-finals, semi-finals, final
-    for (let round = 1; round < 4; round++) {
-      for (let i = 0; i < 8 / Math.pow(2, round); i++) {
-        matchups.push({
-          id: matchups.length,
-          left: null,
-          right: null,
-          winner: null
-        })
-      }
-    }
-    return matchups
-  }
-
-  private advanceMatchup(gameId: string) {
-    const game = this.games.get(gameId)
-    if (!game) return
-    const currentMatchup = game.matchups[game.currentMatchupIndex]
-    const leftVotes = game.currentVotes.filter(v => v.choice === 0).length
-    const rightVotes = game.currentVotes.filter(v => v.choice === 1).length
-    // Authoritative tie flag — clients must not reconstruct this from vote refs
-    // (game_state + matchup_advanced race leaves React refs one vote behind).
-    const wasTie = leftVotes === rightVotes
-
-    // Randomly select a winner if there's a tie
-    const winner = leftVotes > rightVotes
-      ? currentMatchup.left
-      : rightVotes > leftVotes
-        ? currentMatchup.right
-        : Math.random() < 0.5
-          ? currentMatchup.left
-          : currentMatchup.right
-    currentMatchup.winner = winner
-
-    // Update next matchup if not final round
-    if (game.currentMatchupIndex < 14) {
-      const nextMatchupIndex = 8 + Math.floor(game.currentMatchupIndex / 2)
-      const nextMatchup = game.matchups[nextMatchupIndex]
-      if (game.currentMatchupIndex % 2 === 0) {
-        nextMatchup.left = winner
-      } else {
-        nextMatchup.right = winner
-      }
-    }
-
-    game.currentVotes = []
-    game.currentMatchupIndex++
-    this.io.to(gameId).emit('matchup_advanced', {
-      matchups: game.matchups,
-      currentMatchupIndex: game.currentMatchupIndex,
-      wasTie,
-    })
-  }
-}
-
-interface GameState {
-  gameId: string
-  bracket: Bracket | null
-  players: Player[]
-  currentMatchupIndex: number
-  matchups: Matchup[]
-  currentVotes: Vote[]
-  isGameStarted: boolean
-  isGameOver: boolean
 }

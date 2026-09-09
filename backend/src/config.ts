@@ -5,7 +5,7 @@ dotenv.config()
 export const config = {
   dev: process.env.NODE_ENV !== 'production',
 
-  maxPlayers: Math.max(2, parseInt(process.env.MAX_PLAYERS || '10', 10)),
+  maxPlayers: Math.max(2, parseInt(process.env.MAX_PLAYERS || '16', 10)),
 
   dbFolder: process.env.DB_FOLDER
     || (process.env.NODE_ENV === 'production' ? '../config' : './config'),
