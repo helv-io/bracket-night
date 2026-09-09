@@ -108,18 +108,18 @@ function LobbySet({ state, joinUrl }: { state: NightState | null, joinUrl: strin
 
   return (
     <group visible={visible}>
-      <Text position={[0, 5.6, -1.4]} fontSize={0.72} color={GOLD} anchorX="center">
+      <Text position={[0, 5.85, -1.4]} fontSize={0.58} color={GOLD} anchorX="center">
         BRACKET NIGHT
       </Text>
-      <Text position={[0, 4.95, -1.4]} fontSize={0.28} color="#f2efe6" anchorX="center">
+      <Text position={[0, 5.28, -1.4]} fontSize={0.22} color="#f2efe6" anchorX="center">
         {state?.field?.title || 'Scan in. The house is listening.'}
       </Text>
-      <Text position={[0, 3.35, 0.2]} fontSize={0.55} color="#ffe9a8" anchorX="center">
+      <Text position={[0, 1.72, 0.35]} fontSize={0.48} color="#ffe9a8" anchorX="center">
         {state?.roomId || '····'}
       </Text>
       {qr && (
-        <mesh position={[0, 1.85, 0.4]}>
-          <planeGeometry args={[2.1, 2.1]} />
+        <mesh position={[0, 0.42, 0.5]}>
+          <planeGeometry args={[1.2, 1.2]} />
           <meshBasicMaterial map={qr} />
         </mesh>
       )}
@@ -150,21 +150,24 @@ function LobbySet({ state, joinUrl }: { state: NightState | null, joinUrl: strin
 function FieldPreview({ state }: { state: NightState | null }) {
   const contestants = state?.field?.contestants || []
   if (!contestants.length || state?.phase !== 'lobby') return null
+  const cols = Math.min(4, contestants.length)
+  const rows = Math.ceil(contestants.length / cols)
   return (
     <group>
       {contestants.map((contestant, i) => {
-        const angle = (i / contestants.length) * Math.PI * 2 - Math.PI / 2
-        const r = 6.6
+        const col = i % cols
+        const row = Math.floor(i / cols)
+        const x = (col - (cols - 1) / 2) * 1.55
+        const y = 4.15 - row * 1.48
         return (
-          <group
-            key={contestant.id}
-            position={[Math.cos(angle) * r, 1.55, Math.sin(angle) * r]}
-            rotation={[0, -angle, 0]}
-          >
+          <group key={contestant.id} position={[x, y, -3.15]}>
             <LobbyPhoto contestant={contestant} />
           </group>
         )
       })}
+      <Text position={[0, 4.15 + (rows > 1 ? 0.92 : 0.85), -3.1]} fontSize={0.18} color="#9aa3b8" anchorX="center">
+        {`${contestants.length} in the house`}
+      </Text>
     </group>
   )
 }
@@ -179,7 +182,7 @@ function LobbyPhoto({ contestant }: { contestant: { name: string, imageUrl: stri
       {texture && (
         <mesh position={[0, 0.1, 0.045]}>
           <planeGeometry args={[1.02, 1.02]} />
-          <meshStandardMaterial map={texture} />
+          <meshBasicMaterial map={texture} />
         </mesh>
       )}
       <Text position={[0, -0.54, 0.05]} fontSize={0.1} color="#ffe9a8" anchorX="center" maxWidth={1.1}>
@@ -242,7 +245,7 @@ function FighterCard({
       {texture && (
         <mesh position={[0, 0.15, 0.08]}>
           <planeGeometry args={[1.9, 1.9]} />
-          <meshStandardMaterial map={texture} />
+          <meshBasicMaterial map={texture} />
         </mesh>
       )}
       <Text position={[0, -1.15, 0.1]} fontSize={0.2} color="#ffe9a8" anchorX="center" maxWidth={2}>
@@ -294,6 +297,7 @@ function CoinSet({ state }: { state: NightState | null }) {
 
   return (
     <group>
+      <spotLight position={[0, 6.2, 3.2]} angle={0.5} intensity={3.4} color="#fff1c8" />
       <Text position={[0, 4.2, 0]} fontSize={0.36} color={GOLD} anchorX="center">
         TIE. THE COIN DECIDES.
       </Text>
@@ -312,13 +316,13 @@ function CoinSet({ state }: { state: NightState | null }) {
           {leftTex && (
             <mesh position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[0.92, 40]} />
-              <meshStandardMaterial map={leftTex} />
+              <meshBasicMaterial map={leftTex} />
             </mesh>
           )}
           {rightTex && (
             <mesh position={[0, -0.09, 0]} rotation={[Math.PI / 2, 0, 0]}>
               <circleGeometry args={[0.92, 40]} />
-              <meshStandardMaterial map={rightTex} />
+              <meshBasicMaterial map={rightTex} />
             </mesh>
           )}
         </group>

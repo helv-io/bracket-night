@@ -15,10 +15,10 @@ assert.ok(mid.rotX > 0)
 const leftLand = coinTossPose(COIN_TOSS_MS, 0)
 assert.ok(leftLand.done)
 assert.ok(Math.abs(leftLand.y) < 1e-9)
-assert.ok(Math.abs(leftLand.rotX / Math.PI - 8) < 1e-9, 'left winner lands on even half-turns')
+assert.ok(Math.abs(leftLand.rotX / Math.PI - 6) < 1e-9, 'left winner lands on even half-turns')
 
 const rightLand = coinTossPose(COIN_TOSS_MS, 1)
-assert.ok(Math.abs(rightLand.rotX / Math.PI - 9) < 1e-9, 'right winner lands on odd half-turns')
+assert.ok(Math.abs(rightLand.rotX / Math.PI - 7) < 1e-9, 'right winner lands on odd half-turns')
 
 const contestant = (id: string, name: string): NonNullable<Matchup['left']> => ({
   id,

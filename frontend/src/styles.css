@@ -55,11 +55,16 @@ button, input {
 }
 
 .tv-top { top: 0; }
-.tv-bottom { bottom: 0; align-items: flex-end; }
+.tv-bottom {
+  bottom: 0;
+  align-items: flex-end;
+  padding-bottom: 2.2rem;
+}
 
 .tv-bottom .tv-actions {
   margin-top: 0;
   justify-content: flex-end;
+  padding-bottom: 0.2rem;
 }
 
 .tv-brand img {

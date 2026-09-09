@@ -1,5 +1,5 @@
 /** Toss duration. Host ack must wait longer than this so the land is visible. */
-export const COIN_TOSS_MS = 2800
+export const COIN_TOSS_MS = 3200
 export const COIN_HOLD_MS = 1400
 export const COIN_ACK_MS = COIN_TOSS_MS + COIN_HOLD_MS
 
@@ -21,7 +21,7 @@ const PEAK = 2.65
 export const coinTossPose = (elapsedMs: number, winnerSide: 0 | 1): CoinPose => {
   const t = Math.min(1, Math.max(0, elapsedMs / COIN_TOSS_MS))
   const eased = 1 - Math.pow(1 - t, 3)
-  const halfTurns = winnerSide === 0 ? 8 : 9
+  const halfTurns = winnerSide === 0 ? 6 : 7
   return {
     y: START_Y + PEAK * 4 * t * (1 - t),
     rotX: eased * halfTurns * Math.PI,

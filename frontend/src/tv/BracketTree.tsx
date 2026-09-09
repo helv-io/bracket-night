@@ -29,7 +29,7 @@ export function BracketSet({
     const tx = focus ? 0 : 0
     const ty = focus ? 2.15 : 4.05
     const tz = focus ? 0.2 : -8.6
-    const ts = focus ? 1 : 0.34
+    const ts = focus ? 1.05 : 0.4
     group.current.position.x += (tx - group.current.position.x) * k
     group.current.position.y += (ty - group.current.position.y) * k
     group.current.position.z += (tz - group.current.position.z) * k
@@ -44,7 +44,8 @@ export function BracketSet({
   const rounds = Array.from({ length: layout.maxRound + 1 }, (_, r) => r)
 
   return (
-    <group ref={group} position={[0, 4.05, -8.6]} scale={0.34} visible={visible}>
+    <group ref={group} position={[0, 4.05, -8.6]} scale={0.4} visible={visible}>
+      <pointLight position={[0, 0.5, 3.6]} intensity={focus ? 2.8 : 1.2} color="#fff6d2" />
       <mesh position={[0, 0, -0.18]} receiveShadow>
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial color="#080d18" metalness={0.35} roughness={0.55} transparent opacity={0.92} />
@@ -145,19 +146,18 @@ function SlotFace({
   position: [number, number, number]
   winner: boolean
 }) {
-  const texture = useNightTexture(contestant?.imageUrl, contestant?.name || '?')
+  const texture = useNightTexture(contestant?.imageUrl, contestant?.name || 'TBD')
   return (
     <group position={position}>
       <mesh>
-        <planeGeometry args={[0.82, 0.82]} />
-        <meshStandardMaterial
-          map={texture || undefined}
-          color={texture ? '#ffffff' : '#2a3148'}
-          emissive={winner ? GOLD : '#000'}
-          emissiveIntensity={winner ? 0.22 : 0}
-        />
+        <planeGeometry args={[0.86, 0.86]} />
+        {contestant && texture ? (
+          <meshBasicMaterial map={texture} color={winner ? '#fff4cc' : '#ffffff'} />
+        ) : (
+          <meshBasicMaterial color="#1a2236" />
+        )}
       </mesh>
-      <Text position={[0, -0.52, 0.01]} fontSize={0.1} color={winner ? GOLD : '#f2efe6'} anchorX="center" maxWidth={0.9}>
+      <Text position={[0, -0.54, 0.01]} fontSize={0.1} color={winner ? GOLD : '#f2efe6'} anchorX="center" maxWidth={0.9}>
         {contestant?.name || 'TBD'}
       </Text>
     </group>
