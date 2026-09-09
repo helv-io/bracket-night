@@ -18,7 +18,13 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion()),
   },
+  resolve: {
+    alias: {
+      engine: join(__dirname, '..', 'engine', 'src'),
+    },
+  },
   server: {
+    fs: { allow: [join(__dirname, '..')] },
     port: 3000,
     proxy: {
       '/api': 'http://localhost:3001',

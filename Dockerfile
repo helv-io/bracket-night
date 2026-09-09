@@ -23,6 +23,7 @@ RUN set -eu; \
   done; \
   exit 1
 COPY frontend ./
+COPY engine /app/engine
 COPY package.json /tmp/root-package.json
 RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('/tmp/root-package.json','utf8')); fs.writeFileSync('/app/package.json', JSON.stringify({ name: p.name, version: p.version }, null, 2));"
 ENV NODE_ENV=production
