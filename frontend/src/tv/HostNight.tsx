@@ -11,6 +11,7 @@ export function HostNight() {
   const [code, setCode] = useState('showcase')
   const roomId = state?.roomId || ''
   const ackFor = useRef<string>('')
+  const beat = useRef(0)
 
   useEffect(() => {
     socket.emit('create_room')
@@ -30,7 +31,21 @@ export function HostNight() {
         waitingOn: [],
       })
     })
-    socket.on('night_state', (next: NightState) => setState(next))
+    socket.on('night_state', (next: NightState) => {
+      const id = ++beat.current
+      setState(prev => {
+        const hold = prev
+          && prev.phase === 'matchup'
+          && (next.phase === 'tally' || next.phase === 'coin' || next.phase === 'champion')
+        if (hold) {
+          window.setTimeout(() => {
+            if (beat.current === id) setState(next)
+          }, 1600)
+          return { ...prev, votes: next.votes, lastResult: next.lastResult }
+        }
+        return next
+      })
+    })
     socket.on('night_error', (err: NightError) => setError(err.message))
     return () => {
       socket.off('room_created')
