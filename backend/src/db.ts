@@ -1,8 +1,13 @@
+import fs from 'fs'
 import sqlite3 from 'better-sqlite3'
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator'
 import { config } from './config'
 import { Bracket, Contestant, PublicBracket } from './types'
 import { saveImage } from './image'
+
+if (!fs.existsSync(config.dbFolder)) {
+  fs.mkdirSync(config.dbFolder, { recursive: true })
+}
 
 // Initialize database
 const db = sqlite3(config.dbPath)
