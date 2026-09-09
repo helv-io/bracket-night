@@ -1,0 +1,16 @@
+{
+  "name": "engine",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Pure Bracket Night tournament engine. No I/O.",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "ts-node src/bracket.test.ts && ts-node src/room.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

@@ -48,9 +48,10 @@ $RECYCLE.BIN/
 # VSCode
 .vscode/
 
-# Next.js
+# Next.js (retired) and Vite
 .next/
 out/
+frontend/dist/
 
 # Production
 /build

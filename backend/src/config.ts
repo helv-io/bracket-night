@@ -5,7 +5,12 @@ dotenv.config()
 export const config = {
   dev: process.env.NODE_ENV !== 'production',
 
-  maxPlayers: Math.max(2, parseInt(process.env.MAX_PLAYERS || '10', 10)),
+  // Stable DEV join code only for interactive local nights, never for test/CI.
+  useDevJoinCode:
+    process.env.NIGHT_DEV_CODE === '1'
+    || process.env.NODE_ENV === 'development',
+
+  maxPlayers: Math.min(16, Math.max(2, parseInt(process.env.MAX_PLAYERS || '16', 10))),
 
   dbFolder: process.env.DB_FOLDER
     || (process.env.NODE_ENV === 'production' ? '../config' : './config'),

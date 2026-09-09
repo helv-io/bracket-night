@@ -47,7 +47,7 @@ export const requireApiSecret = (req: Request, res: Response, next: NextFunction
 
 /**
  * Socket.IO / HTTP CORS allowlist from FRONTEND_ORIGIN or CORS_ORIGIN.
- * Dev defaults to localhost Next.js; production defaults to same-origin only.
+ * Dev defaults to localhost Vite; production defaults to same-origin only.
  */
 export const getCorsOrigins = (): string[] | boolean => {
   const raw = config.corsOrigin
@@ -56,7 +56,7 @@ export const getCorsOrigins = (): string[] | boolean => {
     return list.length ? list : false
   }
   if (config.dev) return ['http://localhost:3000']
-  // Same-origin (Express serves the static frontend) — no cross-origin needed.
+  // Same-origin (Express serves the static frontend). No cross-origin needed.
   return false
 }
 

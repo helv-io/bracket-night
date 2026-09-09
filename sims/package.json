@@ -1,0 +1,19 @@
+{
+  "name": "sims",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Scripted night harness: engine + live Socket.IO bots",
+  "scripts": {
+    "sim": "ts-node src/run.ts",
+    "rehearsal": "ts-node src/rehearsal.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

@@ -14,6 +14,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "strict": true,
+    "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
@@ -23,6 +24,10 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "../engine/src/**/*.ts"
+  ],
+  "exclude": [
+    "../engine/src/**/*.test.ts"
   ]
 }
