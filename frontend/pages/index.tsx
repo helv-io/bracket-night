@@ -264,6 +264,9 @@ const Home = () => {
             <p className="text-xs text-[var(--text-muted)] mb-2">
               Game master loads <span className="host-code-pill">DEMO</span>
             </p>
+            <p className="host-demo-tip">
+              Two phones · opposite votes on round one · the coin owns the TV
+            </p>
             <div className="host-qr-pad w-24 md:w-32 lg:w-48 mx-auto bg-white p-2">
               <QRCodeSVG
                 value={`${origin}/join?game=${gameId}`}
@@ -306,6 +309,7 @@ const Home = () => {
 
       {activeToss && (
         <CoinToss
+          key={`${activeToss.contestants[0].id}-${activeToss.contestants[1].id}-${activeToss.winner}`}
           contestants={activeToss.contestants}
           winner={activeToss.winner}
           autoStart={activeToss.autoStart}

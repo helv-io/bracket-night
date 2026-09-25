@@ -13,10 +13,10 @@ export interface CoinTossProps {
 }
 
 /** Full spin / flight duration (ms). Completion is wall-clock — not rAF/animationend. */
-const SPIN_MS = 3200
+const SPIN_MS = 3400
 /** Celebrate / confetti linger after land before overlay clears */
-const HOLD_MS = 3800
-const HOLD_MS_REDUCED = 2200
+const HOLD_MS = 4200
+const HOLD_MS_REDUCED = 2400
 
 /**
  * Continuous metallic cylinder rim: wall panels around the circumference.
@@ -176,24 +176,29 @@ export default function CoinToss({
         <div className="coin-toss-overlay animate-coinFadeIn" role="dialog" aria-label="Coin toss">
           <div className="coin-toss-vignette" />
           <div className="coin-toss-spotlight" />
+          <div className="coin-toss-rays" aria-hidden />
           <div className="coin-toss-particles">{sparkNodes}</div>
           <div className={`coin-burst ${burst ? 'is-on' : ''}`} />
+          <div className={`coin-impact ${burst ? 'is-on' : ''}`} aria-hidden />
 
           {showResult && windowSize.width > 0 && (
             <Confetti
               width={windowSize.width}
               height={windowSize.height}
-              numberOfPieces={260}
+              numberOfPieces={360}
               recycle={true}
-              gravity={0.16}
+              gravity={0.14}
               tweenDuration={4800}
               colors={['#e8c46a', '#ffe9a8', '#ff6f61', '#5dffa8', '#ffffff']}
             />
           )}
 
           <div className="coin-toss-stage">
-            <div className="coin-toss-kicker">
-              {showResult ? 'Decided!' : 'Tiebreaker'}
+            <div className="coin-toss-kicker" aria-live="assertive">
+              {showResult ? 'Decided!' : "It's a tie!"}
+            </div>
+            <div className="coin-toss-subkicker">
+              {showResult ? 'Advances to the next round' : 'Coin toss · watch the flip'}
             </div>
 
             {!showResult && (
@@ -205,7 +210,7 @@ export default function CoinToss({
                     alt=""
                   />
                   <div className="coin-matchup-meta">
-                    <span className="coin-matchup-face">Face A</span>
+                    <span className="coin-matchup-face">Face A · Heads</span>
                     <span className="coin-matchup-name">{contestants[0].name}</span>
                   </div>
                 </div>
@@ -217,7 +222,7 @@ export default function CoinToss({
                     alt=""
                   />
                   <div className="coin-matchup-meta">
-                    <span className="coin-matchup-face">Face B</span>
+                    <span className="coin-matchup-face">Face B · Tails</span>
                     <span className="coin-matchup-name">{contestants[1].name}</span>
                   </div>
                 </div>
@@ -265,7 +270,7 @@ export default function CoinToss({
 
             <div className="coin-status">
               {!showResult ? (
-                <div className="coin-status-line">In the air…</div>
+                <div className="coin-status-line">In the air — call it!</div>
               ) : (
                 <>
                   <img
@@ -288,14 +293,31 @@ export default function CoinToss({
 }
 
 /** Compact mobile notice while the host TV runs the toss */
-export function CoinTossMobileNotice({ winnerName }: { winnerName?: string }) {
+export function CoinTossMobileNotice({
+  leftName,
+  rightName,
+  winnerName,
+}: {
+  leftName?: string
+  rightName?: string
+  winnerName?: string
+}) {
+  const matchup =
+    leftName && rightName ? (
+      <span className="coin-toss-mobile-matchup">
+        {leftName} <span>vs</span> {rightName}
+      </span>
+    ) : null
+
   return (
-    <div className="coin-toss-mobile">
-      <h3>Tie!</h3>
+    <div className="coin-toss-mobile" role="status" aria-live="polite">
+      <p className="coin-toss-mobile-kicker">Tiebreaker</p>
+      <h3>Watch the big screen</h3>
+      {matchup}
       <p>
         {winnerName
-          ? `Coin toss on the big screen — ${winnerName} advances!`
-          : 'Coin toss on the big screen… watch the host TV!'}
+          ? `The coin landed — ${winnerName} advances!`
+          : 'A gold coin is flipping on the host TV. Stay on this phone; a refresh keeps your seat.'}
       </p>
     </div>
   )
