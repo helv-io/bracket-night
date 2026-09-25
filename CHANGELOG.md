@@ -13,10 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Socket.IO reconnect simulation covering disconnect mid-lobby, mid-vote, mid-coin, late rejoin, and host reattach
 - Lobby / host tips for the two-phone DEMO coin path (even count · opposite votes)
 - Stronger TV coin spectacle (larger disk, stadium rays, impact flash, clearer tie kicker) and a clearer phone “watch the big screen” notice
+- Host TV “Host TV” brand chip during the toss; champion curtain + lobby ready-up polish
 
 ### Changed
 - Ties are a server phase. The bracket advances when the host finishes the coin cinematic, or when the coin timeout fires
-- Coin spin / hold timings nudged for a punchier land on living-room TVs
+- **Coin flip is camera-first**: ~5.8s spin, ~4 / 4.5 readable revolutions (was 10 in 3.4s), larger disk during the flip (~620px), shallower arc so the gold coin stays center-frame, full-bleed host takeover (`bn-coin-live`) while phones stay on the watch-TV notice
 
 
 ## [0.1.0] - 2026-08-12

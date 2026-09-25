@@ -321,3 +321,124 @@
   line-height: 1.4;
   text-align: center;
 }
+
+.player-lobby-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(232, 196, 106, 0.18);
+}
+
+.player-lobby-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 0.85rem;
+}
+
+.player-lobby-seat {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  letter-spacing: 0.06em;
+  color: var(--gold-bright);
+  line-height: 1;
+}
+
+.player-lobby-meter {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.player-ready-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(93, 255, 168, 0.45);
+  background: rgba(93, 255, 168, 0.1);
+  color: var(--winner-highlight);
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+}
+
+.player-ready-pulse,
+.player-waiting-pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--winner-highlight);
+  box-shadow: 0 0 10px var(--winner-highlight);
+  animation: playerPulse 1.2s ease-in-out infinite;
+  flex: 0 0 auto;
+}
+
+.player-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  margin-top: 0.35rem;
+}
+
+.player-waiting .player-waiting-pulse {
+  margin-bottom: 0.25rem;
+}
+
+.player-champ-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.player-champ-bracket {
+  margin: 0.25rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.player-champ-name {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 2.8rem);
+  line-height: 0.95;
+  color: var(--gold-bright);
+}
+
+.player-champ-seal {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--winner-highlight);
+  font-size: 0.92rem;
+}
+
+@keyframes playerPulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-ready-pulse,
+  .player-waiting-pulse,
+  .champion-rays,
+  .champion-burst,
+  .champion-frame {
+    animation: none !important;
+  }
+}

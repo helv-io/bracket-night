@@ -14,6 +14,46 @@
     perspective: 1400px;
   }
 
+
+  .coin-toss-host-brand {
+    position: absolute;
+    top: 1.1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 196, 106, 0.45);
+    background: rgba(6, 10, 22, 0.78);
+    box-shadow: 0 0 24px rgba(232, 196, 106, 0.18);
+    pointer-events: none;
+  }
+
+  .coin-toss-host-logo {
+    width: clamp(7rem, 14vw, 11rem);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 0 10px rgba(255, 214, 102, 0.35));
+  }
+
+  .coin-toss-host-live {
+    font-family: var(--font-display);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-size: clamp(0.85rem, 1.6vw, 1.15rem);
+    color: var(--gold-bright);
+    white-space: nowrap;
+  }
+
+  .coin-status-line.is-flipping {
+    color: var(--gold-bright);
+    letter-spacing: 0.1em;
+    animation: coinKickerPulse 1.1s ease-in-out infinite;
+  }
+
   .coin-toss-vignette {
     position: absolute;
     inset: 0;
@@ -182,17 +222,25 @@
   }
 
   .coin-scene {
-    /* Chunky disk: two contestant faces + continuous metallic cylinder rim */
-    --coin-size: min(58vw, 440px);
-    --coin-thickness: 86px;
+    /* Big living-room disk — faces must read on camera during the flip */
+    --coin-size: min(78vw, 560px);
+    --coin-thickness: 96px;
     --coin-half: calc(var(--coin-thickness) / 2);
     position: relative;
     width: var(--coin-size);
     height: var(--coin-size);
-    max-width: 440px;
-    max-height: 440px;
+    max-width: 560px;
+    max-height: 560px;
     transform-style: preserve-3d;
-    perspective: 1200px;
+    perspective: 1400px;
+  }
+
+  /* Even larger while mid-flip so the spin fills the TV frame */
+  .coin-toss-overlay.is-flipping .coin-scene {
+    --coin-size: min(86vw, 620px);
+    --coin-thickness: 104px;
+    max-width: 620px;
+    max-height: 620px;
   }
 
   /* Layer 1 — floor shadow (shrinks as coin rises) */
@@ -411,6 +459,17 @@
       -56px -56px 0 -4px #ffe9a8;
   }
 
+
+  .coin-toss-overlay.is-flipping .coin-toss-kicker {
+    font-size: clamp(3.2rem, 9vw, 6.5rem);
+    letter-spacing: 0.18em;
+  }
+
+  .coin-toss-overlay.is-flipping .coin-matchup {
+    opacity: 0.72;
+    transform: scale(0.92);
+  }
+
   .coin-toss-mobile {
     width: 100%;
     max-width: 28rem;
@@ -473,23 +532,24 @@
    * (Previous double mid-air hop felt unphysical / ugly.)
    */
   @keyframes coinTossArc {
+    /* Shallow arc: disk stays center-frame for the camera */
     0% {
-      transform: translateY(48px) scale(0.88);
+      transform: translateY(36px) scale(0.92);
     }
-    12% {
-      transform: translateY(-90px) scale(1.02);
+    14% {
+      transform: translateY(-48px) scale(1.06);
     }
-    38% {
-      transform: translateY(-250px) scale(1.1);
+    40% {
+      transform: translateY(-110px) scale(1.16);
     }
-    62% {
-      transform: translateY(-70px) scale(1.02);
+    64% {
+      transform: translateY(-36px) scale(1.08);
     }
-    78% {
-      transform: translateY(6px) scale(0.96);
+    80% {
+      transform: translateY(8px) scale(0.98);
     }
-    88% {
-      transform: translateY(-28px) scale(1.03);
+    90% {
+      transform: translateY(-18px) scale(1.04);
     }
     100% {
       transform: translateY(0) scale(1);
@@ -500,73 +560,71 @@
    * Layer 3 — constant-speed flip (linear). Slight tilt for mass.
    * Heads: 10 full turns (3600°). Tails: 10.5 turns (3780°) so Face B lands up.
    */
+  /*
+   * Slow readable flip (~0.7 rev/s). 4 turns heads / 4.5 tails so Face B lands up.
+   * Mild rotateX keeps thickness visible without staying edge-on.
+   */
   @keyframes coinSpinHeads {
     0% {
-      transform: rotateX(22deg) rotateY(0deg);
+      transform: rotateX(16deg) rotateY(0deg);
     }
-    20% {
-      transform: rotateX(-10deg) rotateY(720deg);
+    25% {
+      transform: rotateX(-8deg) rotateY(360deg);
     }
-    45% {
-      transform: rotateX(8deg) rotateY(1620deg);
+    50% {
+      transform: rotateX(6deg) rotateY(720deg);
     }
-    70% {
-      transform: rotateX(-5deg) rotateY(2520deg);
-    }
-    88% {
-      transform: rotateX(3deg) rotateY(3240deg);
+    75% {
+      transform: rotateX(-4deg) rotateY(1080deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(3600deg);
+      transform: rotateX(0deg) rotateY(1440deg);
     }
   }
 
   @keyframes coinSpinTails {
     0% {
-      transform: rotateX(22deg) rotateY(0deg);
+      transform: rotateX(16deg) rotateY(0deg);
     }
-    20% {
-      transform: rotateX(-10deg) rotateY(720deg);
+    25% {
+      transform: rotateX(-8deg) rotateY(360deg);
     }
-    45% {
-      transform: rotateX(8deg) rotateY(1620deg);
+    50% {
+      transform: rotateX(6deg) rotateY(810deg);
     }
-    70% {
-      transform: rotateX(-5deg) rotateY(2520deg);
-    }
-    88% {
-      transform: rotateX(3deg) rotateY(3420deg);
+    75% {
+      transform: rotateX(-4deg) rotateY(1260deg);
     }
     100% {
-      transform: rotateX(0deg) rotateY(3780deg);
+      transform: rotateX(0deg) rotateY(1620deg);
     }
   }
 
   /* Layer 1 — shadow shrinks at apex, grows on land (synced to single arc) */
   @keyframes coinShadowToss {
     0% {
-      transform: translateX(-50%) scale(1.2);
+      transform: translateX(-50%) scale(1.15);
       opacity: 0.9;
     }
-    12% {
-      transform: translateX(-50%) scale(0.72);
-      opacity: 0.5;
+    14% {
+      transform: translateX(-50%) scale(0.78);
+      opacity: 0.55;
     }
-    38% {
-      transform: translateX(-50%) scale(0.36);
-      opacity: 0.22;
+    40% {
+      transform: translateX(-50%) scale(0.48);
+      opacity: 0.3;
     }
-    62% {
-      transform: translateX(-50%) scale(0.7);
-      opacity: 0.48;
+    64% {
+      transform: translateX(-50%) scale(0.78);
+      opacity: 0.55;
     }
-    78% {
-      transform: translateX(-50%) scale(1.12);
+    80% {
+      transform: translateX(-50%) scale(1.1);
       opacity: 0.88;
     }
-    88% {
-      transform: translateX(-50%) scale(0.85);
-      opacity: 0.62;
+    90% {
+      transform: translateX(-50%) scale(0.9);
+      opacity: 0.65;
     }
     100% {
       transform: translateX(-50%) scale(1);
@@ -683,19 +741,19 @@
 
   /* Arc eases like a throw; spin stays near-linear so faces read as a real flip */
   .animate-coinTossArc {
-    animation: coinTossArc 3.4s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+    animation: coinTossArc 5.8s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
   }
 
   .animate-coinSpinHeads {
-    animation: coinSpinHeads 3.4s linear forwards;
+    animation: coinSpinHeads 5.8s linear forwards;
   }
 
   .animate-coinSpinTails {
-    animation: coinSpinTails 3.4s linear forwards;
+    animation: coinSpinTails 5.8s linear forwards;
   }
 
   .animate-coinShadowToss {
-    animation: coinShadowToss 3.4s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
+    animation: coinShadowToss 5.8s cubic-bezier(0.2, 0.7, 0.25, 1) forwards;
   }
 
   .animate-coinFadeIn {
@@ -716,8 +774,15 @@
 
 @media (max-width: 640px) {
   .coin-scene {
-    --coin-size: min(72vw, 300px);
-    --coin-thickness: 62px;
+    --coin-size: min(82vw, 360px);
+    --coin-thickness: 72px;
+  }
+
+  .coin-toss-overlay.is-flipping .coin-scene {
+    --coin-size: min(88vw, 400px);
+    --coin-thickness: 78px;
+    max-width: 400px;
+    max-height: 400px;
   }
 
   .coin-matchup {

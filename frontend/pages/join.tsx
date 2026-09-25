@@ -333,7 +333,17 @@ const Join = () => {
       )}
 
       {inLobby && playerId && !moved && (
-        <div className="bn-card player-shell p-6">
+        <div className={`bn-card player-shell player-lobby p-6 ${bracket ? 'is-bracket-set' : ''}`}>
+          <div className="player-lobby-header">
+            <p className="player-lobby-kicker">
+              {isGameMaster ? 'Game master' : 'Your seat'}
+            </p>
+            <p className="player-lobby-seat">{name}</p>
+            <p className="player-lobby-meter" aria-live="polite">
+              {players.length} {players.length === 1 ? 'phone' : 'phones'} in the room
+            </p>
+          </div>
+
           {isGameMaster && !bracket && (
             <div>
               <h1 className="player-state-title">Set the bracket</h1>
@@ -368,6 +378,10 @@ const Join = () => {
 
           {isGameMaster && bracket && (
             <>
+              <div className="player-ready-banner" role="status">
+                <span className="player-ready-pulse" aria-hidden />
+                Bracket locked · phones are in
+              </div>
               <button type="button" onClick={handleStart} className="bn-btn bn-btn--gold mt-2">
                 Everyone ready — start
               </button>
@@ -382,13 +396,17 @@ const Join = () => {
           )}
 
           {!bracket && !isGameMaster && (
-            <p className="player-state-copy">Waiting for the bracket to be set…</p>
+            <div className="player-waiting">
+              <span className="player-waiting-pulse" aria-hidden />
+              <p className="player-state-copy">Waiting for the bracket to be set…</p>
+            </div>
           )}
           {bracket && !isGameMaster && (
-            <>
+            <div className="player-waiting">
+              <span className="player-waiting-pulse" aria-hidden />
               <h1 className="player-state-title">{bracket.title}</h1>
               <p className="player-state-copy">Waiting for the game master to begin…</p>
-            </>
+            </div>
           )}
 
           <h2 className="bn-display text-xl mt-5 mb-1 text-[var(--gold)] tracking-widest text-center">
@@ -441,11 +459,13 @@ const Join = () => {
 
           {phase === 'champion' && (
             <div className="bn-card p-6 game-over-winner">
-              <h2 className="player-state-title">Champion</h2>
-              <h3 className="text-2xl font-bold text-[var(--winner-highlight)]">{champion?.name}</h3>
+              <p className="player-champ-kicker">Champion of the night</p>
+              {bracket?.title && <p className="player-champ-bracket">{bracket.title}</p>}
               {champion?.image_url && (
                 <img src={champion.image_url} alt={champion.name || 'Winner'} />
               )}
+              <h2 className="player-champ-name">{champion?.name || 'Bracket complete'}</h2>
+              <p className="player-champ-seal">The night is sealed</p>
             </div>
           )}
         </div>

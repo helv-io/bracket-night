@@ -120,8 +120,8 @@ See [`.env.example`](.env.example) for the full list. Important knobs:
 2. Open the join link on **two** phones (or two mobile browser profiles) **before** start. First phone is game master.
 3. Tap **Load Mountain GOATs**, wait until both seats show in the lobby, then **Everyone ready — start**.
 4. On matchup 1, phones vote **opposite** sides. Even player counts can tie; opposite votes with two phones always open the coin.
-5. The host TV fills with the cinematic toss (contestant faces on a thick gold coin). Let it land, or wait for the server timeout (`COIN_TIMEOUT_MS`, default 14s).
-6. Optional reconnect checks while the coin is up: refresh a phone, reload the TV. The same toss (`startedAt` / winner side) comes back; the bracket does not advance early.
+5. **Frame the host TV full-bleed** (phones stay in hand — they only show “Watch the big screen”). The gold coin should spin for ~6 seconds with contestant faces clearly flipping; then it lands and celebrates.
+6. Let it land, or wait for the server timeout (`COIN_TIMEOUT_MS`, default 14s). Optional reconnect checks while the coin is up: refresh a phone, reload the TV. The same toss (`startedAt` / winner side) comes back; the bracket does not advance early.
 
 Recording tip: frame the TV full-screen; the phone only shows a “watch the big screen” notice during the toss.
 
