@@ -31,3 +31,11 @@ export const config = {
   // FRONTEND_ORIGIN is an alias for CORS_ORIGIN.
   corsOrigin: process.env.CORS_ORIGIN || process.env.FRONTEND_ORIGIN || '',
 }
+
+/** How long the TV has to finish a tie toss before the server places the winner. 0 disables the timer. */
+export function coinTimeoutMs(): number {
+  const raw = process.env.COIN_TIMEOUT_MS
+  if (raw === undefined || raw === '') return 14000
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) ? n : 14000
+}

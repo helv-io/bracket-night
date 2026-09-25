@@ -1,68 +1,46 @@
 /* eslint-disable @next/next/no-img-element */
-import { useState, useEffect } from 'react'
 import { Matchup } from '../../backend/src/types'
-import { socket } from '../lib/socket'
 
 interface VotingCardProps {
   matchup: Matchup
-  gameId: string
-  playerName: string
   hasVoted: boolean
+  yourChoice: number | null
+  round: string
+  lockedCount: number
+  playerCount: number
+  onVote: (choice: number) => void
 }
 
-const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) => {
-  const [voted, setVoted] = useState(hasVoted)
-
-  useEffect(() => {
-    localStorage.setItem('gameId', gameId)
-    localStorage.setItem('playerName', playerName)
-  }, [gameId, playerName])
-
-  useEffect(() => {
-    setVoted(hasVoted)
-  }, [matchup, hasVoted])
-
-  useEffect(() => {
-    const storedGameId = localStorage.getItem('gameId')
-    const storedPlayerName = localStorage.getItem('playerName')
-    if (storedGameId && storedPlayerName) {
-      socket.emit('join', { gameId: storedGameId, playerName: storedPlayerName })
-    }
-
-    socket.on('vote_status', ({ hasVoted }) => {
-      setVoted(hasVoted)
-    })
-
-    return () => {
-      socket.off('vote_status')
-    }
-  }, [])
-
-  const handleVote = (choice: number) => {
-    if (!voted) {
-      socket.emit('vote', { gameId, choice })
-      setVoted(true)
-    }
-  }
-
+const VotingCard = ({
+  matchup,
+  hasVoted,
+  yourChoice,
+  round,
+  lockedCount,
+  playerCount,
+  onVote,
+}: VotingCardProps) => {
   const renderChoice = (side: 0 | 1) => {
     const contestant = side === 0 ? matchup.left : matchup.right
-    const disabled = voted || !contestant
+    const isMine = yourChoice === side
+    const disabled = hasVoted || !contestant
 
     return (
       <button
         type="button"
-        onClick={() => handleVote(side)}
+        onClick={() => onVote(side)}
         onMouseDown={(e) => e.currentTarget.blur()}
         disabled={disabled}
         className={[
           'vote-choice',
           disabled ? 'is-disabled' : '',
-          voted ? 'has-voted' : '',
+          hasVoted ? 'has-voted' : '',
+          isMine ? 'is-picked' : '',
         ]
           .filter(Boolean)
           .join(' ')}
         aria-label={contestant ? `Vote for ${contestant.name}` : 'Unavailable'}
+        aria-pressed={isMine}
       >
         <div className="vote-choice-frame">
           {contestant?.image_url ? (
@@ -72,7 +50,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
           )}
         </div>
         <span className="vote-choice-name">{contestant?.name || 'TBD'}</span>
-        <span className="vote-choice-cta">{voted ? 'Locked in' : 'Tap to vote'}</span>
+        <span className="vote-choice-cta">
+          {isMine ? 'Your pick' : hasVoted ? 'Locked' : 'Tap to vote'}
+        </span>
       </button>
     )
   }
@@ -80,12 +60,15 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
   return (
     <div className="bn-card vote-card">
       <div className="vote-card-header">
-        <p className="bn-display vote-eyebrow">Your vote</p>
+        <p className="bn-display vote-eyebrow">{round}</p>
         <h3 className="vote-title">
           <span>{matchup.left?.name || 'TBD'}</span>
           <span className="vote-vs">VS</span>
           <span>{matchup.right?.name || 'TBD'}</span>
         </h3>
+        <p className="vote-progress">
+          {lockedCount}/{playerCount} locked in
+        </p>
       </div>
 
       <div className="vote-choices">
@@ -93,9 +76,9 @@ const VotingCard = ({ matchup, gameId, playerName, hasVoted }: VotingCardProps) 
         {renderChoice(1)}
       </div>
 
-      {voted && (
+      {hasVoted && (
         <div className="vote-waiting">
-          <p>Waiting for the rest of the room…</p>
+          <p>Locked in. The room is still voting.</p>
           <div className="vote-spinner" aria-hidden />
         </div>
       )}

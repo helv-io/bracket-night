@@ -21,14 +21,54 @@ export interface Matchup {
   winner: Contestant | null
 }
 
+/** Public seat. `id` is stable for the night and is never a socket id. */
 export interface Player {
   id: string
   name: string
+  connected: boolean
 }
 
 export interface Vote {
   playerId: string
   choice: number // 0 for left, 1 for right
+}
+
+export type GamePhase = 'lobby' | 'voting' | 'coin' | 'champion'
+
+/** Server-owned tie. The bracket does not advance until the toss resolves. */
+export interface CoinTossState {
+  matchupIndex: number
+  left: Contestant
+  right: Contestant
+  winnerSide: 0 | 1
+  winner: Contestant
+  startedAt: number
+}
+
+/** Broadcast view. Must not include host or player secrets. */
+export interface PublicGameState {
+  gameId: string
+  bracket: Bracket | null
+  players: Player[]
+  currentMatchupIndex: number
+  matchups: Matchup[]
+  currentVotes: Vote[]
+  isGameStarted: boolean
+  isGameOver: boolean
+  phase: GamePhase
+  coin: CoinTossState | null
+  gameMasterId: string | null
+}
+
+/** Sent only to the joining socket. */
+export interface PlayerSelf {
+  playerId: string
+  playerToken: string
+  name: string
+  isGameMaster: boolean
+  hasVoted: boolean
+  choice: number | null
+  resumed: boolean
 }
 
 export interface SearXNG {

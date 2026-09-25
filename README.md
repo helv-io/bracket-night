@@ -6,8 +6,8 @@ Bracket Night is a Jackbox-style party game. Players join by scanning a QR code 
 
 - **Bracket Setup**: Create a bracket with a title, subtitle, and 16 contestants, each with a picture.
 - **Voting System**: Players vote; winners advance through quarters, semis, and finals.
-- **Tie Resolution**: Ties pick a random winner.
-- **Player Management**: Up to `MAX_PLAYERS` (default 10) join via QR code.
+- **Tie Resolution**: Ties open a server-owned coin toss on the host TV. The bracket advances when the toss finishes (or when the server timeout places the already-chosen winner).
+- **Player Management**: Up to `MAX_PLAYERS` (default 10) join via QR code. Each phone keeps a stable player id (not the socket id) in local storage, so a refresh, a dropped connection, or reopening `/join?game=...` resumes the same seat in the lobby, a vote, or a coin toss. The host TV stores a host key and reattaches to the same room.
 - **Bracket Templates**: First player can enter a bracket code to load contestants/images from SQLite.
 - **Mobile Friendly**: `/new` for creating brackets; mobiles hitting `/` redirect there.
 - **Docker Support**: See `Dockerfile`.
@@ -110,8 +110,17 @@ See [`.env.example`](.env.example) for the full list. Important knobs:
 ## Usage
 
 - **Main page (`/`)**: Host screen with QR code for the live join code.
-- **Join (`/join?game=...`)**: Player join / vote UI.
+- **Join (`/join?game=...`)**: Player join / vote UI. Game masters can load the built-in `DEMO` bracket (Mountain GOATs) with no database setup.
 - **New (`/new`)**: Create a reusable bracket template.
+
+### Reconnects
+
+Live rooms stay in memory for the process lifetime. Within that lifetime:
+
+- A phone's identity is a random token stored at `localStorage['bn.player.<gameId>']`. The server mints a player id from that token. Socket ids are only the current connection.
+- The host TV stores `localStorage['bn.host.session']`. Reloading the TV emits `host_attach` and keeps the bracket, votes, and coin.
+- Disconnecting does not remove a seat or a vote. A new person cannot take a disconnected name, and a new token cannot join after the night has started.
+- `npm test` runs a Socket.IO simulation of mid-lobby, mid-vote, mid-coin, and late reconnect, plus a host reattach.
 
 ## Development
 

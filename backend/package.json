@@ -7,7 +7,7 @@
     "build": "npx esbuild ./src/server.ts --bundle --minify --platform=node --outfile=./dist/server.js --packages=external",
     "start": "npm run build && node dist/server.js",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "test": "ts-node src/security.test.ts && ts-node src/game.test.ts",
+    "test": "ts-node src/security.test.ts && ts-node src/game.test.ts && NODE_ENV=test BRACKET_RANDOM_ROOMS=1 COIN_TIMEOUT_MS=0 MAX_PLAYERS=3 DB_FOLDER=/tmp/bn-cook-db DB_PATH=/tmp/bn-cook-db/bracket.db ts-node src/reconnect.sim.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -29,6 +29,7 @@
     "@types/express": "^5.0.1",
     "esbuild": "^0.25.1",
     "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2"
   }

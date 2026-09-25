@@ -1,25 +1,29 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { isMobile } from 'react-device-detect'
 import { QRCodeSVG } from 'qrcode.react'
 import Confetti from 'react-confetti'
 import { socket } from '../lib/socket'
+import { clearHostSession, loadHostSession, saveHostSession } from '../lib/session'
+import { roundLabel } from '../lib/round'
 import { APP_VERSION_LABEL } from '../lib/version'
 import Bracket from '../components/Bracket'
-import { Matchup, Player, Bracket as BracketType, Vote, Contestant } from '../../backend/src/types'
+import {
+  CoinTossState,
+  GamePhase,
+  Matchup,
+  Player,
+  Bracket as BracketType,
+  PublicGameState,
+  Vote,
+} from '../../backend/src/types'
 import CoinToss from '@/components/CoinToss'
 
 type ActiveToss = {
-  contestants: [Contestant, Contestant]
+  contestants: [CoinTossState['left'], CoinTossState['right']]
   winner: 0 | 1
   autoStart: boolean
-}
-
-/** Server advance held until the coin cinematic fully completes */
-type PendingAdvance = {
-  matchups: Matchup[]
-  currentMatchupIndex: number
 }
 
 declare global {
@@ -42,19 +46,16 @@ const Home = () => {
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
   const [activeToss, setActiveToss] = useState<ActiveToss | null>(null)
   const gameIdRef = useRef(gameId)
-  const currentVotesRef = useRef(currentVotes)
+  const hostTokenRef = useRef<string | null>(null)
+  const phaseRef = useRef<GamePhase>('lobby')
   const matchupsRef = useRef(matchups)
   const currentMatchupIndexRef = useRef(currentMatchupIndex)
-  const pendingAdvanceRef = useRef<PendingAdvance | null>(null)
   const tossActiveRef = useRef(false)
+  const coinKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
     gameIdRef.current = gameId
   }, [gameId])
-
-  useEffect(() => {
-    currentVotesRef.current = currentVotes
-  }, [currentVotes])
 
   useEffect(() => {
     matchupsRef.current = matchups
@@ -69,12 +70,52 @@ const Home = () => {
     return () => document.documentElement.classList.remove('bn-host-tv')
   }, [])
 
-  const applyAdvance = useCallback((next: PendingAdvance) => {
-    setMatchups(next.matchups)
-    matchupsRef.current = next.matchups
-    setCurrentMatchupIndex(next.currentMatchupIndex)
-    currentMatchupIndexRef.current = next.currentMatchupIndex
-    if (next.currentMatchupIndex === 15) setIsGameOver(true)
+  const showCoin = useCallback((coin: CoinTossState) => {
+    const key = `${coin.matchupIndex}:${coin.winner.id}:${coin.startedAt}`
+    if (coinKeyRef.current === key && tossActiveRef.current) return
+    coinKeyRef.current = key
+    tossActiveRef.current = true
+    setActiveToss({
+      contestants: [coin.left, coin.right],
+      winner: coin.winnerSide,
+      autoStart: true,
+    })
+  }, [])
+
+  const applyState = useCallback((state: PublicGameState) => {
+    setGameId(state.gameId)
+    gameIdRef.current = state.gameId
+    setBracket(state.bracket)
+    setPlayers(state.players)
+    setCurrentVotes(state.currentVotes)
+    setIsGameStarted(state.isGameStarted)
+    phaseRef.current = state.phase
+    setMatchups(state.matchups)
+    matchupsRef.current = state.matchups
+    setCurrentMatchupIndex(state.currentMatchupIndex)
+    currentMatchupIndexRef.current = state.currentMatchupIndex
+
+    if (state.phase === 'coin' && state.coin) {
+      setIsGameOver(false)
+      showCoin(state.coin)
+      return
+    }
+
+    tossActiveRef.current = false
+    coinKeyRef.current = null
+    setActiveToss(null)
+    setIsGameOver(state.isGameOver || state.phase === 'champion')
+  }, [showCoin])
+
+  const clearToss = useCallback(() => {
+    const id = gameIdRef.current
+    const token = hostTokenRef.current
+    if (id && token) socket.emit('coin_complete', { gameId: id, hostToken: token })
+    if (phaseRef.current !== 'coin') {
+      tossActiveRef.current = false
+      coinKeyRef.current = null
+      setActiveToss(null)
+    }
   }, [])
 
   useEffect(() => {
@@ -83,96 +124,68 @@ const Home = () => {
       return
     }
 
-    socket.emit('create_game')
+    const remember = (msg: { gameId: string, hostToken: string }) => {
+      if (!msg?.gameId || !msg.hostToken) return
+      hostTokenRef.current = msg.hostToken
+      saveHostSession({ gameId: msg.gameId, hostToken: msg.hostToken })
+      setGameId(msg.gameId)
+      gameIdRef.current = msg.gameId
+    }
 
-    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex, wasTie }) => {
-      const prevIndex = currentMatchupIndex - 1
-
-      // Prefer server wasTie — client vote refs race with the preceding game_state.
-      if (wasTie && prevIndex >= 0) {
-        const completed = matchups[prevIndex] as Matchup
-        if (completed?.left && completed?.right && completed.winner) {
-          const winnerSide: 0 | 1 =
-            completed.winner.id === completed.left.id ? 0 : 1
-
-          // Cliffhanger: keep the pre-advance bracket on screen (no winner yet).
-          // Apply matchups only when CoinToss calls onComplete.
-          pendingAdvanceRef.current = { matchups, currentMatchupIndex }
-          tossActiveRef.current = true
-          setActiveToss({
-            contestants: [completed.left, completed.right],
-            winner: winnerSide,
-            autoStart: true,
-          })
-          setCurrentVotes([])
-          currentVotesRef.current = []
-          return
-        }
+    const hello = () => {
+      const saved = loadHostSession()
+      if (saved) {
+        hostTokenRef.current = saved.hostToken
+        socket.emit('host_attach', saved)
+        return
       }
+      socket.emit('create_game')
+    }
 
-      setMatchups(matchups)
-      matchupsRef.current = matchups
-      setCurrentMatchupIndex(currentMatchupIndex)
-      currentMatchupIndexRef.current = currentMatchupIndex
-      setCurrentVotes([])
-      currentVotesRef.current = []
+    const onAttachFailed = () => {
+      clearHostSession()
+      hostTokenRef.current = null
+      socket.emit('create_game')
+    }
 
-      if (currentMatchupIndex === 15) setIsGameOver(true)
-    })
+    const onAdvanced = ({
+      currentMatchupIndex: nextIndex,
+    }: {
+      currentMatchupIndex: number
+    }) => {
+      phaseRef.current = nextIndex >= 15 ? 'champion' : 'voting'
+      tossActiveRef.current = false
+      coinKeyRef.current = null
+      setActiveToss(null)
+    }
 
-    socket.on(
-      'game_state',
-      ({
-        gameId,
-        bracket,
-        matchups,
-        currentMatchupIndex,
-        players,
-        currentVotes,
-        isGameStarted,
-        isGameOver,
-      }) => {
-        setGameId(gameId)
-        setBracket(bracket)
-        setPlayers(players)
-        setCurrentVotes(currentVotes)
-        currentVotesRef.current = currentVotes
-        setIsGameStarted(isGameStarted)
+    socket.on('game_created', remember)
+    socket.on('host_attached', remember)
+    socket.on('host_attach_failed', onAttachFailed)
+    socket.on('game_state', applyState)
+    socket.on('coin_toss', showCoin)
+    socket.on('matchup_advanced', onAdvanced)
+    socket.on('connect', hello)
 
-        // Don't spoil the cliffhanger if a game_state arrives mid-toss
-        if (tossActiveRef.current || pendingAdvanceRef.current) {
-          return
-        }
-
-        setMatchups(matchups)
-        matchupsRef.current = matchups
-        setCurrentMatchupIndex(currentMatchupIndex)
-        currentMatchupIndexRef.current = currentMatchupIndex
-        setIsGameOver(isGameOver)
-      }
-    )
+    if (socket.connected) hello()
 
     return () => {
-      socket.off('matchup_advanced')
-      socket.off('game_state')
+      socket.off('game_created', remember)
+      socket.off('host_attached', remember)
+      socket.off('host_attach_failed', onAttachFailed)
+      socket.off('game_state', applyState)
+      socket.off('coin_toss', showCoin)
+      socket.off('matchup_advanced', onAdvanced)
+      socket.off('connect', hello)
     }
-  }, [router])
+  }, [applyState, router, showCoin])
 
-  const clearToss = useCallback(() => {
-    const pending = pendingAdvanceRef.current
-    pendingAdvanceRef.current = null
-    tossActiveRef.current = false
-    setActiveToss(null)
-    // Reveal bracket winners only after the full cinematic (spin + celebrate hold)
-    if (pending) applyAdvance(pending)
-  }, [applyAdvance])
-
-  // Automation hook for Demo recordings — no host UI control
   useEffect(() => {
     window.__bnTriggerCoinToss = (winner = 0) => {
       const current = matchupsRef.current[currentMatchupIndexRef.current]
       if (!current?.left || !current?.right) return
       tossActiveRef.current = true
+      coinKeyRef.current = null
       setActiveToss({
         contestants: [current.left, current.right],
         winner,
@@ -183,6 +196,11 @@ const Home = () => {
       delete window.__bnTriggerCoinToss
     }
   }, [])
+
+  const liveMatchup =
+    isGameStarted && !isGameOver && !activeToss ? matchups[currentMatchupIndex] : null
+  const champion = matchups[14]?.winner ?? matchups[currentMatchupIndex - 1]?.winner ?? null
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
   return (
     <div className="bn-page bn-page--stadium bn-page--host">
@@ -210,25 +228,45 @@ const Home = () => {
         )}
         {matchups.length === 0 && (
           <div className="host-welcome">
-            <h1 className="bn-display text-4xl md:text-5xl text-[var(--gold-bright)] mb-3 drop-shadow-lg">
+            <p className="host-kicker">A live tournament for the room</p>
+            <h1 className="bn-display text-4xl md:text-6xl text-[var(--gold-bright)]">
               Welcome to Bracket Night
             </h1>
-            <p className="text-lg md:text-xl text-[var(--text-muted)]">
-              The arena is almost set. Scan in, pick your fighter energy, and let the room decide.
-            </p>
           </div>
         )}
       </main>
 
+      {liveMatchup?.left && liveMatchup.right && (
+        <div className="host-now" aria-live="polite">
+          <div className="host-now-side">
+            <img src={liveMatchup.left.image_url} alt="" />
+            <span className="host-now-name">{liveMatchup.left.name}</span>
+          </div>
+          <div className="host-now-meta">
+            <span>{roundLabel(currentMatchupIndex)}</span>
+            <strong>
+              {currentVotes.length}/{players.length} locked
+            </strong>
+          </div>
+          <div className="host-now-side is-right">
+            <img src={liveMatchup.right.image_url} alt="" />
+            <span className="host-now-name">{liveMatchup.right.name}</span>
+          </div>
+        </div>
+      )}
+
       {!isGameStarted && gameId && (
         <div className="text-center qr-container">
           <div className="bn-card p-4 inline-block">
-            <p className="text-sm text-[var(--text-muted)] mb-2 tracking-wide uppercase">
+            <p className="text-sm text-[var(--text-muted)] mb-1 tracking-wide uppercase">
               Scan to join
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mb-2">
+              Game master loads <span className="host-code-pill">DEMO</span>
             </p>
             <div className="host-qr-pad w-24 md:w-32 lg:w-48 mx-auto bg-white p-2">
               <QRCodeSVG
-                value={`${window.location.origin}/join?game=${gameId}`}
+                value={`${origin}/join?game=${gameId}`}
                 imageSettings={{
                   src: '/bn-logo-gold.svg',
                   height: 48,
@@ -241,7 +279,7 @@ const Home = () => {
             </div>
             <div className="mt-3">
               <a
-                href={`${window.location.origin}/join?game=${gameId}`}
+                href={`${origin}/join?game=${gameId}`}
                 target="_blank"
                 className="bn-display text-2xl md:text-3xl text-[var(--gold-bright)] tracking-widest"
                 rel="noreferrer"
@@ -249,16 +287,19 @@ const Home = () => {
                 {gameId}
               </a>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2 md:gap-4 justify-center mt-4">
-            {players.length === 0 && (
-              <div className="bn-chip">Waiting for players…</div>
-            )}
-            {players.length > 0 && (
-              <div className="bn-chip bn-chip--live">
-                {players.length} Player{players.length > 1 ? 's' : ''} joined
-              </div>
-            )}
+            <div className="host-roster">
+              {players.length === 0 && <div className="bn-chip">Waiting for players…</div>}
+              {players.map((player) => (
+                <div
+                  key={player.id}
+                  className={`bn-chip ${player.connected ? 'bn-chip--live' : 'bn-chip--away'}`}
+                >
+                  <span className={`presence ${player.connected ? '' : 'is-away'}`} />
+                  <span>{player.name}</span>
+                  {!player.connected && <span className="text-xs uppercase tracking-wide">Reconnecting</span>}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -280,11 +321,12 @@ const Home = () => {
               return (
                 <li
                   key={player.id}
-                  className={`bn-chip ${hasVoted ? 'bn-chip--done' : ''}`}
+                  className={`bn-chip ${hasVoted ? 'bn-chip--done' : ''} ${player.connected ? '' : 'bn-chip--away'}`}
                 >
+                  <span className={`presence ${player.connected ? '' : 'is-away'}`} />
                   <span>{player.name}</span>
                   <span className="text-xs uppercase tracking-wide opacity-80">
-                    {hasVoted ? 'Voted' : 'Pending'}
+                    {player.connected ? (hasVoted ? 'Voted' : 'Pending') : 'Reconnecting'}
                   </span>
                 </li>
               )
@@ -293,9 +335,17 @@ const Home = () => {
         </footer>
       )}
 
-      {isGameOver && <Confetti />}
+      {isGameOver && !activeToss && (
+        <div className="champion-curtain">
+          <Confetti />
+          <p className="champion-kicker">Champion of the night</p>
+          {champion?.image_url && (
+            <img src={champion.image_url} alt={champion.name} />
+          )}
+          <h2 className="champion-name">{champion?.name || 'The bracket is complete'}</h2>
+        </div>
+      )}
 
-      {/* Discreet build version — host TV only; stays visible over coin overlay corner */}
       <div className="host-version" aria-hidden="true">
         {APP_VERSION_LABEL}
       </div>
