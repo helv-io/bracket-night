@@ -101,7 +101,7 @@ a {
   display: flex;
   justify-content: center;
   padding-top: 0.25rem;
-  max-height: 3.25rem;
+  max-height: 4.75rem;
   overflow: hidden;
 }
 
@@ -133,13 +133,169 @@ a {
 
 .host-welcome {
   position: absolute;
-  inset: 0;
+  top: 7vh;
+  left: 0;
+  right: 0;
   display: grid;
-  place-content: center;
+  justify-items: center;
   text-align: center;
-  padding: 1.5rem;
+  padding: 0 1.5rem;
   max-width: 42rem;
   margin: 0 auto;
+}
+
+.host-kicker {
+  margin: 0 0 0.35rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 0.82rem;
+}
+
+.host-code-pill {
+  display: inline-block;
+  margin: 0 0.15rem;
+  padding: 0 0.4rem;
+  border-radius: 0.35rem;
+  background: rgba(232, 196, 106, 0.16);
+  color: var(--gold-bright);
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+.host-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  max-width: 36rem;
+  margin: 0.85rem auto 0;
+}
+
+.host-now {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  width: min(920px, 100%);
+  margin: 0.2rem auto 0.15rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 196, 106, 0.4);
+  background: rgba(6, 10, 22, 0.82);
+  box-shadow: 0 0 28px rgba(232, 196, 106, 0.14);
+}
+
+.host-now-side {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.host-now-side.is-right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.host-now-side img {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+  flex: 0 0 auto;
+}
+
+.host-now-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.host-now-meta {
+  text-align: center;
+  min-width: 7.5rem;
+}
+
+.host-now-meta span {
+  display: block;
+  font-family: var(--font-display);
+  letter-spacing: 0.14em;
+  color: var(--gold-bright);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.host-now-meta strong {
+  display: block;
+  margin-top: 0.15rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.presence {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--winner-highlight);
+  box-shadow: 0 0 8px var(--winner-highlight);
+  flex: 0 0 auto;
+}
+
+.presence.is-away {
+  background: var(--text-muted);
+  box-shadow: none;
+}
+
+.bn-chip--away {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.champion-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+  padding: 2rem;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(232, 196, 106, 0.24), transparent 52%),
+    rgba(2, 4, 12, 0.84);
+}
+
+.champion-curtain img {
+  width: min(42vh, 280px);
+  height: min(42vh, 280px);
+  object-fit: cover;
+  border-radius: 50%;
+  border: 6px solid var(--gold);
+  box-shadow: 0 0 60px rgba(232, 196, 106, 0.45);
+  margin-top: 0.35rem;
+}
+
+.champion-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  font-size: clamp(1.1rem, 2vw, 1.6rem);
+}
+
+.champion-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 8vw, 7rem);
+  line-height: 0.92;
+  color: var(--gold-bright);
+  text-shadow: 0 0 28px rgba(255, 214, 102, 0.35);
 }
 
 /* Higher specificity + later win vs .logo-container { position:absolute } (Tailwind may reorder) */
