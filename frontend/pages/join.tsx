@@ -367,9 +367,18 @@ const Join = () => {
           )}
 
           {isGameMaster && bracket && (
-            <button type="button" onClick={handleStart} className="bn-btn bn-btn--gold mt-2">
-              Everyone ready — start
-            </button>
+            <>
+              <button type="button" onClick={handleStart} className="bn-btn bn-btn--gold mt-2">
+                Everyone ready — start
+              </button>
+              <p className="player-demo-tip" role="note">
+                {players.length < 2
+                  ? 'Wait for a second phone — two players can force a coin by voting opposite sides.'
+                  : players.length % 2 === 1
+                    ? `Odd count (${players.length}): a natural tie needs an even number of voters. Add or drop a phone for the coin demo.`
+                    : `${players.length} players (even): pick opposite sides on the first matchup to force the TV coin toss.`}
+              </p>
+            </>
           )}
 
           {!bracket && !isGameMaster && (
@@ -411,7 +420,12 @@ const Join = () => {
             </div>
           )}
 
-          {phase === 'coin' && <CoinTossMobileNotice />}
+          {phase === 'coin' && (
+            <CoinTossMobileNotice
+              leftName={currentMatchup?.left?.name}
+              rightName={currentMatchup?.right?.name}
+            />
+          )}
 
           {phase === 'voting' && currentMatchup && (
             <VotingCard
