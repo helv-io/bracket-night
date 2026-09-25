@@ -1,14 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { socket } from '../lib/socket'
-import { Bracket, Matchup, Player, PublicBracket, Vote } from '../../backend/src/types'
+import { loadPlayerSession, newToken, savePlayerSession } from '../lib/session'
+import { resumeCopy, roundLabel } from '../lib/round'
+import {
+  Bracket,
+  GamePhase,
+  Matchup,
+  Player,
+  PlayerSelf,
+  PublicBracket,
+  PublicGameState,
+  Vote,
+} from '../../backend/src/types'
 import VotingCard from '../components/VotingCard'
 import { CoinTossMobileNotice } from '../components/CoinToss'
 
 const Join = () => {
   const router = useRouter()
-  const { game } = router.query
+  const gameQuery = typeof router.query.game === 'string' ? router.query.game : ''
 
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -20,155 +31,239 @@ const Join = () => {
   const [currentVotes, setCurrentVotes] = useState<Vote[]>([])
   const [hasJoined, setHasJoined] = useState(false)
   const [gameId, setGameId] = useState('')
-  const [wakeLock, setWakeLock] = useState<WakeLockSentinel | null>(null)
   const [isGameStarted, setIsGameStarted] = useState(false)
-  const [isGameOver, setIsGameOver] = useState(false)
+  const [phase, setPhase] = useState<GamePhase>('lobby')
   const [publicBrackets, setPublicBrackets] = useState<PublicBracket[]>([])
-  const [tieNotice, setTieNotice] = useState<{ winnerName: string } | null>(null)
-  const currentVotesRef = useRef(currentVotes)
+  const [hasVoted, setHasVoted] = useState(false)
+  const [yourChoice, setYourChoice] = useState<number | null>(null)
+  const [playerId, setPlayerId] = useState('')
+  const [link, setLink] = useState<'live' | 'dropped'>('live')
+  const [resuming, setResuming] = useState(false)
+  const [note, setNote] = useState('')
+  const [formError, setFormError] = useState('')
+  const [moved, setMoved] = useState(false)
+
+  const tokenRef = useRef('')
+  const nameRef = useRef('')
+  const playerIdRef = useRef('')
+  const yieldSeatRef = useRef(false)
+  const pendingResumeRef = useRef(false)
+  const hasVotedRef = useRef(false)
 
   useEffect(() => {
-    currentVotesRef.current = currentVotes
-  }, [currentVotes])
+    nameRef.current = name
+  }, [name])
 
   useEffect(() => {
-    const storedName = localStorage.getItem('playerName')
-    if (storedName) setName(storedName)
-
-    const storedCode = localStorage.getItem('code')
-    if (storedCode) setCode(storedCode)
-
-    if (game) setGameId(game as string)
-  }, [game])
+    hasVotedRef.current = hasVoted
+  }, [hasVoted])
 
   useEffect(() => {
-    if (!game) return
+    if (!gameQuery) return
+    setGameId(gameQuery)
+    const saved = loadPlayerSession(gameQuery)
+    if (saved) {
+      tokenRef.current = saved.token
+      nameRef.current = saved.name
+      setName(saved.name)
+      setHasJoined(true)
+      setResuming(true)
+    } else {
+      const storedName = localStorage.getItem('playerName')
+      if (storedName) setName(storedName)
+      const storedCode = localStorage.getItem('code')
+      if (storedCode) setCode(storedCode)
+    }
+  }, [gameQuery])
 
-    socket.on('player_joined', ({ players }) => setPlayers(players))
-    socket.on('game_master', () => setIsGameMaster(true))
+  useEffect(() => {
+    if (!gameQuery) return
 
-    socket.on('bracket_set', ({ bracket, matchups, currentMatchupIndex }) => {
-      setBracket(bracket as Bracket)
-      setMatchups(matchups as Matchup[])
-      setCurrentMatchupIndex(currentMatchupIndex as number)
-    })
+    const hello = () => {
+      if (yieldSeatRef.current) return
+      const saved = loadPlayerSession(gameQuery)
+      const token = tokenRef.current || saved?.token || ''
+      const playerName = nameRef.current || saved?.name || ''
+      if (!token || !playerName) return
+      tokenRef.current = token
+      setLink('live')
+      socket.emit('join', { gameId: gameQuery, playerName, playerToken: token })
+    }
 
-    socket.on('vote_cast', ({ currentVotes, players }) => {
-      setCurrentVotes(currentVotes)
-      currentVotesRef.current = currentVotes
-      setPlayers(players)
-    })
+    const onJoined = (self: PlayerSelf) => {
+      tokenRef.current = self.playerToken
+      nameRef.current = self.name
+      playerIdRef.current = self.playerId
+      yieldSeatRef.current = false
+      savePlayerSession(gameQuery, { token: self.playerToken, name: self.name })
+      setName(self.name)
+      setPlayerId(self.playerId)
+      setIsGameMaster(self.isGameMaster)
+      setHasVoted(self.hasVoted)
+      hasVotedRef.current = self.hasVoted
+      setYourChoice(self.choice)
+      setHasJoined(true)
+      setResuming(false)
+      setMoved(false)
+      setFormError('')
+      setLink('live')
+      if (self.resumed) pendingResumeRef.current = true
+    }
 
-    socket.on('matchup_advanced', ({ matchups, currentMatchupIndex, wasTie }) => {
-      const prevIndex = currentMatchupIndex - 1
-
-      if (wasTie && prevIndex >= 0) {
-        const completed = matchups[prevIndex] as Matchup
-        setTieNotice({ winnerName: completed.winner?.name || 'Someone' })
-        window.setTimeout(() => setTieNotice(null), 4500)
+    const onState = (state: PublicGameState) => {
+      setGameId(state.gameId)
+      setBracket(state.bracket)
+      setMatchups(state.matchups)
+      setCurrentMatchupIndex(state.currentMatchupIndex)
+      setPlayers(state.players)
+      setCurrentVotes(state.currentVotes)
+      setIsGameStarted(state.isGameStarted)
+      setPhase(state.phase)
+      if (playerIdRef.current) {
+        setIsGameMaster(state.gameMasterId === playerIdRef.current)
       }
-
-      setMatchups(matchups)
-      setCurrentMatchupIndex(currentMatchupIndex)
-      setCurrentVotes([])
-      currentVotesRef.current = []
-      if (currentMatchupIndex === 15) setIsGameOver(true)
-    })
-
-    socket.on('error', (msg) => alert(msg))
-    socket.on('players_update', (updatedPlayers) => setPlayers(updatedPlayers))
-
-    socket.on(
-      'game_state',
-      ({
-        gameId,
-        bracket,
-        matchups,
-        currentMatchupIndex,
-        players,
-        currentVotes,
-        isGameStarted,
-        isGameOver,
-      }) => {
-        setGameId(gameId)
-        setBracket(bracket)
-        setMatchups(matchups)
-        setCurrentMatchupIndex(currentMatchupIndex)
-        setPlayers(players)
-        setCurrentVotes(currentVotes)
-        currentVotesRef.current = currentVotes
-        setIsGameStarted(isGameStarted)
-        setIsGameOver(isGameOver)
+      if (pendingResumeRef.current) {
+        pendingResumeRef.current = false
+        setNote(resumeCopy(state.phase, hasVotedRef.current))
       }
-    )
+    }
+
+    const onVoteStatus = ({ hasVoted: voted, choice }: { hasVoted: boolean, choice: number | null }) => {
+      setHasVoted(voted)
+      hasVotedRef.current = voted
+      setYourChoice(choice)
+    }
+
+    const onError = (msg: string) => {
+      setFormError(msg)
+      setResuming(false)
+      if (!playerIdRef.current) setHasJoined(false)
+      if (msg === 'Voting is closed' || msg === 'Join the room first' || msg === 'Invalid choice') {
+        setHasVoted(false)
+        hasVotedRef.current = false
+        setYourChoice(null)
+      }
+    }
+
+    const onDrop = () => setLink('dropped')
+    const onMaster = () => setIsGameMaster(true)
+    const onMoved = () => {
+      yieldSeatRef.current = true
+      setMoved(true)
+      setNote('This seat is open on another tab.')
+    }
+
+    socket.on('connect', hello)
+    socket.on('disconnect', onDrop)
+    socket.on('joined', onJoined)
+    socket.on('game_master', onMaster)
+    socket.on('game_state', onState)
+    socket.on('vote_status', onVoteStatus)
+    socket.on('error', onError)
+    socket.on('session_moved', onMoved)
+
+    if (socket.connected) hello()
 
     return () => {
-      socket.off('player_joined')
-      socket.off('game_master')
-      socket.off('bracket_set')
-      socket.off('vote_cast')
-      socket.off('matchup_advanced')
-      socket.off('error')
-      socket.off('players_update')
-      socket.off('game_state')
+      socket.off('connect', hello)
+      socket.off('disconnect', onDrop)
+      socket.off('joined', onJoined)
+      socket.off('game_master', onMaster)
+      socket.off('game_state', onState)
+      socket.off('vote_status', onVoteStatus)
+      socket.off('error', onError)
+      socket.off('session_moved', onMoved)
     }
-  }, [game, gameId])
+  }, [gameQuery])
 
   useEffect(() => {
-    const requestWakeLock = async () => {
-      try {
-        const lock = await navigator.wakeLock.request('screen')
-        setWakeLock(lock)
-      } catch (err) {
-        console.error(err)
+    let lock: WakeLockSentinel | null = null
+    let cancelled = false
+    navigator.wakeLock?.request('screen').then((sentinel) => {
+      if (cancelled) {
+        sentinel.release().catch(() => undefined)
+        return
       }
-    }
-
-    requestWakeLock()
-
+      lock = sentinel
+    }).catch(() => undefined)
     return () => {
-      if (wakeLock) {
-        wakeLock.release().then(() => setWakeLock(null))
-      }
+      cancelled = true
+      lock?.release().catch(() => undefined)
     }
-  }, [wakeLock])
+  }, [])
 
   useEffect(() => {
-    const fetchPublicBrackets = async () => {
-      const response = await fetch('/api/public')
-      const data = await response.json()
-      setPublicBrackets(data)
+    let cancelled = false
+    fetch('/api/public')
+      .then((response) => response.json())
+      .then((data: PublicBracket[]) => {
+        if (!cancelled && Array.isArray(data)) setPublicBrackets(data)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
     }
-
-    fetchPublicBrackets()
   }, [])
 
   const handleJoin = () => {
-    if (gameId && name) {
-      socket.emit('join', { gameId, playerName: name })
-      localStorage.setItem('playerName', name)
-      setHasJoined(true)
+    const trimmed = name.trim()
+    if (!gameId || !trimmed) return
+    const token = tokenRef.current || newToken()
+    tokenRef.current = token
+    nameRef.current = trimmed
+    yieldSeatRef.current = false
+    savePlayerSession(gameId, { token, name: trimmed })
+    setHasJoined(true)
+    setResuming(true)
+    setFormError('')
+    socket.emit('join', { gameId, playerName: trimmed, playerToken: token })
+    if (router.query.game !== gameId) {
+      router.replace({ pathname: '/join', query: { game: gameId } }, undefined, { shallow: true })
     }
   }
 
-  const handleSetBracket = () => {
-    if (gameId && code) {
-      socket.emit('set_bracket', { gameId, code: code.toLowerCase() })
-      localStorage.setItem('code', code.toLowerCase())
-    }
+  const handleSetBracket = (nextCode?: string) => {
+    const value = (nextCode ?? code).trim().toLowerCase()
+    if (!gameId || !value) return
+    setCode(value)
+    localStorage.setItem('code', value)
+    socket.emit('set_bracket', { gameId, code: value })
   }
 
   const handleStart = () => {
     socket.emit('start_game', { gameId })
   }
 
-  const hasVoted = currentVotes.some((v) => v.playerId === socket.id)
+  const handleVote = (choice: number) => {
+    if (hasVoted || phase !== 'voting') return
+    setHasVoted(true)
+    hasVotedRef.current = true
+    setYourChoice(choice)
+    socket.emit('vote', { gameId, choice })
+  }
+
+  const reclaimSeat = () => {
+    yieldSeatRef.current = false
+    setMoved(false)
+    const token = tokenRef.current
+    const playerName = nameRef.current
+    if (!gameQuery || !token || !playerName) return
+    socket.emit('join', { gameId: gameQuery, playerName, playerToken: token })
+  }
+
   const currentMatchup = matchups[currentMatchupIndex]
-  const champion = matchups[currentMatchupIndex - 1]?.winner
+  const champion = matchups[14]?.winner ?? matchups[currentMatchupIndex - 1]?.winner
+  const inLobby = hasJoined && !isGameStarted && phase === 'lobby'
 
   return (
     <div className="bn-page bn-page--stadium min-h-screen flex flex-col items-center p-4 gap-4">
-      {(!isGameStarted || isGameOver) && (
+      {link === 'dropped' && hasJoined && !moved && (
+        <div className="link-banner" role="status">
+          Signal dropped. Your seat is saved — hang on.
+        </div>
+      )}
+
+      {(!isGameStarted || phase === 'champion') && (
         <img
           src="/bracket-night-gold.svg"
           alt="Bracket Night"
@@ -176,20 +271,39 @@ const Join = () => {
         />
       )}
 
-      {!hasJoined && (
+      {note && hasJoined && (
+        <div className="resume-banner" role="status">{note}</div>
+      )}
+
+      {formError && <div className="resume-banner is-error" role="alert">{formError}</div>}
+
+      {moved && (
+        <div className="bn-card player-shell p-6">
+          <h1 className="player-state-title">Seat moved</h1>
+          <p className="player-state-copy mb-4">
+            Another tab took this phone&apos;s seat. You can pull it back.
+          </p>
+          <button type="button" onClick={reclaimSeat} className="bn-btn bn-btn--gold">
+            Take my seat back
+          </button>
+        </div>
+      )}
+
+      {!hasJoined && !moved && (
         <div className="flex-grow flex items-center justify-center w-full">
           <div className="bn-card player-shell p-6">
             <h1 className="player-state-title">Join the night</h1>
             <p className="player-state-copy mb-4">
-              Enter the room code from the TV and your display name.
+              The room code is on the TV. Your name is your seat for the whole night.
             </p>
 
             <input
               type="text"
               value={gameId}
-              onChange={(e) => setGameId(e.target.value)}
+              onChange={(e) => setGameId(e.target.value.trim())}
               placeholder="Game ID"
               className="bn-input"
+              autoCapitalize="characters"
             />
 
             <input
@@ -198,6 +312,7 @@ const Join = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your Name"
               className="bn-input"
+              maxLength={20}
               onKeyUp={(e) => {
                 if (e.key === 'Enter') handleJoin()
               }}
@@ -210,35 +325,50 @@ const Join = () => {
         </div>
       )}
 
-      {hasJoined && !isGameStarted && (
+      {resuming && hasJoined && !playerId && !moved && (
+        <div className="bn-card player-shell p-6">
+          <h1 className="player-state-title">Pulling you back in</h1>
+          <p className="player-state-copy">Same phone, same seat. The night did not reset.</p>
+        </div>
+      )}
+
+      {inLobby && playerId && !moved && (
         <div className="bn-card player-shell p-6">
           {isGameMaster && !bracket && (
             <div>
               <h1 className="player-state-title">Set the bracket</h1>
               <p className="player-state-copy mb-4">
-                You&apos;re the Game Master. Drop in a bracket code to load the field.
+                You&apos;re the game master. Load the demo night or drop in a bracket code.
               </p>
+
+              <button
+                type="button"
+                onClick={() => handleSetBracket('demo')}
+                className="bn-btn bn-btn--gold"
+              >
+                Load Mountain GOATs
+              </button>
 
               <input
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                placeholder="Enter Bracket Code"
-                className="bn-input"
+                placeholder="Or enter a bracket code"
+                className="bn-input mt-4"
                 onKeyUp={(e) => {
                   if (e.key === 'Enter') handleSetBracket()
                 }}
               />
 
-              <button type="button" onClick={handleSetBracket} className="bn-btn bn-btn--gold">
-                Load Bracket
+              <button type="button" onClick={() => handleSetBracket()} className="bn-btn bn-btn--ghost">
+                Load code
               </button>
             </div>
           )}
 
-          {isGameMaster && bracket && !isGameStarted && (
-            <button type="button" onClick={handleStart} className="bn-btn mt-2">
-              Everyone ready — start!
+          {isGameMaster && bracket && (
+            <button type="button" onClick={handleStart} className="bn-btn bn-btn--gold mt-2">
+              Everyone ready — start
             </button>
           )}
 
@@ -246,48 +376,59 @@ const Join = () => {
             <p className="player-state-copy">Waiting for the bracket to be set…</p>
           )}
           {bracket && !isGameMaster && (
-            <p className="player-state-copy">Waiting for the Game Master to begin…</p>
+            <>
+              <h1 className="player-state-title">{bracket.title}</h1>
+              <p className="player-state-copy">Waiting for the game master to begin…</p>
+            </>
           )}
 
           <h2 className="bn-display text-xl mt-5 mb-1 text-[var(--gold)] tracking-widest text-center">
             Players in room
           </h2>
           <div className="player-list">
-            {players.map((player, index) => (
-              <div key={index} className="player-pill">
+            {players.map((player) => (
+              <div
+                key={player.id}
+                className={`player-pill ${player.id === playerId ? 'is-you' : ''} ${player.connected ? '' : 'is-away'}`}
+              >
+                <span className={`presence ${player.connected ? '' : 'is-away'}`} />
                 {player.name}
+                {player.id === playerId ? ' · you' : ''}
+                {!player.connected ? ' · reconnecting' : ''}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {hasJoined && isGameStarted && (
+      {hasJoined && isGameStarted && !moved && (
         <div className="player-shell w-full">
-          {bracket && (
+          {bracket && phase !== 'champion' && (
             <div className="text-center mb-3">
+              <p className="bn-display vote-eyebrow">{roundLabel(currentMatchupIndex)}</p>
               <h2 className="bn-display text-4xl text-[var(--gold-bright)]">{bracket.title}</h2>
               <h3 className="text-[var(--text-muted)] mt-1">{bracket.subtitle}</h3>
             </div>
           )}
 
-          {tieNotice && <CoinTossMobileNotice winnerName={tieNotice.winnerName} />}
+          {phase === 'coin' && <CoinTossMobileNotice />}
 
-          {isGameStarted && !isGameOver && currentMatchup && (
+          {phase === 'voting' && currentMatchup && (
             <VotingCard
               matchup={currentMatchup}
-              gameId={gameId}
-              playerName={name}
               hasVoted={hasVoted}
+              yourChoice={yourChoice}
+              round={roundLabel(currentMatchupIndex)}
+              lockedCount={currentVotes.length}
+              playerCount={players.length}
+              onVote={handleVote}
             />
           )}
 
-          {isGameOver && (
+          {phase === 'champion' && (
             <div className="bn-card p-6 game-over-winner">
               <h2 className="player-state-title">Champion</h2>
-              <h3 className="text-2xl font-bold text-[var(--winner-highlight)]">
-                {champion?.name}
-              </h3>
+              <h3 className="text-2xl font-bold text-[var(--winner-highlight)]">{champion?.name}</h3>
               {champion?.image_url && (
                 <img src={champion.image_url} alt={champion.name || 'Winner'} />
               )}
@@ -296,13 +437,16 @@ const Join = () => {
         </div>
       )}
 
-      {isGameMaster && !bracket && (
+      {isGameMaster && !bracket && hasJoined && !moved && (
         <>
           <h2 className="bn-display text-2xl text-[var(--gold)] tracking-widest mt-2">
             Public brackets
           </h2>
-          {publicBrackets.map((publicBracket, index) => (
-            <div key={index} className="bn-card public-bracket-row">
+          {publicBrackets.length === 0 && (
+            <p className="player-state-copy">No saved public brackets yet. DEMO is ready.</p>
+          )}
+          {publicBrackets.map((publicBracket) => (
+            <div key={publicBracket.code} className="bn-card public-bracket-row">
               <div>
                 <h3 className="text-lg font-bold mb-1">{publicBracket.title}</h3>
                 <p className="text-sm text-[var(--text-muted)]">{publicBracket.subtitle}</p>
