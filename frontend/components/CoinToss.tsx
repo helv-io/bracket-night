@@ -13,10 +13,10 @@ export interface CoinTossProps {
 }
 
 /** Full spin / flight duration (ms). Completion is wall-clock — not rAF/animationend. */
-const SPIN_MS = 3400
+const SPIN_MS = 5800
 /** Celebrate / confetti linger after land before overlay clears */
-const HOLD_MS = 4200
-const HOLD_MS_REDUCED = 2400
+const HOLD_MS = 4000
+const HOLD_MS_REDUCED = 2800
 
 /**
  * Continuous metallic cylinder rim: wall panels around the circumference.
@@ -69,6 +69,7 @@ export default function CoinToss({
     return () => {
       window.clearTimeout(spinTimerRef.current)
       window.clearTimeout(holdTimerRef.current)
+      document.documentElement.classList.remove('bn-coin-live')
     }
   }, [])
 
@@ -82,6 +83,7 @@ export default function CoinToss({
     window.clearTimeout(holdTimerRef.current)
     holdTimerRef.current = window.setTimeout(() => {
       if (gen !== spinGenRef.current) return
+      document.documentElement.classList.remove('bn-coin-live')
       setIsTossing(false)
       setBurst(false)
       onCompleteRef.current?.()
@@ -97,6 +99,7 @@ export default function CoinToss({
     setBurst(false)
     setTossKey((prev) => prev + 1)
     setIsTossing(true)
+    document.documentElement.classList.add('bn-coin-live')
   }
 
   useEffect(() => {
@@ -173,7 +176,11 @@ export default function CoinToss({
   return (
     <>
       {isTossing && (
-        <div className="coin-toss-overlay animate-coinFadeIn" role="dialog" aria-label="Coin toss">
+        <div className={`coin-toss-overlay animate-coinFadeIn ${showResult ? 'is-landed' : 'is-flipping'}`} role="dialog" aria-label="Coin toss">
+          <div className="coin-toss-host-brand" aria-hidden>
+            <img src="/bracket-night-gold.svg" alt="" className="coin-toss-host-logo" />
+            <span className="coin-toss-host-live">Host TV</span>
+          </div>
           <div className="coin-toss-vignette" />
           <div className="coin-toss-spotlight" />
           <div className="coin-toss-rays" aria-hidden />
@@ -195,10 +202,10 @@ export default function CoinToss({
 
           <div className="coin-toss-stage">
             <div className="coin-toss-kicker" aria-live="assertive">
-              {showResult ? 'Decided!' : "It's a tie!"}
+              {showResult ? 'Decided!' : 'FLIPPING'}
             </div>
             <div className="coin-toss-subkicker">
-              {showResult ? 'Advances to the next round' : 'Coin toss · watch the flip'}
+              {showResult ? 'Advances to the next round' : 'Watch the gold coin spin on this TV'}
             </div>
 
             {!showResult && (
@@ -270,7 +277,7 @@ export default function CoinToss({
 
             <div className="coin-status">
               {!showResult ? (
-                <div className="coin-status-line">In the air — call it!</div>
+                <div className="coin-status-line is-flipping">Spinning — call it in the air!</div>
               ) : (
                 <>
                   <img

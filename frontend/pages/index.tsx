@@ -257,7 +257,8 @@ const Home = () => {
 
       {!isGameStarted && gameId && (
         <div className="text-center qr-container">
-          <div className="bn-card p-4 inline-block">
+          <div className={`bn-card host-lobby-card p-4 inline-block ${players.length > 0 ? 'is-filling' : ''}`}>
+            <p className="host-lobby-kicker">Living-room lobby</p>
             <p className="text-sm text-[var(--text-muted)] mb-1 tracking-wide uppercase">
               Scan to join
             </p>
@@ -289,6 +290,18 @@ const Home = () => {
               >
                 {gameId}
               </a>
+            </div>
+            <div className="host-room-meter" aria-live="polite">
+              <span className="host-room-count">{players.length}</span>
+              <span className="host-room-label">
+                {players.length === 0
+                  ? 'waiting for the first phone'
+                  : players.length === 1
+                    ? 'in the room · need one more for a coin'
+                    : bracket
+                      ? 'ready when the game master starts'
+                      : 'in the room · waiting on the bracket'}
+              </span>
             </div>
             <div className="host-roster">
               {players.length === 0 && <div className="bn-chip">Waiting for players…</div>}
@@ -340,13 +353,25 @@ const Home = () => {
       )}
 
       {isGameOver && !activeToss && (
-        <div className="champion-curtain">
-          <Confetti />
+        <div className="champion-curtain" role="dialog" aria-label="Champion of the night">
+          <div className="champion-rays" aria-hidden />
+          <div className="champion-burst" aria-hidden />
+          <Confetti
+            numberOfPieces={420}
+            recycle={true}
+            gravity={0.11}
+            tweenDuration={5200}
+            colors={['#e8c46a', '#ffe9a8', '#ff6f61', '#5dffa8', '#ffffff', '#7eb6ff']}
+          />
           <p className="champion-kicker">Champion of the night</p>
-          {champion?.image_url && (
-            <img src={champion.image_url} alt={champion.name} />
-          )}
+          {bracket?.title && <p className="champion-bracket">{bracket.title}</p>}
+          <div className="champion-frame">
+            {champion?.image_url && (
+              <img src={champion.image_url} alt={champion.name} />
+            )}
+          </div>
           <h2 className="champion-name">{champion?.name || 'The bracket is complete'}</h2>
+          <p className="champion-seal">The night is sealed</p>
         </div>
       )}
 

@@ -175,6 +175,50 @@ a {
 }
 
 
+
+.host-lobby-card {
+  position: relative;
+}
+
+.host-lobby-card.is-filling {
+  box-shadow: 0 0 36px rgba(232, 196, 106, 0.22), var(--surface-glow);
+  border-color: rgba(232, 196, 106, 0.55);
+}
+
+.host-lobby-kicker {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 0.78rem;
+}
+
+.host-room-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  margin: 0.75rem auto 0.15rem;
+}
+
+.host-room-count {
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--gold-bright);
+  letter-spacing: 0.06em;
+}
+
+.host-room-label {
+  max-width: 18rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
 .host-roster {
   display: flex;
   flex-wrap: wrap;
@@ -268,6 +312,20 @@ a {
   border-style: dashed;
 }
 
+
+/* Host TV: coin owns the entire viewport; phones stay on /join */
+html.bn-coin-live .host-chrome,
+html.bn-coin-live .host-now,
+html.bn-coin-live .qr-container,
+html.bn-coin-live .host-bracket-area {
+  visibility: hidden;
+}
+
+html.bn-coin-live .host-version {
+  z-index: 2100;
+  color: rgba(232, 196, 106, 0.55);
+}
+
 .champion-curtain {
   position: fixed;
   inset: 0;
@@ -275,39 +333,133 @@ a {
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
   padding: 2rem;
   text-align: center;
   background:
-    radial-gradient(ellipse at 50% 38%, rgba(232, 196, 106, 0.24), transparent 52%),
-    rgba(2, 4, 12, 0.84);
+    radial-gradient(ellipse at 50% 38%, rgba(232, 196, 106, 0.28), transparent 52%),
+    rgba(2, 4, 12, 0.9);
+  overflow: hidden;
+}
+
+.champion-rays {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(130vw, 1100px);
+  height: min(130vw, 1100px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 214, 120, 0.12) 0deg 10deg,
+    transparent 10deg 22deg
+  );
+  mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, transparent 64%);
+  -webkit-mask-image: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, transparent 64%);
+  animation: championRays 22s linear infinite;
+  opacity: 0.9;
+}
+
+.champion-burst {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: championBurst 1.2s ease-out both;
+}
+
+.champion-frame {
+  position: relative;
+  z-index: 1;
+  padding: 0.35rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--gold-bright), var(--gold-deep));
+  box-shadow: 0 0 48px rgba(232, 196, 106, 0.4);
+  animation: championPop 0.7s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
 
 .champion-curtain img {
-  width: min(42vh, 280px);
-  height: min(42vh, 280px);
+  width: min(44vh, 300px);
+  height: min(44vh, 300px);
   object-fit: cover;
   border-radius: 50%;
-  border: 6px solid var(--gold);
-  box-shadow: 0 0 60px rgba(232, 196, 106, 0.45);
-  margin-top: 0.35rem;
+  border: 4px solid rgba(20, 14, 6, 0.55);
+  display: block;
+  margin: 0;
 }
 
 .champion-kicker {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-family: var(--font-display);
   letter-spacing: 0.28em;
   color: var(--gold);
-  font-size: clamp(1.1rem, 2vw, 1.6rem);
+  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+}
+
+.champion-bracket {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
 }
 
 .champion-name {
-  margin: 0;
+  position: relative;
+  z-index: 1;
+  margin: 0.15rem 0 0;
   font-family: var(--font-display);
   font-size: clamp(3.2rem, 8vw, 7rem);
   line-height: 0.92;
   color: var(--gold-bright);
   text-shadow: 0 0 28px rgba(255, 214, 102, 0.35);
+}
+
+.champion-seal {
+  position: relative;
+  z-index: 1;
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--winner-highlight);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+@keyframes championRays {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes championBurst {
+  0% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 0 rgba(255, 230, 150, 0.8);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 0 160px rgba(255, 230, 150, 0);
+  }
+}
+
+@keyframes championPop {
+  from {
+    transform: scale(0.82);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Higher specificity + later win vs .logo-container { position:absolute } (Tailwind may reorder) */
@@ -544,7 +696,7 @@ a {
   .animate-coinSpinHeads,
   .animate-coinSpinTails,
   .animate-coinShadowToss {
-    animation-duration: 3.4s !important;
+    animation-duration: 5.8s !important;
     animation-iteration-count: 1 !important;
   }
 }
