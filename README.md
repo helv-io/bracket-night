@@ -113,6 +113,18 @@ See [`.env.example`](.env.example) for the full list. Important knobs:
 - **Join (`/join?game=...`)**: Player join / vote UI. Game masters can load the built-in `DEMO` bracket (Mountain GOATs) with no database setup.
 - **New (`/new`)**: Create a reusable bracket template.
 
+
+### Screen-recording the coin (2 phones + DEMO)
+
+1. `npm run dev`, open `/` on a desktop (the host TV).
+2. Open the join link on **two** phones (or two mobile browser profiles) **before** start. First phone is game master.
+3. Tap **Load Mountain GOATs**, wait until both seats show in the lobby, then **Everyone ready — start**.
+4. On matchup 1, phones vote **opposite** sides. Even player counts can tie; opposite votes with two phones always open the coin.
+5. The host TV fills with the cinematic toss (contestant faces on a thick gold coin). Let it land, or wait for the server timeout (`COIN_TIMEOUT_MS`, default 14s).
+6. Optional reconnect checks while the coin is up: refresh a phone, reload the TV. The same toss (`startedAt` / winner side) comes back; the bracket does not advance early.
+
+Recording tip: frame the TV full-screen; the phone only shows a “watch the big screen” notice during the toss.
+
 ### Reconnects
 
 Live rooms stay in memory for the process lifetime. Within that lifetime:

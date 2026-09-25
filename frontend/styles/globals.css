@@ -163,6 +163,18 @@ a {
   font-weight: 700;
 }
 
+.host-demo-tip {
+  margin: 0.35rem auto 0.75rem;
+  max-width: 22rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.9;
+  line-height: 1.35;
+}
+
+
 .host-roster {
   display: flex;
   flex-wrap: wrap;
@@ -532,7 +544,7 @@ a {
   .animate-coinSpinHeads,
   .animate-coinSpinTails,
   .animate-coinShadowToss {
-    animation-duration: 3.2s !important;
+    animation-duration: 3.4s !important;
     animation-iteration-count: 1 !important;
   }
 }

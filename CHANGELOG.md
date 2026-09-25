@@ -11,9 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stable player identity and host key so a phone or the TV can drop and resume the same night (lobby, vote, or coin)
 - Built-in `DEMO` bracket (Mountain GOATs) for a room that has no saved template
 - Socket.IO reconnect simulation covering disconnect mid-lobby, mid-vote, mid-coin, late rejoin, and host reattach
+- Lobby / host tips for the two-phone DEMO coin path (even count · opposite votes)
+- Stronger TV coin spectacle (larger disk, stadium rays, impact flash, clearer tie kicker) and a clearer phone “watch the big screen” notice
 
 ### Changed
 - Ties are a server phase. The bracket advances when the host finishes the coin cinematic, or when the coin timeout fires
+- Coin spin / hold timings nudged for a punchier land on living-room TVs
+
 
 ## [0.1.0] - 2026-08-12
 

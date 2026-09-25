@@ -534,6 +534,76 @@ async function main() {
       }
     })
 
+    await stage('DEMO two phones opposite votes emit coin_toss; host finishes', async () => {
+      const room = await createRoom()
+      const ava = await join(room.gameId, 'Ava', token())
+      const ben = await join(room.gameId, 'Ben', token())
+      const bracketReady = waitForMatch<PublicGameState>(room.host, 'game_state', (state) => state.bracket?.code === 'demo')
+      ava.phone.emit('set_bracket', { gameId: room.gameId, code: 'DEMO' })
+      await bracketReady
+      const started = waitForMatch<PublicGameState>(room.host, 'game_state', (state) => state.phase === 'voting')
+      ava.phone.emit('start_game', { gameId: room.gameId })
+      await started
+
+      type CoinPayload = NonNullable<PublicGameState['coin']>
+      const tossEvent = waitFor<CoinPayload>(room.host, 'coin_toss')
+      const phoneToss = waitFor<CoinPayload>(ava.phone, 'coin_toss')
+      ava.phone.emit('vote', { gameId: room.gameId, choice: 0 })
+      const coinStateP = waitForMatch<PublicGameState>(room.host, 'game_state', (state) => state.phase === 'coin')
+      ben.phone.emit('vote', { gameId: room.gameId, choice: 1 })
+      const [toss, phoneSeen, coinState] = await Promise.all([tossEvent, phoneToss, coinStateP])
+      assert.ok(coinState.coin)
+      assert.strictEqual(toss.matchupIndex, 0)
+      assert.strictEqual(toss.startedAt, coinState.coin!.startedAt)
+      assert.strictEqual(toss.winnerSide, coinState.coin!.winnerSide)
+      assert.strictEqual(phoneSeen.startedAt, toss.startedAt)
+      assert.strictEqual(coinState.players.length, 2)
+
+      const advanced = waitFor<Advance>(room.host, 'matchup_advanced')
+      const next = waitForMatch<PublicGameState>(
+        room.host,
+        'game_state',
+        (state) => state.phase === 'voting' && state.currentMatchupIndex === 1
+      )
+      room.host.emit('coin_complete', { gameId: room.gameId, hostToken: room.hostToken })
+      const advance = await advanced
+      const after = await next
+      assert.strictEqual(advance.wasTie, true)
+      assert.strictEqual(after.coin, null)
+      assert.strictEqual(after.matchups[0].winner?.id, toss.winner.id)
+    })
+
+    await stage('odd player count cannot natural-tie', async () => {
+      const room = await createRoom()
+      const ava = await join(room.gameId, 'Ava', token())
+      const ben = await join(room.gameId, 'Ben', token())
+      const cy = await join(room.gameId, 'Cy', token())
+      const bracketReady = waitForMatch<PublicGameState>(room.host, 'game_state', (state) => Boolean(state.bracket))
+      ava.phone.emit('set_bracket', { gameId: room.gameId, code: 'demo' })
+      await bracketReady
+      const started = waitForMatch<PublicGameState>(room.host, 'game_state', (state) => state.phase === 'voting')
+      ava.phone.emit('start_game', { gameId: room.gameId })
+      await started
+
+      let tossed = false
+      room.host.on('coin_toss', () => { tossed = true })
+      const advanced = waitFor<Advance>(room.host, 'matchup_advanced')
+      const next = waitForMatch<PublicGameState>(
+        room.host,
+        'game_state',
+        (state) => state.phase === 'voting' && state.currentMatchupIndex === 1
+      )
+      ava.phone.emit('vote', { gameId: room.gameId, choice: 0 })
+      ben.phone.emit('vote', { gameId: room.gameId, choice: 0 })
+      cy.phone.emit('vote', { gameId: room.gameId, choice: 1 })
+      const advance = await advanced
+      const after = await next
+      assert.strictEqual(advance.wasTie, false)
+      assert.strictEqual(tossed, false)
+      assert.strictEqual(after.coin, null)
+      assert.ok(after.matchups[0].winner)
+    })
+
     await stage('coin timeout places the same winner', async () => {
       process.env.COIN_TIMEOUT_MS = '200'
       const room = await createRoom()
