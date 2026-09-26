@@ -9,6 +9,7 @@ import { clearHostSession, loadHostSession, saveHostSession } from '../lib/sessi
 import { roundLabel } from '../lib/round'
 import { APP_VERSION_LABEL } from '../lib/version'
 import Bracket from '../components/Bracket'
+import ConstellationBackdrop from '../components/ConstellationBackdrop'
 import {
   CoinTossState,
   GamePhase,
@@ -204,6 +205,7 @@ const Home = () => {
 
   return (
     <div className="bn-page bn-page--stadium bn-page--host">
+      <ConstellationBackdrop />
       <audio src="/background.ogg" autoPlay loop />
 
       <header className="host-chrome host-chrome--top">
