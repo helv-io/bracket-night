@@ -504,6 +504,26 @@ html.bn-coin-live .host-version {
   pointer-events: none;
 }
 
+/* Host TV drops the photo plate. The constellation canvas is the field. */
+.bn-page--host.bn-page--stadium::before {
+  display: none;
+}
+
+.constellation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: block;
+  /* Visible before the canvas bitmap paints, and if animation never starts. */
+  background:
+    radial-gradient(ellipse 46% 42% at 88% 38%, rgba(196, 150, 72, 0.16), transparent 64%),
+    radial-gradient(ellipse 62% 48% at 40% 6%, rgba(86, 116, 196, 0.14), transparent 62%),
+    linear-gradient(180deg, #12182e 0%, #0b1020 50%, #070a14 100%);
+}
+
 .bn-page--stadium::after {
   content: '';
   position: fixed;
@@ -514,6 +534,15 @@ html.bn-coin-live .host-version {
     radial-gradient(circle at 50% 45%, transparent 18%, rgba(0, 0, 0, 0.55) 100%);
   z-index: -1;
   pointer-events: none;
+}
+
+/* Light edge falloff only — the star field has to stay visible across the TV. */
+.bn-page--host.bn-page--stadium::after {
+  background: radial-gradient(
+    ellipse 125% 100% at 50% 46%,
+    transparent 46%,
+    rgba(3, 5, 12, 0.34) 100%
+  );
 }
 
 .bn-display {
