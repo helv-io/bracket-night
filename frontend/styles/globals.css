@@ -24,6 +24,8 @@
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
+  /* Breathing room between the brand logo and whatever sits beneath it (tables, cards, brackets) */
+  --bn-logo-gap: clamp(1.25rem, 4vh, 2.75rem);
 }
 
 * {
@@ -94,7 +96,7 @@ a {
   display: flex;
   justify-content: center;
   padding-top: 0.25rem;
-  padding-bottom: 0.55rem;
+  padding-bottom: var(--bn-logo-gap);
 }
 
 .host-chrome--bottom {
@@ -472,14 +474,17 @@ html.bn-coin-live .host-version {
   right: auto !important;
 }
 
-.logo--host {
-  width: min(22vw, 260px);
-  max-width: 260px;
+.logo.logo--host {
+  /* Keep the TV look (<= 580px wide) but also bound by height so short screens
+     don't get a header that swallows the bracket. Prefixed with .logo so it wins
+     over the generic .logo rule further down. */
+  width: min(40vw, 54vh, 580px);
+  max-width: 580px;
 }
 
 .host-title {
   font-size: clamp(1.1rem, 2.2vw, 1.75rem);
-  margin: 0;
+  margin: 0.35rem 0 0;
   line-height: 1.1;
 }
 
@@ -680,6 +685,23 @@ html.bn-coin-live .host-version {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+}
+
+/* Short screens (720p TVs, small laptops): shrink the lobby with the viewport height
+   so the card can never ride up into the logo. Unlayered, so it beats the Tailwind w-* utilities. */
+.qr-container .host-qr-pad {
+  width: clamp(5.5rem, 24vh, 12rem);
+}
+
+@media (max-height: 800px) {
+  .qr-container .host-demo-tip,
+  .qr-container .host-lobby-kicker {
+    display: none;
+  }
+
+  .qr-container .bn-card {
+    padding: 0.75rem 1rem;
+  }
 }
 
 /*

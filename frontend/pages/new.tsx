@@ -154,71 +154,85 @@ const NewBracket = () => {
   }
 
   return (
-    <div className="bn-page bn-page--stadium min-h-screen flex items-center justify-center p-4 flex-col">
+    <div className="bn-page bn-page--stadium new-page">
       <img
         src="/bracket-night-gold.svg"
-        alt="Bracket Night Logo"
-        className="w-full sm:w-1/3 object-cover"
+        alt="Bracket Night"
+        className="new-logo"
       />
-      <div className="w-full max-w-2xl bn-card p-6 transition-all duration-300">
-        <h1 className="text-3xl font-extrabold text-center mb-6 bracket-title text-[var(--gold-bright)]">
-          New Bracket
-        </h1>
-  
-        {/* AI is happening - Draw a full screen, blocking progress spinner with some AI Doing Magic text */}
-        {/* This should fade in / out based on the isAiHappening boolean */}
+      <div className="bn-card new-shell">
+        <header className="new-header">
+          <h1 className="new-title">New Bracket</h1>
+          <p className="new-lede">
+            Name it, add 16 contestants, and we&apos;ll find the pictures.
+          </p>
+        </header>
+
+        {/* AI is happening - full screen, blocking spinner */}
         {isAiHappening && (
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-8 space-y-4">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[var(--accent)] mx-auto"></div>
-              <p className="text-gray-900 dark:text-white text-lg font-semibold text-center">AI is doing magic...</p>
+          <div className="new-overlay" role="alert" aria-busy="true">
+            <div className="bn-card new-overlay-card">
+              <div className="vote-spinner" style={{ width: '3.25rem', height: '3.25rem', borderWidth: 4 }} />
+              <p>AI is doing magic…</p>
             </div>
           </div>
         )}
-  
+
         {/* Form for creating a new bracket */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title Input with AI Button */}
-          <div className="flex flex-col sm:flex-row gap-2">
+        <form onSubmit={handleSubmit} className="new-form">
+          <div className="new-field">
+            <label htmlFor="title" className="new-label">Title</label>
+            <div className="new-input-row">
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="e.g. Best Pizza Toppings"
+                className="new-input"
+                autoComplete="off"
+                enterKeyHint="next"
+              />
+              <button
+                type="button"
+                disabled={title.length < 3}
+                onClick={magic}
+                className="new-icon-btn new-icon-btn--magic"
+                aria-label="Generate contestants with AI"
+                title="Fill the empty slots with AI"
+              >
+                🪄
+              </button>
+            </div>
+            <p className="new-hint">Tap the wand to have AI fill the empty contestant slots.</p>
+          </div>
+
+          <div className="new-field">
+            <label htmlFor="subtitle" className="new-label">Subtitle</label>
             <input
               type="text"
-              id="title"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Title"
-              className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+              id="subtitle"
+              value={subtitle}
+              onChange={e => setSubtitle(e.target.value)}
+              placeholder="A short description"
+              className="new-input"
+              autoComplete="off"
+              enterKeyHint="done"
             />
-            <button
-              type="button"
-              disabled={title.length < 3}
-              onClick={magic}
-              className="w-full sm:w-12 sm:h-12 flex items-center justify-center bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed p-3 sm:p-0"
-              aria-label="Generate contestants with AI"
-            >
-              🪄
-            </button>
           </div>
-  
-          <input
-            type="text"
-            id="subtitle"
-            value={subtitle}
-            onChange={e => setSubtitle(e.target.value)}
-            placeholder="Subtitle (Description)"
-            className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-          />
-  
-          <div className="flex flex-col space-y-2">
-            <label className="flex items-center space-x-2 cursor-pointer">
+
+          <div className="new-field">
+            <label className="new-toggle">
+              <span className="new-toggle-text">
+                <span className="new-toggle-title">Public bracket</span>
+                <span className="new-toggle-sub">Shareable &amp; searchable with a code</span>
+              </span>
               <input
                 type="checkbox"
                 checked={isPublic}
                 onChange={e => setIsPublic(e.target.checked)}
-                className="form-checkbox h-5 w-5 text-blue-600 dark:text-blue-400 rounded focus:ring-blue-500"
               />
-              <span className="text-gray-700 dark:text-gray-300 font-medium">
-                Public Bracket (Shareable & Searchable)
-              </span>
+              <span className="new-switch" aria-hidden />
             </label>
             {isPublic && (
               <input
@@ -226,129 +240,135 @@ const NewBracket = () => {
                 value={code}
                 onChange={e => setCode(e.target.value)}
                 onBlur={checkUniqueCode}
-                placeholder="Bracket Code"
-                className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
+                placeholder="Bracket code"
+                aria-label="Bracket code"
+                className="new-input"
+                autoCapitalize="characters"
+                autoComplete="off"
               />
             )}
           </div>
-  
+
           {errorMessage && (
-            <div
-              ref={errorRef}
-              className="mb-4 p-3 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-lg shadow"
-            >
+            <div ref={errorRef} className="new-banner new-banner--error" role="alert">
               {errorMessage}
             </div>
           )}
-  
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div className="new-contestants-head">
+            <h2 className="new-label">Contestants</h2>
+            <span className="new-count" aria-live="polite">
+              {contestants.filter(c => c.name.trim()).length}/16
+            </span>
+          </div>
+
+          <div className="new-contestants">
             {contestants.map((contestant, index) => (
-              <fieldset key={index} className="border border-gray-300 dark:border-gray-600 p-4 rounded-lg">
-                <legend className="text-gray-700 dark:text-gray-300 font-medium bg-white dark:bg-gray-800 px-1">
-                  Contestant {index + 1}
-                </legend>
-                <div className="space-y-4">
-                  <div>
-                    <input
-                      id={`name-${index}`}
-                      type="text"
-                      value={contestant.name}
-                      onChange={e => updateContestant(index, 'name', e.target.value)}
-                      onFocus={() => {
-                        if (!title)
-                          document.getElementById('title')?.focus()
-                        contestants[index].previousName = contestant.name
-                      }}
-                      onBlur={async () => {
-                        // If the name is empty or the same as before, return
-                        if (!contestant.name.trim()) return
-                        if (contestant.previousName === contestants[index].name) return
-                        
-                        contestant.choice = 0
-                        updateContestant(index, 'image_url', '')
-                        updateContestant(index, 'loading', true)
-                        await proposeImages(index, `${title} ${contestant.name}`)
-                        const url = images[index].urls.length > 0 && images[index].urls[0] || '/bn-logo-gold.svg'
-                        updateContestant(index, 'image_url', url)
-                        updateContestant(index, 'loading', false)
-                      }}
-                      placeholder={title ? `Contestant ${index + 1} Name` : 'Please enter Title first'}
-                      maxLength={20}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="hidden"
-                      id={`image-${index}`}
-                      value={contestant.image_url}
-                    />
-                    {contestant.name && (
-                      <div className="flex items-center justify-center space-x-2">
-                        {contestant.loading && (
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[var(--accent)] mx-auto mt-2"></div>
-                        )}
-                        {contestant.image_url && (
-                          <>
-                            <button
-                              type="button"
-                              disabled={images[index].urls.length === 0 || contestant.choice === 0}
-                              onClick={() => {
-                                const newChoice = Math.max(contestant.choice - 1, 0)
-                                updateContestant(index, 'image_url', images[index].urls[newChoice])
-                                contestant.choice = newChoice
-                              }}
-                              className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                            >
-                              👈
-                            </button>
-                            <img
-                              src={images[index].urls[contestant.choice] || '/bn-logo-gold.svg'}
-                              alt={contestant.name}
-                              onError={e => (e.currentTarget.src = '/bn-logo-gold.svg')}
-                              className="w-25 h-25 object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              disabled={
-                                images[index].urls.length === 0 ||
-                                contestant.choice === images[index].urls.length - 1
-                              }
-                              onClick={() => {
-                                const newChoice = Math.min(
-                                  contestant.choice + 1,
-                                  images[index].urls.length - 1
-                                )
-                                updateContestant(index, 'image_url', images[index].urls[newChoice])
-                                contestant.choice = newChoice
-                              }}
-                              className="p-1 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-                            >
-                              👉
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              <fieldset key={index} className="new-contestant">
+                <legend className="sr-only">Contestant {index + 1}</legend>
+                <span className="new-seed" aria-hidden>{index + 1}</span>
+                <div className="new-contestant-body">
+                  <input
+                    id={`name-${index}`}
+                    type="text"
+                    value={contestant.name}
+                    onChange={e => updateContestant(index, 'name', e.target.value)}
+                    onFocus={() => {
+                      if (!title)
+                        document.getElementById('title')?.focus()
+                      contestants[index].previousName = contestant.name
+                    }}
+                    onBlur={async () => {
+                      // If the name is empty or the same as before, return
+                      if (!contestant.name.trim()) return
+                      if (contestant.previousName === contestants[index].name) return
+
+                      contestant.choice = 0
+                      updateContestant(index, 'image_url', '')
+                      updateContestant(index, 'loading', true)
+                      await proposeImages(index, `${title} ${contestant.name}`)
+                      const url = images[index].urls.length > 0 && images[index].urls[0] || '/bn-logo-gold.svg'
+                      updateContestant(index, 'image_url', url)
+                      updateContestant(index, 'loading', false)
+                    }}
+                    placeholder={title ? `Contestant ${index + 1}` : 'Enter a title first'}
+                    aria-label={`Contestant ${index + 1} name`}
+                    maxLength={20}
+                    autoComplete="off"
+                    className="new-input"
+                  />
+                  <input
+                    type="hidden"
+                    id={`image-${index}`}
+                    value={contestant.image_url}
+                  />
+                  {contestant.name && (contestant.loading || contestant.image_url) && (
+                    <div className="new-picker">
+                      {contestant.loading && <div className="vote-spinner" aria-label="Finding pictures" />}
+                      {contestant.image_url && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={images[index].urls.length === 0 || contestant.choice === 0}
+                            onClick={() => {
+                              const newChoice = Math.max(contestant.choice - 1, 0)
+                              updateContestant(index, 'image_url', images[index].urls[newChoice])
+                              contestant.choice = newChoice
+                            }}
+                            className="new-icon-btn"
+                            aria-label={`Previous picture for ${contestant.name}`}
+                          >
+                            ‹
+                          </button>
+                          <img
+                            src={images[index].urls[contestant.choice] || '/bn-logo-gold.svg'}
+                            alt={contestant.name}
+                            onError={e => (e.currentTarget.src = '/bn-logo-gold.svg')}
+                            className="new-thumb"
+                          />
+                          <button
+                            type="button"
+                            disabled={
+                              images[index].urls.length === 0 ||
+                              contestant.choice === images[index].urls.length - 1
+                            }
+                            onClick={() => {
+                              const newChoice = Math.min(
+                                contestant.choice + 1,
+                                images[index].urls.length - 1
+                              )
+                              updateContestant(index, 'image_url', images[index].urls[newChoice])
+                              contestant.choice = newChoice
+                            }}
+                            className="new-icon-btn"
+                            aria-label={`Next picture for ${contestant.name}`}
+                          >
+                            ›
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </fieldset>
             ))}
           </div>
-  
+
           {successMessage && (
-            <div className="mb-4 p-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg shadow">
+            <div className="new-banner new-banner--success" role="status">
               {successMessage}
             </div>
           )}
-  
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Creating...' : 'Create Bracket'}
-          </button>
+
+          <div className="new-submit-bar">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="bn-btn bn-btn--gold new-submit"
+            >
+              {isSubmitting ? 'Creating…' : 'Create bracket'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

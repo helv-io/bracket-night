@@ -5,6 +5,8 @@
     --matchup-card-height: clamp(118px, 15.8vh, 152px);
     --bracket-inline-pad: clamp(0.75rem, 2.2vw, 1.75rem);
     --bracket-label-gap: 0.45rem;
+    /* Space kept free above the top-most cards for the round labels */
+    --bn-label-room: 2rem;
     position: absolute;
     inset: 0;
     width: 100%;
@@ -27,7 +29,9 @@
     position: absolute;
     left: var(--bracket-inline-pad);
     right: var(--bracket-inline-pad);
-    top: 0.1rem;
+    /* Reserve room for the round labels that ride above the top-most cards so they
+       can never creep up into the logo/header */
+    top: var(--bn-label-room);
     bottom: 0.15rem;
     z-index: 1;
     display: grid;
