@@ -1,5 +1,9 @@
 # Multi-arch publish to Docker Hub (helvio/bracket-night).
 #
+# Each architecture builds on a runner of its own kind, so nothing runs under emulation (under emulation npm kept failing on arm64
+# and the build was slow). The two images are joined into one multi-arch tag at the end.
+# A branch push only builds, to prove it works; main, master and version tags also publish.
+#
 # Variables: DOCKERHUB_USERNAME
 # Secrets: DOCKERHUB_TOKEN
 #
@@ -9,7 +13,7 @@ name: Docker
 
 on:
   push:
-    branches: [main, master]
+    branches: ["**"]
     tags: ["v*"]
   pull_request:
     branches: [main, master]
@@ -17,21 +21,95 @@ on:
 
 env:
   IMAGE_NAME: bracket-night
+  PUBLISH: ${{ github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/') || github.ref_name == 'main' || github.ref_name == 'master') }}
 
 jobs:
-  docker:
-    name: Build & push
-    runs-on: ubuntu-latest
+  build:
+    name: Build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
-      packages: write
-
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-latest }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Resolve Docker Hub username
+        id: hub
+        run: |
+          USERNAME="${{ vars.DOCKERHUB_USERNAME }}"
+          if [ -z "$USERNAME" ]; then
+            USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+          fi
+          if [ -z "$USERNAME" ] && [ "$PUBLISH" = true ]; then
+            echo "DOCKERHUB_USERNAME is not set." >&2
+            exit 1
+          fi
+          echo "username=${USERNAME:-none}" >> "$GITHUB_OUTPUT"
+          echo "image=docker.io/${USERNAME:-none}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      # Only for the labels.
+      - name: Docker meta (labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.hub.outputs.image }}
+
+      - name: Log in to Docker Hub
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ steps.hub.outputs.username }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: ${{ env.PUBLISH == 'true' && format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', steps.hub.outputs.image) || 'type=cacheonly' }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,scope=${{ matrix.arch }},mode=max
+          provenance: false
+
+      - name: Keep the digest
+        if: env.PUBLISH == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "$RUNNER_TEMP/digests/${{ matrix.arch }}.${digest#sha256:}"
+      - uses: actions/upload-artifact@v4
+        if: env.PUBLISH == 'true'
+        with:
+          name: digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Publish multi-arch tags
+    needs: [build]
+    if: ${{ github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/') || github.ref_name == 'main' || github.ref_name == 'master') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -50,34 +128,31 @@ jobs:
           echo "username=${USERNAME}" >> "$GITHUB_OUTPUT"
           echo "image=docker.io/${USERNAME}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Docker meta (tags / labels)
+      # latest follows the default branch only, never a tag build.
+      - name: Docker meta (tags)
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.hub.outputs.image }}
           tags: |
-            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' }}
+            type=raw,value=latest,enable=${{ !startsWith(github.ref, 'refs/tags/') }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha,prefix=sha-
 
       - name: Log in to Docker Hub
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ steps.hub.outputs.username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          provenance: false
+      - name: Tag one multi-arch manifest from the per-arch images
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(for f in *; do printf '${{ steps.hub.outputs.image }}@sha256:%s ' "${f#*.}"; done)
+
+      - name: Show the result
+        run: docker buildx imagetools inspect ${{ steps.hub.outputs.image }}:${{ steps.meta.outputs.version }}

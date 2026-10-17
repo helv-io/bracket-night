@@ -1,0 +1,15 @@
+# Settings for the shared checks (the pinned copy is in .agent-checks/).
+[docs]
+user-facing = "^(frontend|backend)/(?!.*(test|\\.test\\.|__tests__))"
+require = ["CHANGELOG.md"]
+
+[model-ids]
+exempt = []
+
+[private]
+patterns = ['helv\.io']
+
+# The live site's own address and the credits line on the public page are product content.
+[[private.allow]]
+path = "^frontend/pages/(_app|join)\\.tsx$"
+why = "the live site address and the credits shown on the public page"
