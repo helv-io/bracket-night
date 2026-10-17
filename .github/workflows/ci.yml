@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, restore/thick-gold-coin]
+    branches: ["**"]
   pull_request:
 
 jobs:
