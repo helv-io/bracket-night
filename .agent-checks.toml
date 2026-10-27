@@ -1,6 +1,9 @@
 # Settings for the shared checks (the pinned copy is in .agent-checks/).
 [docs]
-user-facing = "^(frontend|backend)/(?!.*(test|\\.test\\.|__tests__))"
+# package.json and package-lock.json are not user-visible. An npm bump only
+# edits those, so it does not belong in the changelog. Source under frontend
+# and backend still does.
+user-facing = "^(frontend|backend)/(?!.*(test|\\.test\\.|__tests__|package(-lock)?\\.json$))"
 require = ["CHANGELOG.md"]
 
 [model-ids]
