@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.6.2",
-    "next": "^15.2.3",
+    "next": "^15.5.29",
     "postcss": "^8.5.32",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
