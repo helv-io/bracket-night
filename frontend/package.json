@@ -8,7 +8,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "autoprefixer": "^10.6.2",
+    "autoprefixer": "^10.7.0",
     "next": "^15.5.29",
     "postcss": "^8.5.32",
     "qrcode.react": "^4.2.0",
